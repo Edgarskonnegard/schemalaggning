@@ -16,6 +16,20 @@
   align-items: start;
 }
 
+.employee-sidebar {
+  display: grid;
+  gap: 16px;
+}
+
+.page-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
 /* FORM */
 
 .form-card {
@@ -140,6 +154,17 @@
 .shift-access-option span {
   font-size: 14px;
   color: #444;
+}
+
+.shift-chip {
+  display: inline-flex;
+  margin: 0 8px 8px 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .empty-text {

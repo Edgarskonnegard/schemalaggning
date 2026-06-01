@@ -1,4 +1,6 @@
-import ShiftCard from "./ShiftCard";
+function formatTime(value) {
+  return value?.slice(0, 5) || "";
+}
 
 function ScheduleList({ shifts }) {
   return (
@@ -10,7 +12,14 @@ function ScheduleList({ shifts }) {
           <p className="empty-text">Inga passtyper skapade ännu.</p>
         ) : (
           shifts.map((shift) => (
-            <ShiftCard key={shift.id} shift={shift} />
+            <div key={shift.id} className="shift-card">
+              <h3>{shift.name}</h3>
+              <p>Roll: {shift.roleName}</p>
+              <p>
+                {formatTime(shift.defaultStartTime)}-
+                {formatTime(shift.defaultEndTime)}
+              </p>
+            </div>
           ))
         )}
       </div>
