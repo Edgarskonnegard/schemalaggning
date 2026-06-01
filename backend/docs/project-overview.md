@@ -146,3 +146,4 @@ När chefen redigerar ett genererat pass ska endast det passet ändras.
 - `docs/architecture.md` beskriver lager, ansvar och implementationens riktning.
 - `docs/business-rules.md` beskriver affärsregler och invariants.
 - `docs/api-spec.md` beskriver planerade V1-endpoints.
+- `docs/todo.md` samlar kommande arbete och rekommenderad genomförandeordning.
