@@ -1,0 +1,96 @@
+using Schemalaggning.DTOs.BaseScheduleRules;
+using Schemalaggning.DTOs.Employees;
+using Schemalaggning.DTOs.Roles;
+using Schemalaggning.DTOs.Schedules;
+using Schemalaggning.DTOs.ShiftTypes;
+using Schemalaggning.Models;
+
+namespace Schemalaggning.Services;
+
+internal static class MappingExtensions
+{
+    public static RoleReadDto ToReadDto(this Role role)
+    {
+        return new RoleReadDto
+        {
+            Id = role.Id,
+            Name = role.Name
+        };
+    }
+
+    public static EmployeeReadDto ToReadDto(this Employee employee)
+    {
+        return new EmployeeReadDto
+        {
+            Id = employee.Id,
+            Name = employee.Name,
+            RoleId = employee.RoleId,
+            RoleName = employee.Role?.Name ?? string.Empty,
+            EmploymentPercentage = employee.EmploymentPercentage,
+            AllowedShiftTypeIds = employee.EmployeeShiftTypes
+                .Select(employeeShiftType => employeeShiftType.ShiftTypeId)
+                .ToList()
+        };
+    }
+
+    public static ShiftTypeReadDto ToReadDto(this ShiftType shiftType)
+    {
+        return new ShiftTypeReadDto
+        {
+            Id = shiftType.Id,
+            Name = shiftType.Name,
+            RoleId = shiftType.RoleId,
+            RoleName = shiftType.Role?.Name ?? string.Empty,
+            DefaultStartTime = shiftType.DefaultStartTime,
+            DefaultEndTime = shiftType.DefaultEndTime
+        };
+    }
+
+    public static BaseScheduleRuleReadDto ToReadDto(this BaseScheduleRule rule)
+    {
+        return new BaseScheduleRuleReadDto
+        {
+            Id = rule.Id,
+            EmployeeId = rule.EmployeeId,
+            EmployeeName = rule.Employee?.Name ?? string.Empty,
+            ShiftTypeId = rule.ShiftTypeId,
+            ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
+            DayOfWeek = rule.DayOfWeek,
+            StartTime = rule.ShiftType?.DefaultStartTime ?? default,
+            EndTime = rule.ShiftType?.DefaultEndTime ?? default
+        };
+    }
+
+    public static ScheduleReadDto ToReadDto(this Schedule schedule)
+    {
+        return new ScheduleReadDto
+        {
+            Id = schedule.Id,
+            Name = schedule.Name,
+            PeriodStart = schedule.PeriodStart,
+            PeriodEnd = schedule.PeriodEnd,
+            Status = schedule.Status,
+            Shifts = schedule.Shifts
+                .OrderBy(shift => shift.Date)
+                .ThenBy(shift => shift.StartTime)
+                .Select(shift => shift.ToReadDto())
+                .ToList()
+        };
+    }
+
+    public static ShiftReadDto ToReadDto(this Shift shift)
+    {
+        return new ShiftReadDto
+        {
+            Id = shift.Id,
+            EmployeeId = shift.EmployeeId,
+            EmployeeName = shift.Employee?.Name ?? string.Empty,
+            ShiftTypeId = shift.ShiftTypeId,
+            ShiftTypeName = shift.ShiftType?.Name ?? string.Empty,
+            Date = shift.Date,
+            StartTime = shift.StartTime,
+            EndTime = shift.EndTime,
+            Status = shift.Status
+        };
+    }
+}

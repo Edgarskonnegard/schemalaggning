@@ -1,0 +1,11 @@
+.badge {
+  display:inline-block;
+
+  padding:6px 10px;
+
+  border-radius:20px;
+
+  background:#dbeafe;
+
+  font-size:12px;
+}

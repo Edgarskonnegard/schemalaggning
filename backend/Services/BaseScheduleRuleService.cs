@@ -1,0 +1,65 @@
+using Schemalaggning.DTOs.BaseScheduleRules;
+using Schemalaggning.Models;
+using Schemalaggning.Repositories.Interfaces;
+using Schemalaggning.Services.Interfaces;
+
+namespace Schemalaggning.Services;
+
+public class BaseScheduleRuleService : IBaseScheduleRuleService
+{
+    private readonly IBaseScheduleRuleRepository _baseScheduleRuleRepository;
+    private readonly IEmployeeRepository _employeeRepository;
+
+    public BaseScheduleRuleService(
+        IBaseScheduleRuleRepository baseScheduleRuleRepository,
+        IEmployeeRepository employeeRepository)
+    {
+        _baseScheduleRuleRepository = baseScheduleRuleRepository;
+        _employeeRepository = employeeRepository;
+    }
+
+    public async Task<List<BaseScheduleRuleReadDto>> GetByEmployeeIdAsync(int employeeId)
+    {
+        var rules = await _baseScheduleRuleRepository.GetByEmployeeIdAsync(employeeId);
+        return rules.Select(rule => rule.ToReadDto()).ToList();
+    }
+
+    public async Task<BaseScheduleRuleReadDto> SetRuleAsync(int employeeId, BaseScheduleRuleCreateDto dto)
+    {
+        var employee = await _employeeRepository.GetByIdAsync(employeeId);
+        if (employee is null)
+        {
+            throw new InvalidOperationException($"Employee {employeeId} does not exist.");
+        }
+
+        if (!await _employeeRepository.HasAllowedShiftTypeAsync(employeeId, dto.ShiftTypeId))
+        {
+            throw new InvalidOperationException("Employee is not allowed to work this shift type.");
+        }
+
+        var existingRule = await _baseScheduleRuleRepository.GetByEmployeeAndDayAsync(employeeId, dto.DayOfWeek);
+        if (existingRule is null)
+        {
+            var created = await _baseScheduleRuleRepository.CreateAsync(new BaseScheduleRule
+            {
+                EmployeeId = employeeId,
+                ShiftTypeId = dto.ShiftTypeId,
+                DayOfWeek = dto.DayOfWeek
+            });
+
+            var rules = await _baseScheduleRuleRepository.GetByEmployeeIdAsync(employeeId);
+            return rules.First(rule => rule.Id == created.Id).ToReadDto();
+        }
+
+        existingRule.ShiftTypeId = dto.ShiftTypeId;
+        await _baseScheduleRuleRepository.UpdateAsync(existingRule);
+
+        var updatedRules = await _baseScheduleRuleRepository.GetByEmployeeIdAsync(employeeId);
+        return updatedRules.First(rule => rule.Id == existingRule.Id).ToReadDto();
+    }
+
+    public Task<bool> DeleteRuleAsync(int employeeId, DayOfWeek dayOfWeek)
+    {
+        return _baseScheduleRuleRepository.DeleteByEmployeeAndDayAsync(employeeId, dayOfWeek);
+    }
+}

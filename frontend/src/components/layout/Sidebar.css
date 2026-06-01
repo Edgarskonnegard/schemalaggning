@@ -1,0 +1,71 @@
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 10;
+}
+
+.drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 280px;
+  height: 100vh;
+
+  background: white;
+  padding: 24px;
+
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+
+  z-index: 20;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.drawer.open {
+  transform: translateX(0);
+}
+
+.drawer h2 {
+  margin-bottom: 24px;
+}
+
+.drawer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drawer-nav a {
+  padding: 12px 14px;
+  border: none;
+  border-radius: 8px;
+
+  background: #f3f4f6;
+  color: #1f2937;
+
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.drawer-nav a:hover {
+  background: #e5e7eb;
+}
+ 
+.drawer-nav a.active {
+  background: #4f46e5;
+  color: white;
+}
