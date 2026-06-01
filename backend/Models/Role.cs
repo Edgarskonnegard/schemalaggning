@@ -8,5 +8,5 @@ public class Role
 
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
 
-    public ICollection<ShiftType> ShiftTypes { get; set; } = new List<ShiftType>();
+    public ICollection<RoleShiftType> RoleShiftTypes { get; set; } = new List<RoleShiftType>();
 }

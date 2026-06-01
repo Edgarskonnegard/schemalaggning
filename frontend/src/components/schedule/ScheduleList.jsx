@@ -14,7 +14,7 @@ function ScheduleList({ shifts }) {
           shifts.map((shift) => (
             <div key={shift.id} className="shift-card">
               <h3>{shift.name}</h3>
-              <p>Roll: {shift.roleName}</p>
+              <p>Roller: {shift.roleNames.join(", ")}</p>
               <p>
                 {formatTime(shift.defaultStartTime)}-
                 {formatTime(shift.defaultEndTime)}

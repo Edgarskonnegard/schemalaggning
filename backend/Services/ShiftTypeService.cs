@@ -8,12 +8,10 @@ namespace Schemalaggning.Services;
 public class ShiftTypeService : IShiftTypeService
 {
     private readonly IShiftTypeRepository _shiftTypeRepository;
-    private readonly IRoleRepository _roleRepository;
 
-    public ShiftTypeService(IShiftTypeRepository shiftTypeRepository, IRoleRepository roleRepository)
+    public ShiftTypeService(IShiftTypeRepository shiftTypeRepository)
     {
         _shiftTypeRepository = shiftTypeRepository;
-        _roleRepository = roleRepository;
     }
 
     public async Task<List<ShiftTypeReadDto>> GetAllAsync()
@@ -30,14 +28,17 @@ public class ShiftTypeService : IShiftTypeService
 
     public async Task<ShiftTypeReadDto> CreateAsync(ShiftTypeCreateDto dto)
     {
-        await ValidateShiftTypeAsync(dto.Name, dto.RoleId, dto.DefaultStartTime, dto.DefaultEndTime);
+        await ValidateShiftTypeAsync(dto.Name, dto.RoleIds, dto.DefaultStartTime, dto.DefaultEndTime);
 
         var shiftType = await _shiftTypeRepository.CreateAsync(new ShiftType
         {
             Name = dto.Name.Trim(),
-            RoleId = dto.RoleId,
             DefaultStartTime = dto.DefaultStartTime,
-            DefaultEndTime = dto.DefaultEndTime
+            DefaultEndTime = dto.DefaultEndTime,
+            RoleShiftTypes = dto.RoleIds
+                .Distinct()
+                .Select(roleId => new RoleShiftType { RoleId = roleId })
+                .ToList()
         });
 
         var created = await _shiftTypeRepository.GetByIdAsync(shiftType.Id);
@@ -46,7 +47,7 @@ public class ShiftTypeService : IShiftTypeService
 
     public async Task<bool> UpdateAsync(int id, ShiftTypeUpdateDto dto)
     {
-        await ValidateShiftTypeAsync(dto.Name, dto.RoleId, dto.DefaultStartTime, dto.DefaultEndTime);
+        await ValidateShiftTypeAsync(dto.Name, dto.RoleIds, dto.DefaultStartTime, dto.DefaultEndTime);
 
         var shiftType = await _shiftTypeRepository.GetByIdAsync(id);
         if (shiftType is null)
@@ -55,9 +56,16 @@ public class ShiftTypeService : IShiftTypeService
         }
 
         shiftType.Name = dto.Name.Trim();
-        shiftType.RoleId = dto.RoleId;
         shiftType.DefaultStartTime = dto.DefaultStartTime;
         shiftType.DefaultEndTime = dto.DefaultEndTime;
+        shiftType.RoleShiftTypes = dto.RoleIds
+            .Distinct()
+            .Select(roleId => new RoleShiftType
+            {
+                RoleId = roleId,
+                ShiftTypeId = id
+            })
+            .ToList();
 
         return await _shiftTypeRepository.UpdateAsync(shiftType);
     }
@@ -67,11 +75,16 @@ public class ShiftTypeService : IShiftTypeService
         return _shiftTypeRepository.DeleteAsync(id);
     }
 
-    private async Task ValidateShiftTypeAsync(string name, int roleId, TimeOnly startTime, TimeOnly endTime)
+    private async Task ValidateShiftTypeAsync(string name, List<int> roleIds, TimeOnly startTime, TimeOnly endTime)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             throw new ArgumentException("Shift type name is required.");
+        }
+
+        if (roleIds.Count == 0)
+        {
+            throw new ArgumentException("At least one role is required.");
         }
 
         if (endTime <= startTime)
@@ -79,9 +92,9 @@ public class ShiftTypeService : IShiftTypeService
             throw new ArgumentException("Default end time must be after default start time.");
         }
 
-        if (!await _roleRepository.ExistsAsync(roleId))
+        if (await _shiftTypeRepository.HasAnyInvalidRoleIdsAsync(roleIds))
         {
-            throw new InvalidOperationException($"Role {roleId} does not exist.");
+            throw new InvalidOperationException("One or more roles do not exist.");
         }
     }
 }

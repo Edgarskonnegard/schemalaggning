@@ -88,10 +88,10 @@ Följande får inte ändras av denna åtgärd:
 
 ## Regler för rollbaserade passtyper
 
-- `Employee.RoleId` styr vilka passtyper en anställd får arbeta.
-- `ShiftType.RoleId` anger vilken roll passtypen hör till.
-- Ett pass får inte skapas för en anställd om passtypens roll inte matchar den anställdas roll.
-- En grundschemaregel får inte skapas om passtypens roll inte matchar den anställdas roll.
+- `Employee.RoleId` styr vilken roll en anställd har.
+- `RoleShiftType` anger vilka roller som får arbeta en passtyp.
+- Ett pass får inte skapas för en anställd om passtypen inte är kopplad till den anställdas roll.
+- En grundschemaregel får inte skapas om passtypen inte är kopplad till den anställdas roll.
 
 ## Regler för schemagenerering
 

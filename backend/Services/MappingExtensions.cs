@@ -36,8 +36,13 @@ internal static class MappingExtensions
         {
             Id = shiftType.Id,
             Name = shiftType.Name,
-            RoleId = shiftType.RoleId,
-            RoleName = shiftType.Role?.Name ?? string.Empty,
+            RoleIds = shiftType.RoleShiftTypes
+                .Select(roleShiftType => roleShiftType.RoleId)
+                .ToList(),
+            RoleNames = shiftType.RoleShiftTypes
+                .Select(roleShiftType => roleShiftType.Role?.Name ?? string.Empty)
+                .Where(roleName => !string.IsNullOrWhiteSpace(roleName))
+                .ToList(),
             DefaultStartTime = shiftType.DefaultStartTime,
             DefaultEndTime = shiftType.DefaultEndTime
         };

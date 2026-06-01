@@ -161,9 +161,13 @@ Se även `docs/domain-model.md` för UML, relationer och entiteternas ansvar.
 
 - `Id`
 - `Name`
-- `RoleId`
 - `DefaultStartTime`
 - `DefaultEndTime`
+
+### RoleShiftType
+
+- `RoleId`
+- `ShiftTypeId`
 
 ### BaseScheduleRule
 

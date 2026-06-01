@@ -6,13 +6,11 @@ public class ShiftType
 
     public string Name { get; set; } = string.Empty;
 
-    public int RoleId { get; set; }
-
-    public Role Role { get; set; } = null!;
-
     public TimeOnly DefaultStartTime { get; set; }
 
     public TimeOnly DefaultEndTime { get; set; }
+
+    public ICollection<RoleShiftType> RoleShiftTypes { get; set; } = new List<RoleShiftType>();
 
     public ICollection<BaseScheduleRule> BaseScheduleRules { get; set; } = new List<BaseScheduleRule>();
 

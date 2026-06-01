@@ -107,8 +107,8 @@ Nuvarande implementation använder en normaliserad rollmodell:
 
 - `Role` är en egen entitet.
 - `Employee` refererar roll via `RoleId`.
-- `ShiftType` refererar roll via `RoleId`.
-- En anställd får arbeta passtyper som hör till samma roll.
+- `ShiftType` kopplas till en eller flera roller via `RoleShiftType`.
+- En anställd får arbeta passtyper som är kopplade till den anställdas roll.
 - `Employee` använder `EmploymentPercentage`.
 
 Det skiljer sig från den enklare tidiga beskrivningen där `Role` och `EmploymentType` var textfält. Framtida implementationer ska utgå från den normaliserade modellen om inget annat beslutas.

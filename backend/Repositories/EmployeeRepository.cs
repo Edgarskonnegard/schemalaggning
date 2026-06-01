@@ -69,9 +69,8 @@ public class EmployeeRepository : IEmployeeRepository
     {
         return _context.Employees
             .Where(employee => employee.Id == employeeId)
-            .AnyAsync(employee => employee.RoleId == _context.ShiftTypes
-                .Where(shiftType => shiftType.Id == shiftTypeId)
-                .Select(shiftType => shiftType.RoleId)
-                .FirstOrDefault());
+            .AnyAsync(employee => _context.RoleShiftTypes.Any(roleShiftType =>
+                roleShiftType.RoleId == employee.RoleId &&
+                roleShiftType.ShiftTypeId == shiftTypeId));
     }
 }

@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<ShiftType> ShiftTypes => Set<ShiftType>();
+    public DbSet<RoleShiftType> RoleShiftTypes => Set<RoleShiftType>();
     public DbSet<BaseScheduleRule> BaseScheduleRules => Set<BaseScheduleRule>();
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Shift> Shifts => Set<Shift>();
@@ -33,12 +34,6 @@ public class AppDbContext : DbContext
             .HasMany(r => r.Employees)
             .WithOne(e => e.Role)
             .HasForeignKey(e => e.RoleId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<Role>()
-            .HasMany(r => r.ShiftTypes)
-            .WithOne(st => st.Role)
-            .HasForeignKey(st => st.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Employee>()
@@ -70,6 +65,21 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ShiftType>()
             .HasIndex(st => st.Name)
             .IsUnique();
+
+        modelBuilder.Entity<RoleShiftType>()
+            .HasKey(rst => new { rst.RoleId, rst.ShiftTypeId });
+
+        modelBuilder.Entity<RoleShiftType>()
+            .HasOne(rst => rst.Role)
+            .WithMany(r => r.RoleShiftTypes)
+            .HasForeignKey(rst => rst.RoleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RoleShiftType>()
+            .HasOne(rst => rst.ShiftType)
+            .WithMany(st => st.RoleShiftTypes)
+            .HasForeignKey(rst => rst.ShiftTypeId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ShiftType>()
             .HasMany(st => st.BaseScheduleRules)

@@ -34,11 +34,13 @@ function EmployeesPage() {
 
   const shiftTypesByRoleId = useMemo(() => {
     return shiftTypes.reduce((groups, shiftType) => {
-      const current = groups[shiftType.roleId] || [];
-      return {
-        ...groups,
-        [shiftType.roleId]: [...current, shiftType],
-      };
+      return shiftType.roleIds.reduce((nextGroups, roleId) => {
+        const current = nextGroups[roleId] || [];
+        return {
+          ...nextGroups,
+          [roleId]: [...current, shiftType],
+        };
+      }, groups);
     }, {});
   }, [shiftTypes]);
 

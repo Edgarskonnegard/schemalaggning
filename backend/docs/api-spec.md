@@ -20,7 +20,7 @@ API:t ska i första versionen stödja:
 - Schedule generation
 - Schedule publishing
 
-Eftersom backendmodellen använder `RoleId` finns även enkla Role-endpoints i implementationen.
+Eftersom backendmodellen använder roller finns även enkla Role-endpoints i implementationen.
 
 ## Roles
 
@@ -118,7 +118,7 @@ Exempel:
 ```json
 {
   "name": "Öppning",
-  "roleId": 1,
+  "roleIds": [1, 2],
   "defaultStartTime": "08:00:00",
   "defaultEndTime": "16:00:00"
 }
@@ -138,13 +138,13 @@ Det bör blockeras om passtypen används av grundschemaregler eller historiska p
 
 ## Rollbaserade passtyper
 
-En anställd får arbeta passtyper som hör till samma roll som den anställda:
+En anställd får arbeta passtyper som är kopplade till den anställdas roll via `RoleShiftType`:
 
 ```text
-Employee.RoleId == ShiftType.RoleId
+Employee.RoleId finns i ShiftType.RoleIds
 ```
 
-Om en anställd ska få andra passtyper ändras den anställdas roll, alternativt skapas en bredare roll.
+Om en passtyp ska kunna arbetas av flera roller kopplas flera roller till samma passtyp.
 
 ## Base Schedule
 

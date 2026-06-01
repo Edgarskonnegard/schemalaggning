@@ -21,9 +21,13 @@ classDiagram
     class ShiftType {
         int Id
         string Name
-        int RoleId
         TimeOnly DefaultStartTime
         TimeOnly DefaultEndTime
+    }
+
+    class RoleShiftType {
+        int RoleId
+        int ShiftTypeId
     }
 
     class BaseScheduleRule {
@@ -55,7 +59,8 @@ classDiagram
     }
 
     Role "1" --> "0..*" Employee
-    Role "1" --> "0..*" ShiftType
+    Role "1" --> "0..*" RoleShiftType
+    ShiftType "1" --> "0..*" RoleShiftType
     Employee "1" --> "0..*" BaseScheduleRule
     ShiftType "1" --> "0..*" BaseScheduleRule
     Schedule "1" --> "0..*" Shift
@@ -68,7 +73,8 @@ classDiagram
 | Relation | Betydelse |
 | --- | --- |
 | `Role` 1..* `Employee` | En roll kan ha flera anställda. |
-| `Role` 1..* `ShiftType` | En roll kan ha flera passtyper, och rollen avgör vilka passtyper en anställd får arbeta. |
+| `Role` 1..* `RoleShiftType` | En roll kan kopplas till flera passtyper. |
+| `ShiftType` 1..* `RoleShiftType` | En passtyp kan kopplas till flera roller. |
 | `Employee` 1..* `BaseScheduleRule` | En anställd kan ha flera grundschemaregler. |
 | `ShiftType` 1..* `BaseScheduleRule` | En passtyp kan användas i flera grundschemaregler. |
 | `Schedule` 1..* `Shift` | Ett schema innehåller faktiska pass. |
@@ -102,17 +108,16 @@ Fält:
 
 - `Id`
 - `Name`
-- `RoleId`
 - `DefaultStartTime`
 - `DefaultEndTime`
 
 Relationer:
 
-- hör till en `Role`
+- kan kopplas till flera roller via `RoleShiftType`
 
 Viktig regel:
 
-- En anställd får arbeta passtypen om `Employee.RoleId` matchar `ShiftType.RoleId`.
+- En anställd får arbeta passtypen om `Employee.RoleId` finns bland passtypens kopplade roller.
 - `DefaultStartTime` och `DefaultEndTime` kopieras till `Shift.StartTime` och `Shift.EndTime` vid schemagenerering.
 - Redan genererade pass ska inte ändras automatiskt om passtypens standardtider ändras senare.
 

@@ -7,7 +7,7 @@ function normalizeTime(value) {
 function CreateShiftForm({ roles, onCreateShiftType }) {
   const [formData, setFormData] = useState({
     name: "",
-    roleId: "",
+    roleIds: [],
     defaultStartTime: "",
     defaultEndTime: "",
   });
@@ -21,12 +21,25 @@ function CreateShiftForm({ roles, onCreateShiftType }) {
     }));
   }
 
+  function handleRoleToggle(roleId) {
+    setFormData((prev) => {
+      const roleIds = prev.roleIds.includes(roleId)
+        ? prev.roleIds.filter((currentRoleId) => currentRoleId !== roleId)
+        : [...prev.roleIds, roleId];
+
+      return {
+        ...prev,
+        roleIds,
+      };
+    });
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
 
     if (
       !formData.name.trim() ||
-      !formData.roleId ||
+      formData.roleIds.length === 0 ||
       !formData.defaultStartTime ||
       !formData.defaultEndTime
     ) {
@@ -35,14 +48,14 @@ function CreateShiftForm({ roles, onCreateShiftType }) {
 
     await onCreateShiftType({
       name: formData.name.trim(),
-      roleId: Number(formData.roleId),
+      roleIds: formData.roleIds,
       defaultStartTime: normalizeTime(formData.defaultStartTime),
       defaultEndTime: normalizeTime(formData.defaultEndTime),
     });
 
     setFormData({
       name: "",
-      roleId: formData.roleId,
+      roleIds: formData.roleIds,
       defaultStartTime: "",
       defaultEndTime: "",
     });
@@ -65,20 +78,20 @@ function CreateShiftForm({ roles, onCreateShiftType }) {
         </div>
 
         <div className="form-group">
-          <label>Roll</label>
+          <label>Roller</label>
 
-          <select
-            name="roleId"
-            value={formData.roleId}
-            onChange={handleChange}
-          >
-            <option value="">Välj roll</option>
+          <div className="role-checkbox-list">
             {roles.map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
+              <label key={role.id} className="role-checkbox">
+                <input
+                  type="checkbox"
+                  checked={formData.roleIds.includes(role.id)}
+                  onChange={() => handleRoleToggle(role.id)}
+                />
+                <span>{role.name}</span>
+              </label>
             ))}
-          </select>
+          </div>
         </div>
 
         <div className="time-row">
