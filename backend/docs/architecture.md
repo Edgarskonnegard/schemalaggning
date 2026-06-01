@@ -77,12 +77,12 @@ Exempel:
 
 ### Grundschema = Återkommande regler
 
-`BaseScheduleRule` beskriver vad en anställd normalt arbetar på en viss veckodag.
+`BaseScheduleRule` beskriver vad en anställd normalt arbetar under en viss vecka i en fyraveckorscykel och på en viss veckodag.
 
 Exempel:
 
 ```text
-Anna arbetar Öppning på måndagar.
+Anna arbetar Öppning vecka 1 på måndagar.
 ```
 
 ### Genererat schema = Faktiska pass
@@ -165,16 +165,12 @@ Se även `docs/domain-model.md` för UML, relationer och entiteternas ansvar.
 - `DefaultStartTime`
 - `DefaultEndTime`
 
-### EmployeeShiftType
-
-- `EmployeeId`
-- `ShiftTypeId`
-
 ### BaseScheduleRule
 
 - `Id`
 - `EmployeeId`
 - `ShiftTypeId`
+- `WeekInCycle`
 - `DayOfWeek`
 
 ### Schedule
@@ -227,9 +223,9 @@ Repository-metoderna nedan är rekommenderade för V1. De är ett riktmärke fö
 Ansvar:
 
 - hämta alla anställda
-- hämta en anställd med passtyper och grundschema
+- hämta en anställd med roll och grundschema
 - skapa, uppdatera och ta bort anställd
-- uppdatera tillåtna passtyper
+- kontrollera om en anställds roll matchar en passtyp
 
 Föreslagna metoder:
 
@@ -240,7 +236,7 @@ Task<Employee?> GetByIdWithDetailsAsync(int id);
 Task<Employee> CreateAsync(Employee employee);
 Task<bool> UpdateAsync(Employee employee);
 Task<bool> DeleteAsync(int id);
-Task<bool> UpdateAllowedShiftTypesAsync(int employeeId, List<int> shiftTypeIds);
+Task<bool> CanWorkShiftTypeAsync(int employeeId, int shiftTypeId);
 ```
 
 ### ShiftTypeRepository
@@ -267,17 +263,17 @@ Ansvar:
 
 - CRUD för grundschemaregler
 - hämta grundschema för en anställd
-- sätta eller ersätta grundregel för viss dag
+- sätta eller ersätta grundregel för viss cykelvecka och dag
 
 Föreslagna metoder:
 
 ```csharp
 Task<List<BaseScheduleRule>> GetByEmployeeIdAsync(int employeeId);
-Task<BaseScheduleRule?> GetByEmployeeAndDayAsync(int employeeId, DayOfWeek dayOfWeek);
+Task<BaseScheduleRule?> GetByEmployeeWeekAndDayAsync(int employeeId, int weekInCycle, DayOfWeek dayOfWeek);
 Task<BaseScheduleRule> CreateAsync(BaseScheduleRule rule);
 Task<bool> UpdateAsync(BaseScheduleRule rule);
 Task<bool> DeleteAsync(int id);
-Task<bool> DeleteByEmployeeAndDayAsync(int employeeId, DayOfWeek dayOfWeek);
+Task<bool> DeleteByEmployeeWeekAndDayAsync(int employeeId, int weekInCycle, DayOfWeek dayOfWeek);
 ```
 
 ### ScheduleRepository
@@ -310,8 +306,7 @@ Ansvar:
 
 - validera input
 - skapa och uppdatera anställda
-- uppdatera anställdas tillåtna passtyper
-- säkerställa att passtyper finns innan koppling
+- säkerställa att rollen finns
 
 Föreslagna metoder:
 
@@ -322,7 +317,6 @@ Task<EmployeeReadDto?> GetDetailsAsync(int id);
 Task<EmployeeReadDto> CreateAsync(EmployeeCreateDto dto);
 Task<bool> UpdateAsync(int id, EmployeeUpdateDto dto);
 Task<bool> DeleteAsync(int id);
-Task<bool> UpdateAllowedShiftTypesAsync(int employeeId, List<int> shiftTypeIds);
 ```
 
 ### ShiftTypeService
@@ -348,16 +342,16 @@ Task<bool> DeleteAsync(int id);
 Ansvar:
 
 - skapa och uppdatera grundschema för anställd
-- kontrollera att anställd får arbeta vald passtyp
-- kontrollera att det bara finns en regel per anställd och dag
-- ta bort grundpass för viss dag
+- kontrollera att anställdas roll matchar vald passtyp
+- kontrollera att det bara finns en regel per anställd, cykelvecka och dag
+- ta bort grundpass för viss cykelvecka och dag
 
 Föreslagna metoder:
 
 ```csharp
 Task<List<BaseScheduleRuleReadDto>> GetByEmployeeIdAsync(int employeeId);
 Task<BaseScheduleRuleReadDto> SetRuleAsync(int employeeId, BaseScheduleRuleCreateDto dto);
-Task<bool> DeleteRuleAsync(int employeeId, DayOfWeek dayOfWeek);
+Task<bool> DeleteRuleAsync(int employeeId, int weekInCycle, DayOfWeek dayOfWeek);
 ```
 
 ### ScheduleGenerationService
@@ -397,9 +391,8 @@ Task<bool> PublishScheduleAsync(int scheduleId);
 1. Säkerställ att modeller och `AppDbContext` matchar domänmodellen.
 2. Skapa migration och uppdatera databas.
 3. Implementera Employees och ShiftTypes först.
-4. Implementera koppling mellan Employee och ShiftType.
-5. Implementera BaseScheduleRule.
-6. Implementera ScheduleGenerationService.
-7. Implementera publicering av schema.
-8. Implementera manuell redigering av genererade pass.
-9. Ta bort scaffoldad `/weatherforecast`.
+4. Implementera BaseScheduleRule.
+5. Implementera ScheduleGenerationService.
+6. Implementera publicering av schema.
+7. Implementera manuell redigering av genererade pass.
+8. Ta bort scaffoldad `/weatherforecast`.

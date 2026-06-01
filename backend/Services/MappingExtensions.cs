@@ -26,10 +26,7 @@ internal static class MappingExtensions
             Name = employee.Name,
             RoleId = employee.RoleId,
             RoleName = employee.Role?.Name ?? string.Empty,
-            EmploymentPercentage = employee.EmploymentPercentage,
-            AllowedShiftTypeIds = employee.EmployeeShiftTypes
-                .Select(employeeShiftType => employeeShiftType.ShiftTypeId)
-                .ToList()
+            EmploymentPercentage = employee.EmploymentPercentage
         };
     }
 
@@ -55,6 +52,7 @@ internal static class MappingExtensions
             EmployeeName = rule.Employee?.Name ?? string.Empty,
             ShiftTypeId = rule.ShiftTypeId,
             ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
+            WeekInCycle = rule.WeekInCycle,
             DayOfWeek = rule.DayOfWeek,
             StartTime = rule.ShiftType?.DefaultStartTime ?? default,
             EndTime = rule.ShiftType?.DefaultEndTime ?? default

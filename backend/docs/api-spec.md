@@ -16,7 +16,6 @@ API:t ska i första versionen stödja:
 
 - Employees
 - ShiftTypes
-- EmployeeShiftTypes
 - BaseScheduleRules
 - Schedule generation
 - Schedule publishing
@@ -74,7 +73,7 @@ Returnerar en anställd.
 
 ### GET `/api/employees/{id}/details`
 
-Returnerar en anställd med tillåtna passtyper och grundschema.
+Returnerar en anställd med roll och grundschema.
 
 ### POST `/api/employees`
 
@@ -137,35 +136,15 @@ Tar bort en passtyp.
 
 Det bör blockeras om passtypen används av grundschemaregler eller historiska pass, om inte en tydlig arkiveringsstrategi införs.
 
-## EmployeeShiftTypes
+## Rollbaserade passtyper
 
-`EmployeeShiftType` anger vilka passtyper en anställd får arbeta.
-
-Rekommenderade endpoints för V1:
-
-### GET `/api/employees/{employeeId}/shift-types`
-
-Returnerar passtyper som den anställda får arbeta.
-
-### PUT `/api/employees/{employeeId}/shift-types`
-
-Ersätter listan med tillåtna passtyper för en anställd.
-
-Exempel:
-
-```json
-{
-  "shiftTypeIds": [1, 2, 3]
-}
-```
-
-Vid uppdatering måste systemet säkerställa att befintliga grundschemaregler inte lämnas i ett ogiltigt läge.
-
-Alias i controller-planen:
+En anställd får arbeta passtyper som hör till samma roll som den anställda:
 
 ```text
-PUT /api/employees/{id}/shift-types
+Employee.RoleId == ShiftType.RoleId
 ```
+
+Om en anställd ska få andra passtyper ändras den anställdas roll, alternativt skapas en bredare roll.
 
 ## Base Schedule
 
@@ -180,6 +159,7 @@ Exempel på svar:
 ```json
 [
   {
+    "weekInCycle": 1,
     "dayOfWeek": "Monday",
     "shiftTypeId": 1,
     "shiftTypeName": "Öppning"
@@ -189,24 +169,25 @@ Exempel på svar:
 
 ### PUT `/api/employees/{employeeId}/base-schedule`
 
-Sätter eller ersätter grundschemaregel för en viss veckodag.
+Sätter eller ersätter grundschemaregel för en viss vecka i fyraveckorscykeln och veckodag.
 
 Exempel:
 
 ```json
 {
+  "weekInCycle": 1,
   "dayOfWeek": "Monday",
   "shiftTypeId": 1
 }
 ```
 
-Regeln betyder: sätt eller ersätt den anställdas regel för måndag.
+Regeln betyder: sätt eller ersätt den anställdas regel för måndag i cykelvecka 1.
 
-Varje regel måste referera till en passtyp som den anställda får arbeta.
+Varje regel måste referera till en passtyp som matchar den anställdas roll.
 
-### DELETE `/api/employees/{employeeId}/base-schedule/{dayOfWeek}`
+### DELETE `/api/employees/{employeeId}/base-schedule/{weekInCycle}/{dayOfWeek}`
 
-Tar bort grundschemaregeln för en viss veckodag.
+Tar bort grundschemaregeln för en viss cykelvecka och veckodag.
 
 ## Schedules
 
@@ -235,7 +216,7 @@ Exempel:
 Förväntat beteende:
 
 - skapar ett nytt schema med status `Draft`
-- skapar faktiska pass från `BaseScheduleRule`
+- skapar faktiska pass från `BaseScheduleRule` genom att matcha fyraveckorscykel och veckodag
 - kopierar tider från `ShiftType` till varje `Shift`
 - ändrar inte `ShiftType`
 - ändrar inte `BaseScheduleRule`

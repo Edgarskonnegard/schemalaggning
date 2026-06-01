@@ -14,8 +14,6 @@ public class ShiftType
 
     public TimeOnly DefaultEndTime { get; set; }
 
-    public ICollection<EmployeeShiftType> EmployeeShiftTypes { get; set; } = new List<EmployeeShiftType>();
-
     public ICollection<BaseScheduleRule> BaseScheduleRules { get; set; } = new List<BaseScheduleRule>();
 
     public ICollection<Shift> Shifts { get; set; } = new List<Shift>();

@@ -12,7 +12,7 @@ Dokumenten i `docs/` är projektets centrala kunskapskälla. Framtida implementa
 
 1. Skapa anställda.
 2. Skapa passtyper.
-3. Ange vilka passtyper en anställd får arbeta.
+3. Koppla anställda och passtyper till roller.
 4. Skapa grundschema per anställd.
 5. Generera ett schema för en vald period baserat på grundscheman.
 6. Redigera genererade pass manuellt.
@@ -46,19 +46,13 @@ En passtyp eller mall. Exempel:
 
 En passtyp innehåller standardtider som kopieras in i faktiska pass när ett schema genereras.
 
-### EmployeeShiftType
-
-Koppling mellan `Employee` och `ShiftType`.
-
-Anger vilka passtyper en anställd får arbeta.
-
 ### BaseScheduleRule
 
-En återkommande regel för en anställd.
+En återkommande regel för en anställd i en fyraveckorscykel.
 
 Exempel:
 
-- Anna arbetar Öppning varje måndag.
+- Anna arbetar Öppning vecka 1 på måndagar.
 
 ### Schedule
 
@@ -80,7 +74,6 @@ Första versionen ska endast stödja:
 
 - Employees
 - ShiftTypes
-- EmployeeShiftTypes
 - BaseScheduleRules
 - Schedule generation
 - Schedule publishing
@@ -115,6 +108,7 @@ Nuvarande implementation använder en normaliserad rollmodell:
 - `Role` är en egen entitet.
 - `Employee` refererar roll via `RoleId`.
 - `ShiftType` refererar roll via `RoleId`.
+- En anställd får arbeta passtyper som hör till samma roll.
 - `Employee` använder `EmploymentPercentage`.
 
 Det skiljer sig från den enklare tidiga beskrivningen där `Role` och `EmploymentType` var textfält. Framtida implementationer ska utgå från den normaliserade modellen om inget annat beslutas.

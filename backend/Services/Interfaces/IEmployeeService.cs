@@ -10,5 +10,4 @@ public interface IEmployeeService
     Task<EmployeeReadDto> CreateAsync(EmployeeCreateDto dto);
     Task<bool> UpdateAsync(int id, EmployeeUpdateDto dto);
     Task<bool> DeleteAsync(int id);
-    Task<bool> UpdateAllowedShiftTypesAsync(int employeeId, List<int> shiftTypeIds);
 }

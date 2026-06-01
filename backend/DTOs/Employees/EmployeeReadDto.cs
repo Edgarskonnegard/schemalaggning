@@ -11,6 +11,4 @@ public class EmployeeReadDto
     public string RoleName { get; set; } = string.Empty;
 
     public decimal EmploymentPercentage { get; set; }
-
-    public List<int> AllowedShiftTypeIds { get; set; } = new();
 }

@@ -9,16 +9,13 @@ public class EmployeeService : IEmployeeService
 {
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IRoleRepository _roleRepository;
-    private readonly IShiftTypeRepository _shiftTypeRepository;
 
     public EmployeeService(
         IEmployeeRepository employeeRepository,
-        IRoleRepository roleRepository,
-        IShiftTypeRepository shiftTypeRepository)
+        IRoleRepository roleRepository)
     {
         _employeeRepository = employeeRepository;
         _roleRepository = roleRepository;
-        _shiftTypeRepository = shiftTypeRepository;
     }
 
     public async Task<List<EmployeeReadDto>> GetAllAsync()
@@ -74,25 +71,6 @@ public class EmployeeService : IEmployeeService
     public Task<bool> DeleteAsync(int id)
     {
         return _employeeRepository.DeleteAsync(id);
-    }
-
-    public async Task<bool> UpdateAllowedShiftTypesAsync(int employeeId, List<int> shiftTypeIds)
-    {
-        var employee = await _employeeRepository.GetByIdAsync(employeeId);
-        if (employee is null)
-        {
-            return false;
-        }
-
-        foreach (var shiftTypeId in shiftTypeIds.Distinct())
-        {
-            if (!await _shiftTypeRepository.ExistsAsync(shiftTypeId))
-            {
-                throw new InvalidOperationException($"ShiftType {shiftTypeId} does not exist.");
-            }
-        }
-
-        return await _employeeRepository.UpdateAllowedShiftTypesAsync(employeeId, shiftTypeIds);
     }
 
     private async Task ValidateEmployeeAsync(string name, int roleId, decimal employmentPercentage)

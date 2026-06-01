@@ -17,12 +17,12 @@ Exempel:
 
 ### Grundschema är återkommande regler
 
-`BaseScheduleRule` beskriver vad en anställd normalt arbetar på en viss veckodag.
+`BaseScheduleRule` beskriver vad en anställd normalt arbetar under en viss vecka i en fyraveckorscykel och på en viss veckodag.
 
 Exempel:
 
 ```text
-Anna arbetar Öppning varje måndag.
+Anna arbetar Öppning vecka 1 på måndagar.
 ```
 
 ### Genererat schema är faktiska pass
@@ -33,9 +33,9 @@ När ett schema genereras kopieras passtypens tider till varje genererat pass.
 
 ## Obligatoriska affärsregler
 
-1. En anställd får endast tilldelas passtyper som finns i `EmployeeShiftType`.
+1. En anställd får endast tilldelas passtyper som hör till samma `Role` som den anställda.
 
-2. En grundschemaregel måste referera till en passtyp som den anställda får arbeta.
+2. En grundschemaregel måste referera till en passtyp som matchar den anställdas roll.
 
 3. Ett genererat pass är en kopia av passtypen vid genereringstillfället.
 
@@ -61,7 +61,7 @@ Passtyp:
 Grundschema:
 
 ```text
-Anna arbetar Öppning på måndagar.
+Anna arbetar Öppning vecka 1 på måndagar.
 ```
 
 Genererat pass:
@@ -86,11 +86,12 @@ Följande får inte ändras av denna åtgärd:
 - `ShiftType.DefaultEndTime`
 - `BaseScheduleRule`
 
-## Regler för EmployeeShiftType
+## Regler för rollbaserade passtyper
 
-- `EmployeeShiftType` är behörighetslistan för vilka passtyper en anställd får arbeta.
-- Ett pass får inte skapas för en anställd om passtypen saknas i `EmployeeShiftType`.
-- En grundschemaregel får inte skapas om passtypen saknas i `EmployeeShiftType`.
+- `Employee.RoleId` styr vilka passtyper en anställd får arbeta.
+- `ShiftType.RoleId` anger vilken roll passtypen hör till.
+- Ett pass får inte skapas för en anställd om passtypens roll inte matchar den anställdas roll.
+- En grundschemaregel får inte skapas om passtypens roll inte matchar den anställdas roll.
 
 ## Regler för schemagenerering
 
@@ -99,7 +100,7 @@ Vid generering ska systemet:
 1. Ta emot period, exempelvis `2026-06-01` till `2026-06-30`.
 2. Skapa ett nytt schema med status `Draft`.
 3. Läsa anställdas grundschemaregler.
-4. Matcha varje datum i perioden mot regelns `DayOfWeek`.
+4. Matcha varje datum i perioden mot regelns `WeekInCycle` och `DayOfWeek`.
 5. Skapa faktiska `Shift`-pass.
 6. Kopiera `ShiftType.DefaultStartTime` till `Shift.StartTime`.
 7. Kopiera `ShiftType.DefaultEndTime` till `Shift.EndTime`.

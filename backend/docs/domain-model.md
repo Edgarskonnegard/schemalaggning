@@ -26,15 +26,11 @@ classDiagram
         TimeOnly DefaultEndTime
     }
 
-    class EmployeeShiftType {
-        int EmployeeId
-        int ShiftTypeId
-    }
-
     class BaseScheduleRule {
         int Id
         int EmployeeId
         int ShiftTypeId
+        int WeekInCycle
         DayOfWeek DayOfWeek
     }
 
@@ -60,8 +56,6 @@ classDiagram
 
     Role "1" --> "0..*" Employee
     Role "1" --> "0..*" ShiftType
-    Employee "1" --> "0..*" EmployeeShiftType
-    ShiftType "1" --> "0..*" EmployeeShiftType
     Employee "1" --> "0..*" BaseScheduleRule
     ShiftType "1" --> "0..*" BaseScheduleRule
     Schedule "1" --> "0..*" Shift
@@ -74,9 +68,7 @@ classDiagram
 | Relation | Betydelse |
 | --- | --- |
 | `Role` 1..* `Employee` | En roll kan ha flera anställda. |
-| `Role` 1..* `ShiftType` | En roll kan ha flera passtyper. |
-| `Employee` 1..* `EmployeeShiftType` | En anställd kan ha flera tillåtna passtyper. |
-| `ShiftType` 1..* `EmployeeShiftType` | En passtyp kan vara tillåten för flera anställda. |
+| `Role` 1..* `ShiftType` | En roll kan ha flera passtyper, och rollen avgör vilka passtyper en anställd får arbeta. |
 | `Employee` 1..* `BaseScheduleRule` | En anställd kan ha flera grundschemaregler. |
 | `ShiftType` 1..* `BaseScheduleRule` | En passtyp kan användas i flera grundschemaregler. |
 | `Schedule` 1..* `Shift` | Ett schema innehåller faktiska pass. |
@@ -99,7 +91,6 @@ Fält:
 Relationer:
 
 - hör till en `Role`
-- har tillåtna passtyper via `EmployeeShiftType`
 - har återkommande regler via `BaseScheduleRule`
 - har faktiska pass via `Shift`
 
@@ -121,44 +112,33 @@ Relationer:
 
 Viktig regel:
 
+- En anställd får arbeta passtypen om `Employee.RoleId` matchar `ShiftType.RoleId`.
 - `DefaultStartTime` och `DefaultEndTime` kopieras till `Shift.StartTime` och `Shift.EndTime` vid schemagenerering.
 - Redan genererade pass ska inte ändras automatiskt om passtypens standardtider ändras senare.
 
-### EmployeeShiftType
-
-Kopplingstabell mellan `Employee` och `ShiftType`.
-
-Fält:
-
-- `EmployeeId`
-- `ShiftTypeId`
-
-Viktig regel:
-
-- Detta är behörighetslistan för vilka passtyper en anställd får arbeta.
-- Grundschemaregler och pass måste valideras mot denna tabell.
-
 ### BaseScheduleRule
 
-Representerar en återkommande grundschemaregel.
+Representerar en återkommande grundschemaregel i en fyraveckorscykel.
 
 Fält:
 
 - `Id`
 - `EmployeeId`
 - `ShiftTypeId`
+- `WeekInCycle`
 - `DayOfWeek`
 
 Exempel:
 
 ```text
-Anna arbetar Öppning varje måndag.
+Anna arbetar Öppning vecka 1 på måndagar.
 ```
 
 Viktig regel:
 
-- En anställd ska bara ha en grundregel per veckodag i V1.
-- Regeln måste referera till en passtyp som finns i den anställdas `EmployeeShiftType`.
+- En anställd ska bara ha en grundregel per kombination av `WeekInCycle` och `DayOfWeek` i V1.
+- Regeln måste referera till en passtyp som matchar den anställdas roll.
+- `WeekInCycle` är 1 till 4.
 
 ### Schedule
 
@@ -211,7 +191,7 @@ flowchart TD
     A[ScheduleCreateDto] --> B[ScheduleGenerationService]
     B --> C[Hämta BaseScheduleRules]
     C --> D[Loopa datum i perioden]
-    D --> E{Datum matchar DayOfWeek?}
+    D --> E{Datum matchar WeekInCycle och DayOfWeek?}
     E -- Ja --> F[Skapa Shift]
     E -- Nej --> D
     F --> G[Kopiera tider från ShiftType]
@@ -240,5 +220,5 @@ Shift
 Efter den manuella ändringen gäller:
 
 - `ShiftType` är fortfarande Öppning 08:00-16:00.
-- `BaseScheduleRule` är fortfarande Anna arbetar Öppning på måndagar.
+- `BaseScheduleRule` är fortfarande Anna arbetar Öppning vecka 1 på måndagar.
 - Endast det faktiska passet för `2026-06-15` har ändrats.

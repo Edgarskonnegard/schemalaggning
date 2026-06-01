@@ -12,7 +12,6 @@ public class AppDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<ShiftType> ShiftTypes => Set<ShiftType>();
-    public DbSet<EmployeeShiftType> EmployeeShiftTypes => Set<EmployeeShiftType>();
     public DbSet<BaseScheduleRule> BaseScheduleRules => Set<BaseScheduleRule>();
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Shift> Shifts => Set<Shift>();
@@ -84,23 +83,8 @@ public class AppDbContext : DbContext
             .HasForeignKey(s => s.ShiftTypeId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<EmployeeShiftType>()
-            .HasKey(est => new { est.EmployeeId, est.ShiftTypeId });
-
-        modelBuilder.Entity<EmployeeShiftType>()
-            .HasOne(est => est.Employee)
-            .WithMany(e => e.EmployeeShiftTypes)
-            .HasForeignKey(est => est.EmployeeId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<EmployeeShiftType>()
-            .HasOne(est => est.ShiftType)
-            .WithMany(st => st.EmployeeShiftTypes)
-            .HasForeignKey(est => est.ShiftTypeId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         modelBuilder.Entity<BaseScheduleRule>()
-            .HasIndex(r => new { r.EmployeeId, r.DayOfWeek })
+            .HasIndex(r => new { r.EmployeeId, r.WeekInCycle, r.DayOfWeek })
             .IsUnique();
 
         modelBuilder.Entity<Schedule>()

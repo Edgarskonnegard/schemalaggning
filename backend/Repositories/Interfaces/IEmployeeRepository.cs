@@ -10,6 +10,5 @@ public interface IEmployeeRepository
     Task<Employee> CreateAsync(Employee employee);
     Task<bool> UpdateAsync(Employee employee);
     Task<bool> DeleteAsync(int id);
-    Task<bool> UpdateAllowedShiftTypesAsync(int employeeId, List<int> shiftTypeIds);
-    Task<bool> HasAllowedShiftTypeAsync(int employeeId, int shiftTypeId);
+    Task<bool> CanWorkShiftTypeAsync(int employeeId, int shiftTypeId);
 }

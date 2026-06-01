@@ -27,7 +27,6 @@ Det här dokumentet samlar saker som ska göras senare och rekommenderad ordning
      - `GET /api/roles`
      - `POST /api/employees`
      - `GET /api/shift-types`
-     - `PUT /api/employees/{id}/shift-types`
      - `GET /api/employees/{id}/details`
      - `GET /api/schedules`
      - `POST /api/schedules/generate`
