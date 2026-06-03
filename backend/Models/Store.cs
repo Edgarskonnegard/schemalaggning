@@ -7,4 +7,6 @@ public class Store
     public string Name { get; set; } = string.Empty;
 
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+
+    public ICollection<UserAccount> UserAccounts { get; set; } = new List<UserAccount>();
 }

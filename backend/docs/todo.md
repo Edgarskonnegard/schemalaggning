@@ -236,13 +236,16 @@ Backend-regler:
    - Frontend kan skapa butik och välja butik vid skapande/uppdatering av anställd.
 
 2. Inför konton och auth-grund
-   - Skapa `UserAccount`.
-   - Lägg till password hashing.
-   - Lägg till login-endpoint som returnerar JWT.
+   - Status: infört som första backend-skiva.
+   - `UserAccount` finns.
+   - Password hashing finns.
+   - Login-endpoint som returnerar JWT finns.
    - Lägg till admin/employee accessroller.
    - Koppla employee-konto till `Employee`.
    - Koppla admin-konto till butik eller systemnivå.
-   - Skydda admin-endpoints och employee-endpoints med policies.
+   - Frontend API-wrapper för auth finns.
+   - Kvar: skydda admin-endpoints och employee-endpoints med JWT bearer och policies.
+   - Kvar: login-sida, token-lagring och frontend route guards.
 
 3. Inför butikens grundbehov
    - Skapa modell för `StoreCoverageRule` eller `StoreBaseShiftNeed`.

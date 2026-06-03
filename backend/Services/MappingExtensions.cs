@@ -1,4 +1,5 @@
 using Schemalaggning.DTOs.BaseScheduleRules;
+using Schemalaggning.DTOs.Auth;
 using Schemalaggning.DTOs.Employees;
 using Schemalaggning.DTOs.Roles;
 using Schemalaggning.DTOs.Schedules;
@@ -25,6 +26,19 @@ internal static class MappingExtensions
         {
             Id = store.Id,
             Name = store.Name
+        };
+    }
+
+    public static UserAccountReadDto ToReadDto(this UserAccount userAccount)
+    {
+        return new UserAccountReadDto
+        {
+            Id = userAccount.Id,
+            Email = userAccount.Email,
+            AccessRole = userAccount.AccessRole,
+            EmployeeId = userAccount.EmployeeId,
+            StoreId = userAccount.StoreId,
+            IsActive = userAccount.IsActive
         };
     }
 

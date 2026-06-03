@@ -151,7 +151,7 @@ Den planerade modellen är:
 
 Se `docs/todo.md` för föreslagen implementationordning och öppna beslut.
 
-Första skivan av `Store` är införd: butiker kan skapas och anställda kopplas till butik. Nästa större steg är konton/JWT innan employee- och adminflöden byggs skarpt.
+Första skivan av `Store` är införd: butiker kan skapas och anställda kopplas till butik. Första backend-skivan av konton/JWT är också införd: konton kan skapas och login kan returnera en JWT. Nästa auth-steg är att lägga på JWT bearer-validering, policies och frontend-login.
 
 ## Dokumentationskarta
 

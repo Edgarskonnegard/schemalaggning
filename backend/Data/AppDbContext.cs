@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Store> Stores => Set<Store>();
+    public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<ShiftType> ShiftTypes => Set<ShiftType>();
     public DbSet<RoleShiftType> RoleShiftTypes => Set<RoleShiftType>();
@@ -50,6 +51,37 @@ public class AppDbContext : DbContext
             .HasMany(s => s.Employees)
             .WithOne(e => e.Store)
             .HasForeignKey(e => e.StoreId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Store>()
+            .HasMany(s => s.UserAccounts)
+            .WithOne(ua => ua.Store)
+            .HasForeignKey(ua => ua.StoreId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<UserAccount>()
+            .Property(ua => ua.Email)
+            .HasMaxLength(255)
+            .IsRequired();
+
+        modelBuilder.Entity<UserAccount>()
+            .HasIndex(ua => ua.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<UserAccount>()
+            .Property(ua => ua.PasswordHash)
+            .HasMaxLength(500)
+            .IsRequired();
+
+        modelBuilder.Entity<UserAccount>()
+            .Property(ua => ua.AccessRole)
+            .HasMaxLength(30)
+            .IsRequired();
+
+        modelBuilder.Entity<UserAccount>()
+            .HasOne(ua => ua.Employee)
+            .WithOne(e => e.UserAccount)
+            .HasForeignKey<UserAccount>(ua => ua.EmployeeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Employee>()
