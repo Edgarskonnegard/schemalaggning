@@ -1,5 +1,7 @@
 namespace Schemalaggning.DTOs.Employees;
 
+using Schemalaggning.DTOs.BaseScheduleRules;
+
 public class EmployeeReadDto
 {
     public int Id { get; set; }
@@ -11,4 +13,6 @@ public class EmployeeReadDto
     public string RoleName { get; set; } = string.Empty;
 
     public decimal EmploymentPercentage { get; set; }
+
+    public List<BaseScheduleRuleReadDto> BaseSchedule { get; set; } = new();
 }

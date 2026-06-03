@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { createEmployee, getEmployees } from "../api/employeesApi";
-import { createRole, getRoles } from "../api/rolesApi";
+import { createRole, getRoles, updateRole } from "../api/rolesApi";
 import { getShiftTypes } from "../api/shiftTypesApi";
 import "./EmployeesPage.css";
 
@@ -25,6 +25,8 @@ function EmployeesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [newRoleName, setNewRoleName] = useState("");
+  const [editingRoleId, setEditingRoleId] = useState(null);
+  const [editingRoleName, setEditingRoleName] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -93,6 +95,33 @@ function EmployeesPage() {
     }
   }
 
+  function startEditRole(role) {
+    setEditingRoleId(role.id);
+    setEditingRoleName(role.name);
+  }
+
+  function cancelEditRole() {
+    setEditingRoleId(null);
+    setEditingRoleName("");
+  }
+
+  async function handleUpdateRole(e) {
+    e.preventDefault();
+
+    if (!editingRoleName.trim()) {
+      return;
+    }
+
+    try {
+      setError("");
+      await updateRole(editingRoleId, { name: editingRoleName.trim() });
+      await loadData();
+      cancelEditRole();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
 
@@ -148,6 +177,38 @@ function EmployeesPage() {
                 Lägg till roll
               </button>
             </form>
+
+            <div className="role-list">
+              {roles.length === 0 ? (
+                <p className="empty-text">Inga roller skapade ännu.</p>
+              ) : (
+                roles.map((role) => (
+                  <div key={role.id} className="role-row">
+                    {editingRoleId === role.id ? (
+                      <form onSubmit={handleUpdateRole} className="role-edit-form">
+                        <input
+                          value={editingRoleName}
+                          onChange={(e) => setEditingRoleName(e.target.value)}
+                        />
+                        <div className="role-actions">
+                          <button type="submit">Spara</button>
+                          <button type="button" onClick={cancelEditRole}>
+                            Avbryt
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <span>{role.name}</span>
+                        <button type="button" onClick={() => startEditRole(role)}>
+                          Redigera
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </section>
 
           <section className="form-card">

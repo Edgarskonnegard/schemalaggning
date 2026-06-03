@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 
 import { getRoles } from "../api/rolesApi";
-import { createShiftType, getShiftTypes } from "../api/shiftTypesApi";
+import {
+  createShiftType,
+  getShiftTypes,
+  updateShiftType,
+} from "../api/shiftTypesApi";
 import CreateShiftForm from "../components/schedule/CreateShiftForm";
 import ScheduleList from "../components/schedule/ScheduleList";
 import "./CreateShiftPage.css";
@@ -47,6 +51,16 @@ function CreateShiftPage() {
     }
   }
 
+  async function handleUpdateShiftType(id, shiftType) {
+    try {
+      setError("");
+      await updateShiftType(id, shiftType);
+      await loadData();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <main className="create-shift-page">
       <div className="page-header">
@@ -72,7 +86,11 @@ function CreateShiftPage() {
           {isLoading ? (
             <p className="empty-text">Laddar passtyper...</p>
           ) : (
-            <ScheduleList shifts={shiftTypes} />
+            <ScheduleList
+              roles={roles}
+              shifts={shiftTypes}
+              onUpdateShiftType={handleUpdateShiftType}
+            />
           )}
         </section>
       </div>

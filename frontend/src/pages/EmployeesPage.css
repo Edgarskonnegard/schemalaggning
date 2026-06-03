@@ -167,6 +167,51 @@
   font-weight: 600;
 }
 
+.role-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.role-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e3e7ef;
+  border-radius: 10px;
+  background: #fafbff;
+}
+
+.role-row button,
+.role-actions button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.role-edit-form {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.role-edit-form input {
+  padding: 10px;
+  border: 1px solid #d7dce5;
+  border-radius: 8px;
+}
+
+.role-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .empty-text {
   color: #888;
   font-size: 14px;

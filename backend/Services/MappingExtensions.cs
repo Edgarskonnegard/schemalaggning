@@ -26,7 +26,12 @@ internal static class MappingExtensions
             Name = employee.Name,
             RoleId = employee.RoleId,
             RoleName = employee.Role?.Name ?? string.Empty,
-            EmploymentPercentage = employee.EmploymentPercentage
+            EmploymentPercentage = employee.EmploymentPercentage,
+            BaseSchedule = employee.BaseScheduleRules
+                .OrderBy(rule => rule.WeekInCycle)
+                .ThenBy(rule => rule.DayOfWeek)
+                .Select(rule => rule.ToReadDto())
+                .ToList()
         };
     }
 

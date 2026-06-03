@@ -45,3 +45,12 @@
   gap: 8px;
   font-size: 14px;
 }
+
+.button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.button-row button {
+  flex: 1;
+}

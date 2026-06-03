@@ -1,8 +1,66 @@
+import { useState } from "react";
+
 function formatTime(value) {
   return value?.slice(0, 5) || "";
 }
 
-function ScheduleList({ shifts }) {
+function normalizeTime(value) {
+  return value.length === 5 ? `${value}:00` : value;
+}
+
+function ScheduleList({ roles, shifts, onUpdateShiftType }) {
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState(null);
+
+  function startEdit(shift) {
+    setEditingId(shift.id);
+    setEditData({
+      name: shift.name,
+      roleIds: shift.roleIds,
+      defaultStartTime: formatTime(shift.defaultStartTime),
+      defaultEndTime: formatTime(shift.defaultEndTime),
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditData(null);
+  }
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setEditData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  function handleRoleToggle(roleId) {
+    setEditData((prev) => {
+      const roleIds = prev.roleIds.includes(roleId)
+        ? prev.roleIds.filter((currentRoleId) => currentRoleId !== roleId)
+        : [...prev.roleIds, roleId];
+
+      return {
+        ...prev,
+        roleIds,
+      };
+    });
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    await onUpdateShiftType(editingId, {
+      name: editData.name.trim(),
+      roleIds: editData.roleIds,
+      defaultStartTime: normalizeTime(editData.defaultStartTime),
+      defaultEndTime: normalizeTime(editData.defaultEndTime),
+    });
+
+    cancelEdit();
+  }
+
   return (
     <section>
       <h2>Skapade passtyper</h2>
@@ -11,16 +69,94 @@ function ScheduleList({ shifts }) {
         {shifts.length === 0 ? (
           <p className="empty-text">Inga passtyper skapade ännu.</p>
         ) : (
-          shifts.map((shift) => (
-            <div key={shift.id} className="shift-card">
-              <h3>{shift.name}</h3>
-              <p>Roller: {shift.roleNames.join(", ")}</p>
-              <p>
-                {formatTime(shift.defaultStartTime)}-
-                {formatTime(shift.defaultEndTime)}
-              </p>
-            </div>
-          ))
+          shifts.map((shift) => {
+            const isEditing = editingId === shift.id;
+
+            return (
+              <div key={shift.id} className="shift-card">
+                {isEditing ? (
+                  <form onSubmit={handleSubmit} className="shift-edit-form">
+                    <div className="form-group">
+                      <label>Namn</label>
+                      <input
+                        name="name"
+                        value={editData.name}
+                        onChange={handleChange}
+                      />
+                    </div>
+
+                    <div className="time-row">
+                      <div className="form-group">
+                        <label>Start</label>
+                        <input
+                          type="time"
+                          name="defaultStartTime"
+                          value={editData.defaultStartTime}
+                          onChange={handleChange}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Slut</label>
+                        <input
+                          type="time"
+                          name="defaultEndTime"
+                          value={editData.defaultEndTime}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Roller</label>
+                      <div className="role-checkbox-list">
+                        {roles.map((role) => (
+                          <label key={role.id} className="role-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={editData.roleIds.includes(role.id)}
+                              onChange={() => handleRoleToggle(role.id)}
+                            />
+                            <span>{role.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="button-row">
+                      <button type="submit" className="primary-btn">
+                        Spara
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-btn"
+                        onClick={cancelEdit}
+                      >
+                        Avbryt
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <h3>{shift.name}</h3>
+                    <p>Roller: {shift.roleNames.join(", ")}</p>
+                    <p>
+                      {formatTime(shift.defaultStartTime)}-
+                      {formatTime(shift.defaultEndTime)}
+                    </p>
+
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      onClick={() => startEdit(shift)}
+                    >
+                      Redigera
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
     </section>
