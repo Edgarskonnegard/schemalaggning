@@ -33,8 +33,10 @@ Det här dokumentet samlar saker som ska göras senare och rekommenderad ordning
    - Mappa frontendens rollval till `roleId` och anställning till `employmentPercentage`.
 
 5. JWT, inloggning och access
-   - Inför auth efter att grundflödet fungerar mot databas och API, om inte projektet behöver multi-user-säkerhet direkt.
-   - Lägg till användar-/konto-modell separat från `Employee` eller besluta tydligt om anställda också är inloggningskonton.
+   - Inför auth efter att grundflödet fungerar mot databas och API, men innan employee-flöden som ledighet, shift-byten och admin-godkännande blir skarpa.
+   - Lägg till användar-/konto-modell separat från `Employee`.
+   - Koppla employee-konton till `Employee`.
+   - Koppla admin-konton till butik eller systemnivå beroende på vald behörighetsmodell.
    - Stöd minst två accessnivåer:
      - `Admin`: kan hantera anställda, roller, passtyper, grundschema, generera och publicera schema.
      - `Employee`: kan läsa sitt eget schema och eventuellt sin egen profil.
@@ -48,6 +50,230 @@ Det här dokumentet samlar saker som ska göras senare och rekommenderad ordning
      - Employee-only data ska filtreras på inloggad användares id, inte på id från klienten.
    - Frontend ska ha auth-state, login-sida, token-hantering och route guards.
    - Frontend-låsning är bara UX. Riktig accesskontroll måste alltid ligga i backend.
+
+## Nästa större domänriktning
+
+Den nuvarande modellen räcker för att hantera roller, anställda, passtyper och ett enkelt grundschema. Nästa större riktning är att göra systemet butik-/verksamhetsbaserat och skilja tydligare på behov, förslag, godkännande och faktiskt schema.
+
+### Målbild
+
+- En `Store` representerar en butik/verksamhet.
+- Anställda kopplas till en butik.
+- Roller och passtyper kan vara butiksspecifika eller globala. Detta behöver beslutas.
+- Butiken har ett grundbehov: vilka pass som behöver täckas i en fyraveckorscykel.
+- En schemagenereringstjänst fördelar butikens behovspass till anställda utifrån regler.
+- Fördelade pass blir först förslag.
+- Admin granskar och godkänner förslag innan passen blir del av schemat.
+- Det allmänna schemat skapas från godkända pass samt händelser.
+- Ändringar i det allmänna schemat sparas på faktiska `Shift` och påverkar inte grundschema eller butikens grundbehov.
+
+### Föreslagen domänmodell att utreda
+
+```text
+Store
+- Id
+- Name
+
+UserAccount
+- Id
+- Email
+- PasswordHash
+- AccessRole: Admin | Employee
+- EmployeeId?
+- StoreId?
+- IsActive
+
+AdminStoreAccess (vid behov)
+- UserAccountId
+- StoreId
+- PermissionLevel
+- IsOwner
+
+Employee
+- StoreId
+- RoleId
+- EmploymentPercentage
+
+StoreCoverageRule / StoreBaseShiftNeed
+- StoreId
+- ShiftTypeId
+- WeekInCycle
+- DayOfWeek
+- RequiredCount
+- StartTime
+- EndTime
+```
+
+`StoreCoverageRule` beskriver butikens behov, inte en anställds arbetspass.
+
+Exempel:
+
+```text
+Butiken behöver 2 mellanpass tisdag vecka 1.
+Butiken behöver 1 stängningspass fredag vecka 3.
+```
+
+```text
+AssignmentProposal
+- StoreCoverageRuleId eller generated need reference
+- EmployeeId
+- ShiftTypeId
+- Date
+- StartTime
+- EndTime
+- Status: Proposed | Approved | Rejected
+```
+
+`AssignmentProposal` är resultatet av fördelningstjänsten innan admin godkänner.
+
+```text
+Schedule
+- StoreId
+- PeriodStart
+- PeriodEnd
+- Status
+
+Shift
+- ScheduleId
+- EmployeeId
+- ShiftTypeId
+- Date
+- StartTime
+- EndTime
+- Source: ApprovedProposal | ManualEdit | ShiftSwap | EventAdjustment
+```
+
+`Shift` är det faktiska schemat. Manuell redigering, byten och händelser ska ändra `Shift`, inte grundschema eller butikens behovsregler.
+
+```text
+ScheduleEvent
+- StoreId
+- EmployeeId?
+- Type: LeaveApproved | SickLeave | ManualBlock | Other
+- PeriodStart
+- PeriodEnd
+- Status
+```
+
+`ScheduleEvent` behöver utredas mer senare. Exempel är godkänd ledighet, sjukdom, blockeringar eller andra händelser som påverkar schemat.
+
+### Konton, inloggning och access
+
+Konton bör införas som en egen modell, inte bakas in direkt i `Employee`.
+
+Rekommenderad riktning:
+
+- `UserAccount` är inloggningskontot.
+- `Employee` är domänobjektet för anställning.
+- Ett employee-konto kopplas till exakt en `Employee`.
+- Ett admin-konto kopplas till en butik eller flera butiker beroende på framtida behov.
+- JWT används för API-auth.
+- Token ska innehålla användar-id, accessroll och relevanta claims, exempelvis `employeeId` och/eller `storeId`.
+- Backend ska alltid filtrera data efter claims, inte lita på id:n som skickas från frontend.
+
+Exempel på access:
+
+```text
+Admin
+- Skapa och ändra butik.
+- Skapa och ändra anställda.
+- Skapa och ändra butikens grundbehov.
+- Köra fördelningstjänst.
+- Godkänna eller avvisa förslag.
+- Publicera och redigera schema.
+
+Employee
+- Läsa sitt eget schema.
+- Se sina egna pass.
+- Ansöka om ledighet.
+- Föreslå shift-byte.
+- Se status på egna ansökningar och byten.
+```
+
+Backend-regler:
+
+- Admin-endpoints skyddas med `[Authorize]` och policy/rollkrav.
+- Employee-endpoints ska baseras på inloggad användares `EmployeeId`.
+- En employee ska inte kunna läsa eller ändra någon annans privata data genom att byta id i URL:en.
+- Store-data ska filtreras på adminens tillåtna butik/butiker.
+- Frontend-route guards är bara UX. All riktig accesskontroll måste ligga i backend.
+
+### Viktiga affärsregler att införa senare
+
+- En anställd tillhör en butik.
+- En inloggad employee är kopplad till exakt en anställd.
+- En admin får bara administrera butiker den har behörighet till.
+- Ett butiksschema får bara innehålla pass för anställda i samma butik.
+- En anställd får bara tilldelas en passtyp som matchar anställdas roll.
+- Fördelning ska ta hänsyn till `EmploymentPercentage`.
+- Fördelning ska skapa förslag, inte direkt publicerade pass.
+- Admin måste godkänna förslag innan de blir faktiska pass.
+- Det faktiska schemat får ändras utan att grundschema eller butikens grundbehov ändras.
+- Shift-byten mellan anställda ska ändra det faktiska schemat efter godkännande.
+- Händelser ska påverka schemagenerering eller schemaredigering utan att skriva om grundbehovet.
+
+### Öppna beslut innan implementation
+
+- Ska `Role` vara global eller per butik?
+- Ska `ShiftType` vara global eller per butik?
+- Ska en anställd kunna arbeta i flera butiker?
+- Ska en admin kunna administrera flera butiker?
+- Ska första admin-kontot skapas via seed, invite eller publik registrering?
+- Ska employee-konton skapas av admin eller via invitation?
+- Ska butikens behovsregler ha egna tider, eller alltid kopiera tider från `ShiftType`?
+- Ska butikens grundbehov ersätta dagens employee-baserade `BaseScheduleRule`, eller leva parallellt?
+- Hur exakt ska `EmploymentPercentage` översättas till timmar per vecka eller per fyraveckorsperiod?
+- Ska schemagenerering optimera rättvisa, kontinuitet, helger, maxpass per dag och överlapp?
+- Ska händelser ligga före eller efter fördelningsförslag i flödet?
+
+### Rekommenderad ny implementationordning
+
+1. Inför `Store`
+   - Lägg till `Store`-modell.
+   - Koppla `Employee` till `Store`.
+   - Lägg till enkla CRUD-endpoints och frontendvy för butik.
+
+2. Inför konton och auth-grund
+   - Skapa `UserAccount`.
+   - Lägg till password hashing.
+   - Lägg till login-endpoint som returnerar JWT.
+   - Lägg till admin/employee accessroller.
+   - Koppla employee-konto till `Employee`.
+   - Koppla admin-konto till butik eller systemnivå.
+   - Skydda admin-endpoints och employee-endpoints med policies.
+
+3. Inför butikens grundbehov
+   - Skapa modell för `StoreCoverageRule` eller `StoreBaseShiftNeed`.
+   - Bygg frontend-rutnät liknande grundschema, men för butikens behov.
+   - Stöd `RequiredCount` så flera personer kan behövas på samma pass.
+
+4. Bestäm relation mellan anställdas grundschema och butikens behov
+   - Utred om anställdas nuvarande `BaseScheduleRule` ska tas bort, behållas som preferens/tillgänglighet, eller användas som input till fördelning.
+   - Dokumentera beslut innan migration.
+
+5. Bygg fördelningstjänst
+   - Input: butikens grundbehov, anställda, roller, sysselsättningsgrad och eventuella händelser.
+   - Output: `AssignmentProposal`.
+   - Första versionen kan vara regelbaserad och enkel.
+
+6. Lägg till admin-godkännande
+   - Admin ser förslag.
+   - Admin kan godkänna, avvisa eller manuellt ändra.
+   - Godkända förslag skapar faktiska `Shift`.
+
+7. Skapa allmänt schema från godkända pass och händelser
+   - `Schedule` skapas per butik och period.
+   - Faktiska `Shift` sparas på schemat.
+   - Händelser integreras som justeringar eller blockeringar.
+
+8. Stöd schemaändringar och byten
+   - Manuell redigering ändrar endast `Shift`.
+   - Shift-byten skapar begäran/förslag som admin eller berörda parter kan godkänna.
+   - Inget av detta ska ändra butikens grundbehov eller anställdas grundschema.
+
+### Rekommenderad försiktighet
+
+Inför inte allt detta i en enda migration. Börja med `Store` och butikskoppling för anställda. Därefter bör butikens grundbehov modelleras och testas innan nuvarande `BaseScheduleRule` eventuellt ändras eller tas bort.
 
 ## Notering om JWT
 

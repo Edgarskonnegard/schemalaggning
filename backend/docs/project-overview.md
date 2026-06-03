@@ -134,6 +134,23 @@ Passtypen är en mall. Grundschemat är återkommande regler. Det genererade sch
 
 När chefen redigerar ett genererat pass ska endast det passet ändras.
 
+## Planerad riktning efter nuvarande V1
+
+Nästa större domänriktning är att införa `Store` och skilja tydligare på butikens behov, fördelningsförslag, admin-godkännande och faktiska schemapass.
+
+Den planerade modellen är:
+
+- En butik har anställda.
+- Admin och anställda har egna inloggningskonton.
+- JWT används för att skilja admin-access från employee-access.
+- En butik har grundbehov: vilka pass som behöver täckas.
+- En fördelningstjänst föreslår vilka anställda som ska täcka behoven utifrån roll och sysselsättningsgrad.
+- Admin godkänner förslag innan de blir faktiska pass.
+- Det allmänna schemat består av faktiska `Shift` plus händelser.
+- Ändringar, byten och händelser ska påverka faktiska pass, inte grundbehov eller grundschema.
+
+Se `docs/todo.md` för föreslagen implementationordning och öppna beslut.
+
 ## Dokumentationskarta
 
 - `docs/domain-model.md` beskriver entiteter, relationer och UML/Mermaid-diagram.
