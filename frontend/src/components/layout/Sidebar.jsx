@@ -32,6 +32,10 @@ function Sidebar({ isOpen, onClose }) {
           <NavLink to="/create-shift" onClick={onClose}>
             Skapa pass
           </NavLink>
+
+          <NavLink to="/store-coverage" onClick={onClose}>
+            Bemanningsbehov
+          </NavLink>
         </nav>
       </aside>
     </>

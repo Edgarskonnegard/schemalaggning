@@ -19,6 +19,7 @@ builder.Services.AddScoped<IUserAccountRepository, UserAccountRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IShiftTypeRepository, ShiftTypeRepository>();
 builder.Services.AddScoped<IBaseScheduleRuleRepository, BaseScheduleRuleRepository>();
+builder.Services.AddScoped<IStoreCoverageRuleRepository, StoreCoverageRuleRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 
 builder.Services.AddScoped<IRoleService, RoleService>();
@@ -29,6 +30,7 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IShiftTypeService, ShiftTypeService>();
 builder.Services.AddScoped<IBaseScheduleRuleService, BaseScheduleRuleService>();
+builder.Services.AddScoped<IStoreCoverageRuleService, StoreCoverageRuleService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IScheduleGenerationService, ScheduleGenerationService>();
 

@@ -189,6 +189,37 @@ Varje regel måste referera till en passtyp som matchar den anställdas roll.
 
 Tar bort grundschemaregeln för en viss cykelvecka och veckodag.
 
+## Store Coverage
+
+Butikens bemanningsbehov beskriver vilka pass som behöver täckas i fyraveckorscykeln. Det är inte ett anställdschema och ska inte ändras när faktiska schemapass flyttas runt.
+
+### GET `/api/stores/{storeId}/coverage-rules`
+
+Returnerar butikens behovsregler.
+
+### PUT `/api/stores/{storeId}/coverage-rules`
+
+Skapar eller uppdaterar en behovsregel för butik, cykelvecka, veckodag och passtyp.
+
+Exempel:
+
+```json
+{
+  "shiftTypeId": 1,
+  "weekInCycle": 1,
+  "dayOfWeek": 1,
+  "requiredCount": 2,
+  "startTime": "10:00:00",
+  "endTime": "18:00:00"
+}
+```
+
+Regeln betyder: butiken behöver två pass av passtypen på måndag i cykelvecka 1.
+
+### DELETE `/api/stores/{storeId}/coverage-rules/{id}`
+
+Tar bort en behovsregel för butiken.
+
 ## Schedules
 
 ### GET `/api/schedules`

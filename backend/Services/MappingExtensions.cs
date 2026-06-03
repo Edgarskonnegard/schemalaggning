@@ -5,6 +5,7 @@ using Schemalaggning.DTOs.Roles;
 using Schemalaggning.DTOs.Schedules;
 using Schemalaggning.DTOs.ShiftTypes;
 using Schemalaggning.DTOs.Stores;
+using Schemalaggning.DTOs.StoreCoverageRules;
 using Schemalaggning.Models;
 
 namespace Schemalaggning.Services;
@@ -92,6 +93,23 @@ internal static class MappingExtensions
             DayOfWeek = rule.DayOfWeek,
             StartTime = rule.ShiftType?.DefaultStartTime ?? default,
             EndTime = rule.ShiftType?.DefaultEndTime ?? default
+        };
+    }
+
+    public static StoreCoverageRuleReadDto ToReadDto(this StoreCoverageRule rule)
+    {
+        return new StoreCoverageRuleReadDto
+        {
+            Id = rule.Id,
+            StoreId = rule.StoreId,
+            StoreName = rule.Store?.Name ?? string.Empty,
+            ShiftTypeId = rule.ShiftTypeId,
+            ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
+            WeekInCycle = rule.WeekInCycle,
+            DayOfWeek = rule.DayOfWeek,
+            RequiredCount = rule.RequiredCount,
+            StartTime = rule.StartTime,
+            EndTime = rule.EndTime
         };
     }
 

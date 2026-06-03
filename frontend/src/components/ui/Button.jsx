@@ -1,7 +1,19 @@
 import "./Button.css";
-function Button({ children, onClick, type = "button" }) {
+function Button({
+  children,
+  className = "",
+  onClick,
+  type = "button",
+  variant,
+  ...props
+}) {
   return (
-    <button type={type} onClick={onClick}>
+    <button
+      className={`button ${variant ? `button-${variant}` : ""} ${className}`.trim()}
+      type={type}
+      onClick={onClick}
+      {...props}
+    >
       {children}
     </button>
   );

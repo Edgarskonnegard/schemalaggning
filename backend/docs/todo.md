@@ -67,6 +67,19 @@ Den nuvarande modellen räcker för att hantera roller, anställda, passtyper oc
 - Det allmänna schemat skapas från godkända pass samt händelser.
 - Ändringar i det allmänna schemat sparas på faktiska `Shift` och påverkar inte grundschema eller butikens grundbehov.
 
+### Implementerat hittills
+
+- `Store` finns och anställda kan kopplas till butik.
+- `UserAccount` finns som separat konto från `Employee`, med första login/JWT-grunden.
+- `StoreCoverageRule` finns för butikens grundbehov i en fyraveckorscykel.
+- Frontend har en första vy för att lägga till, ändra och ta bort bemanningsbehov per butik.
+
+### Nästa rekommenderade steg
+
+- Kör migrationen `AddStoreCoverageRules` mot lokal databas.
+- Börja på en första fördelningstjänst som läser butikens `StoreCoverageRule` och skapar förslag, inte faktiska pass direkt.
+- Lägg därefter till en enkel admin-vy för att granska och godkänna förslagen.
+
 ### Föreslagen domänmodell att utreda
 
 ```text
@@ -248,9 +261,11 @@ Backend-regler:
    - Kvar: login-sida, token-lagring och frontend route guards.
 
 3. Inför butikens grundbehov
-   - Skapa modell för `StoreCoverageRule` eller `StoreBaseShiftNeed`.
-   - Bygg frontend-rutnät liknande grundschema, men för butikens behov.
-   - Stöd `RequiredCount` så flera personer kan behövas på samma pass.
+   - Status: infört som första skiva.
+   - `StoreCoverageRule` finns.
+   - API finns för att lista, skapa/uppdatera och ta bort behovsregler per butik.
+   - Frontend har en första vy för att skapa, ändra och ta bort butikens behov.
+   - `RequiredCount` stöds så flera personer kan behövas på samma pass.
 
 4. Bestäm relation mellan anställdas grundschema och butikens behov
    - Utred om anställdas nuvarande `BaseScheduleRule` ska tas bort, behållas som preferens/tillgänglighet, eller användas som input till fördelning.

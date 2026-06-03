@@ -8,6 +8,7 @@ import EditSchedulePage from "./pages/EditSchedulePage";
 import EmployeesPage from "./pages/EmployeesPage";
 import CreateShiftPage from "./pages/CreateShiftPage";
 import EmployeeDetailsPage from "./pages/EmployeeDetailsPage";
+import StoreCoveragePage from "./pages/StoreCoveragePage";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/employees" element={<EmployeesPage />} />
         <Route path="/employees/:employeeId" element={<EmployeeDetailsPage />} />
         <Route path="/create-shift" element={<CreateShiftPage />} />
+        <Route path="/store-coverage" element={<StoreCoveragePage />} />
       </Routes>
     </AppLayout>
   );

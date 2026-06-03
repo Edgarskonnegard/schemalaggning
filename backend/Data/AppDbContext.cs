@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Store> Stores => Set<Store>();
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
+    public DbSet<StoreCoverageRule> StoreCoverageRules => Set<StoreCoverageRule>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<ShiftType> ShiftTypes => Set<ShiftType>();
     public DbSet<RoleShiftType> RoleShiftTypes => Set<RoleShiftType>();
@@ -58,6 +59,12 @@ public class AppDbContext : DbContext
             .WithOne(ua => ua.Store)
             .HasForeignKey(ua => ua.StoreId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Store>()
+            .HasMany(s => s.CoverageRules)
+            .WithOne(r => r.Store)
+            .HasForeignKey(r => r.StoreId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<UserAccount>()
             .Property(ua => ua.Email)
@@ -136,6 +143,12 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ShiftType>()
+            .HasMany(st => st.StoreCoverageRules)
+            .WithOne(r => r.ShiftType)
+            .HasForeignKey(r => r.ShiftTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ShiftType>()
             .HasMany(st => st.Shifts)
             .WithOne(s => s.ShiftType)
             .HasForeignKey(s => s.ShiftTypeId)
@@ -143,6 +156,10 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<BaseScheduleRule>()
             .HasIndex(r => new { r.EmployeeId, r.WeekInCycle, r.DayOfWeek })
+            .IsUnique();
+
+        modelBuilder.Entity<StoreCoverageRule>()
+            .HasIndex(r => new { r.StoreId, r.WeekInCycle, r.DayOfWeek, r.ShiftTypeId })
             .IsUnique();
 
         modelBuilder.Entity<Schedule>()

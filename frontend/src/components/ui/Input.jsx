@@ -5,7 +5,8 @@ function Input({
  type="text",
  value,
  onChange,
- placeholder
+ placeholder,
+ ...props
 }) {
 
  return(
@@ -19,6 +20,7 @@ function Input({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
+      {...props}
     />
 
    </label>

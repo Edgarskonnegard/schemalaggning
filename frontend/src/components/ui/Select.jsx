@@ -4,7 +4,8 @@ function Select({
  label,
  value,
  onChange,
- options
+ options = [],
+ children
 }) {
 
  return(
@@ -18,7 +19,7 @@ function Select({
  onChange={onChange}
 >
 
-{options.map(option=>(
+{children ?? options.map(option=>(
 
 <option
  key={option.value}
