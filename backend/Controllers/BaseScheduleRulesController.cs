@@ -30,16 +30,20 @@ public class BaseScheduleRulesController : ControllerBase
         {
             return Ok(await _baseScheduleRuleService.SetRuleAsync(employeeId, dto));
         }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(exception.Message);
+        }
         catch (InvalidOperationException exception)
         {
             return Conflict(exception.Message);
         }
     }
 
-    [HttpDelete("{dayOfWeek}")]
-    public async Task<IActionResult> DeleteRule(int employeeId, DayOfWeek dayOfWeek)
+    [HttpDelete("{weekInCycle:int}/{dayOfWeek}")]
+    public async Task<IActionResult> DeleteRule(int employeeId, int weekInCycle, DayOfWeek dayOfWeek)
     {
-        var deleted = await _baseScheduleRuleService.DeleteRuleAsync(employeeId, dayOfWeek);
+        var deleted = await _baseScheduleRuleService.DeleteRuleAsync(employeeId, weekInCycle, dayOfWeek);
         return deleted ? NoContent() : NotFound();
     }
 }

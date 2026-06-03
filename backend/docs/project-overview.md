@@ -12,7 +12,7 @@ Dokumenten i `docs/` är projektets centrala kunskapskälla. Framtida implementa
 
 1. Skapa anställda.
 2. Skapa passtyper.
-3. Ange vilka passtyper en anställd får arbeta.
+3. Koppla anställda och passtyper till roller.
 4. Skapa grundschema per anställd.
 5. Generera ett schema för en vald period baserat på grundscheman.
 6. Redigera genererade pass manuellt.
@@ -46,19 +46,13 @@ En passtyp eller mall. Exempel:
 
 En passtyp innehåller standardtider som kopieras in i faktiska pass när ett schema genereras.
 
-### EmployeeShiftType
-
-Koppling mellan `Employee` och `ShiftType`.
-
-Anger vilka passtyper en anställd får arbeta.
-
 ### BaseScheduleRule
 
-En återkommande regel för en anställd.
+En återkommande regel för en anställd i en fyraveckorscykel.
 
 Exempel:
 
-- Anna arbetar Öppning varje måndag.
+- Anna arbetar Öppning vecka 1 på måndagar.
 
 ### Schedule
 
@@ -80,7 +74,6 @@ Första versionen ska endast stödja:
 
 - Employees
 - ShiftTypes
-- EmployeeShiftTypes
 - BaseScheduleRules
 - Schedule generation
 - Schedule publishing
@@ -114,7 +107,8 @@ Nuvarande implementation använder en normaliserad rollmodell:
 
 - `Role` är en egen entitet.
 - `Employee` refererar roll via `RoleId`.
-- `ShiftType` refererar roll via `RoleId`.
+- `ShiftType` kopplas till en eller flera roller via `RoleShiftType`.
+- En anställd får arbeta passtyper som är kopplade till den anställdas roll.
 - `Employee` använder `EmploymentPercentage`.
 
 Det skiljer sig från den enklare tidiga beskrivningen där `Role` och `EmploymentType` var textfält. Framtida implementationer ska utgå från den normaliserade modellen om inget annat beslutas.
@@ -140,9 +134,27 @@ Passtypen är en mall. Grundschemat är återkommande regler. Det genererade sch
 
 När chefen redigerar ett genererat pass ska endast det passet ändras.
 
+## Planerad riktning efter nuvarande V1
+
+Nästa större domänriktning är att införa `Store` och skilja tydligare på butikens behov, fördelningsförslag, admin-godkännande och faktiska schemapass.
+
+Den planerade modellen är:
+
+- En butik har anställda.
+- Admin och anställda har egna inloggningskonton.
+- JWT används för att skilja admin-access från employee-access.
+- En butik har grundbehov: vilka pass som behöver täckas.
+- En fördelningstjänst föreslår vilka anställda som ska täcka behoven utifrån roll och sysselsättningsgrad.
+- Admin godkänner förslag innan de blir faktiska pass.
+- Det allmänna schemat består av faktiska `Shift` plus händelser.
+- Ändringar, byten och händelser ska påverka faktiska pass, inte grundbehov eller grundschema.
+
+Se `docs/todo.md` för föreslagen implementationordning och öppna beslut.
+
 ## Dokumentationskarta
 
 - `docs/domain-model.md` beskriver entiteter, relationer och UML/Mermaid-diagram.
 - `docs/architecture.md` beskriver lager, ansvar och implementationens riktning.
 - `docs/business-rules.md` beskriver affärsregler och invariants.
 - `docs/api-spec.md` beskriver planerade V1-endpoints.
+- `docs/todo.md` samlar kommande arbete och rekommenderad genomförandeordning.

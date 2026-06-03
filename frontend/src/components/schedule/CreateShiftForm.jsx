@@ -1,121 +1,64 @@
 import { useState } from "react";
 
-const weekDays = [
-  { id: "monday", label: "Mån" },
-  { id: "tuesday", label: "Tis" },
-  { id: "wednesday", label: "Ons" },
-  { id: "thursday", label: "Tor" },
-  { id: "friday", label: "Fre" },
-  { id: "saturday", label: "Lör" },
-  { id: "sunday", label: "Sön" },
-];
+function normalizeTime(value) {
+  return value.length === 5 ? `${value}:00` : value;
+}
 
-function CreateShiftForm({ onCreateShift }) {
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
+function CreateShiftForm({ roles, onCreateShiftType }) {
+  const [formData, setFormData] = useState({
+    name: "",
+    roleIds: [],
+    defaultStartTime: "",
+    defaultEndTime: "",
+  });
 
-  const [dayRules, setDayRules] = useState([
-    {
-      id: Date.now(),
-      days: [],
-      startTime: "",
-      endTime: "",
-    },
-  ]);
+  function handleChange(e) {
+    const { name, value } = e.target;
 
-  function handleDayToggle(ruleId, dayId) {
-    setDayRules((prev) =>
-      prev.map((rule) => {
-        // aktiv regel
-        if (rule.id === ruleId) {
-          const exists = rule.days.includes(dayId);
-
-          return {
-            ...rule,
-            days: exists
-              ? rule.days.filter((day) => day !== dayId)
-              : [...rule.days, dayId],
-          };
-        }
-
-        // ta bort dagen från andra regler
-        return {
-          ...rule,
-          days: rule.days.filter((day) => day !== dayId),
-        };
-      })
-    );
-  }
-
-  function handleRuleChange(ruleId, field, value) {
-    setDayRules((prev) =>
-      prev.map((rule) =>
-        rule.id === ruleId
-          ? {
-              ...rule,
-              [field]: value,
-            }
-          : rule
-      )
-    );
-  }
-
-  function addDayRule() {
-    setDayRules((prev) => [
+    setFormData((prev) => ({
       ...prev,
-      {
-        id: Date.now(),
-        days: [],
-        startTime: "",
-        endTime: "",
-      },
-    ]);
+      [name]: value,
+    }));
   }
 
-  function removeDayRule(ruleId) {
-    setDayRules((prev) =>
-      prev.filter((rule) => rule.id !== ruleId)
-    );
+  function handleRoleToggle(roleId) {
+    setFormData((prev) => {
+      const roleIds = prev.roleIds.includes(roleId)
+        ? prev.roleIds.filter((currentRoleId) => currentRoleId !== roleId)
+        : [...prev.roleIds, roleId];
+
+      return {
+        ...prev,
+        roleIds,
+      };
+    });
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
-    const validRules = dayRules.filter(
-      (rule) =>
-        rule.days.length > 0 &&
-        rule.startTime &&
-        rule.endTime
-    );
-
     if (
-      !name.trim() ||
-      !role.trim() ||
-      validRules.length === 0
+      !formData.name.trim() ||
+      formData.roleIds.length === 0 ||
+      !formData.defaultStartTime ||
+      !formData.defaultEndTime
     ) {
       return;
     }
 
-    const newShift = {
-      id: Date.now(),
-      name,
-      role,
-      dayRules: validRules,
-    };
+    await onCreateShiftType({
+      name: formData.name.trim(),
+      roleIds: formData.roleIds,
+      defaultStartTime: normalizeTime(formData.defaultStartTime),
+      defaultEndTime: normalizeTime(formData.defaultEndTime),
+    });
 
-    onCreateShift(newShift);
-
-    setName("");
-    setRole("");
-
-    setDayRules([
-      {
-        id: Date.now(),
-        days: [],
-        startTime: "",
-        endTime: "",
-      },
-    ]);
+    setFormData({
+      name: "",
+      roleIds: formData.roleIds,
+      defaultStartTime: "",
+      defaultEndTime: "",
+    });
   }
 
   return (
@@ -127,115 +70,55 @@ function CreateShiftForm({ onCreateShift }) {
           <label>Namn</label>
 
           <input
-            value={name}
-            onChange={(e) =>
-              setName(e.target.value)
-            }
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
             placeholder="Ex. Öppning"
           />
         </div>
 
         <div className="form-group">
-          <label>Roll</label>
+          <label>Roller</label>
 
-          <input
-            value={role}
-            onChange={(e) =>
-              setRole(e.target.value)
-            }
-            placeholder="Ex. Butik"
-          />
+          <div className="role-checkbox-list">
+            {roles.map((role) => (
+              <label key={role.id} className="role-checkbox">
+                <input
+                  type="checkbox"
+                  checked={formData.roleIds.includes(role.id)}
+                  onChange={() => handleRoleToggle(role.id)}
+                />
+                <span>{role.name}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
-        <h3>Dagsregler</h3>
+        <div className="time-row">
+          <div className="form-group">
+            <label>Start</label>
 
-        {dayRules.map((rule) => (
-          <div
-            key={rule.id}
-            className="day-rule-card"
-          >
-            <div className="day-buttons">
-              {weekDays.map((day) => (
-                <button
-                  key={day.id}
-                  type="button"
-                  className={
-                    rule.days.includes(day.id)
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    handleDayToggle(
-                      rule.id,
-                      day.id
-                    )
-                  }
-                >
-                  {day.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="time-row">
-              <div className="form-group">
-                <label>Start</label>
-
-                <input
-                  type="time"
-                  value={rule.startTime}
-                  onChange={(e) =>
-                    handleRuleChange(
-                      rule.id,
-                      "startTime",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Slut</label>
-
-                <input
-                  type="time"
-                  value={rule.endTime}
-                  onChange={(e) =>
-                    handleRuleChange(
-                      rule.id,
-                      "endTime",
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-            </div>
-
-            {dayRules.length > 1 && (
-              <button
-                type="button"
-                className="remove-rule-btn"
-                onClick={() =>
-                  removeDayRule(rule.id)
-                }
-              >
-                Ta bort regel
-              </button>
-            )}
+            <input
+              type="time"
+              name="defaultStartTime"
+              value={formData.defaultStartTime}
+              onChange={handleChange}
+            />
           </div>
-        ))}
 
-        <button
-          type="button"
-          className="secondary-btn"
-          onClick={addDayRule}
-        >
-          Lägg till dagsregel
-        </button>
+          <div className="form-group">
+            <label>Slut</label>
 
-        <button
-          type="submit"
-          className="primary-btn"
-        >
+            <input
+              type="time"
+              name="defaultEndTime"
+              value={formData.defaultEndTime}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+
+        <button type="submit" className="primary-btn">
           Skapa passtyp
         </button>
       </form>

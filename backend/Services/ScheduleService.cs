@@ -45,9 +45,9 @@ public class ScheduleService : IScheduleService
             throw new ArgumentException("Shift date must be within the schedule period.");
         }
 
-        if (!await _employeeRepository.HasAllowedShiftTypeAsync(dto.EmployeeId, dto.ShiftTypeId))
+        if (!await _employeeRepository.CanWorkShiftTypeAsync(dto.EmployeeId, dto.ShiftTypeId))
         {
-            throw new InvalidOperationException("Employee is not allowed to work this shift type.");
+            throw new InvalidOperationException("Employee role does not allow this shift type.");
         }
 
         shift.EmployeeId = dto.EmployeeId;

@@ -18,7 +18,8 @@ public class ShiftTypeRepository : IShiftTypeRepository
     {
         return _context.ShiftTypes
             .AsNoTracking()
-            .Include(shiftType => shiftType.Role)
+            .Include(shiftType => shiftType.RoleShiftTypes)
+                .ThenInclude(roleShiftType => roleShiftType.Role)
             .OrderBy(shiftType => shiftType.Name)
             .ToListAsync();
     }
@@ -26,7 +27,8 @@ public class ShiftTypeRepository : IShiftTypeRepository
     public Task<ShiftType?> GetByIdAsync(int id)
     {
         return _context.ShiftTypes
-            .Include(shiftType => shiftType.Role)
+            .Include(shiftType => shiftType.RoleShiftTypes)
+                .ThenInclude(roleShiftType => roleShiftType.Role)
             .FirstOrDefaultAsync(shiftType => shiftType.Id == id);
     }
 
@@ -34,10 +36,20 @@ public class ShiftTypeRepository : IShiftTypeRepository
     {
         return _context.ShiftTypes
             .AsNoTracking()
-            .Include(shiftType => shiftType.Role)
-            .Where(shiftType => shiftType.RoleId == roleId)
+            .Include(shiftType => shiftType.RoleShiftTypes)
+                .ThenInclude(roleShiftType => roleShiftType.Role)
+            .Where(shiftType => shiftType.RoleShiftTypes.Any(roleShiftType => roleShiftType.RoleId == roleId))
             .OrderBy(shiftType => shiftType.Name)
             .ToListAsync();
+    }
+
+    public async Task<bool> HasAnyInvalidRoleIdsAsync(List<int> roleIds)
+    {
+        var uniqueRoleIds = roleIds.Distinct().ToList();
+        var existingCount = await _context.Roles
+            .CountAsync(role => uniqueRoleIds.Contains(role.Id));
+
+        return existingCount != uniqueRoleIds.Count;
     }
 
     public async Task<ShiftType> CreateAsync(ShiftType shiftType)
@@ -49,8 +61,32 @@ public class ShiftTypeRepository : IShiftTypeRepository
 
     public async Task<bool> UpdateAsync(ShiftType shiftType)
     {
+        var roleIds = shiftType.RoleShiftTypes
+            .Select(roleShiftType => roleShiftType.RoleId)
+            .Distinct()
+            .ToList();
+
+        var existingRoleShiftTypes = await _context.RoleShiftTypes
+            .Where(roleShiftType => roleShiftType.ShiftTypeId == shiftType.Id)
+            .ToListAsync();
+
+        _context.RoleShiftTypes.RemoveRange(existingRoleShiftTypes);
+        shiftType.RoleShiftTypes.Clear();
         _context.ShiftTypes.Update(shiftType);
-        return await _context.SaveChangesAsync() > 0;
+
+        var changedRows = await _context.SaveChangesAsync();
+
+        foreach (var roleId in roleIds)
+        {
+            _context.RoleShiftTypes.Add(new RoleShiftType
+            {
+                RoleId = roleId,
+                ShiftTypeId = shiftType.Id
+            });
+        }
+
+        changedRows += await _context.SaveChangesAsync();
+        return changedRows > 0;
     }
 
     public async Task<bool> DeleteAsync(int id)

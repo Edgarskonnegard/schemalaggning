@@ -12,5 +12,7 @@ public class BaseScheduleRule
 
     public ShiftType ShiftType { get; set; } = null!;
 
+    public int WeekInCycle { get; set; }
+
     public DayOfWeek DayOfWeek { get; set; }
 }

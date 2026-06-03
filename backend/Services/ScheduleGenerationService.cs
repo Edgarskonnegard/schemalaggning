@@ -41,7 +41,11 @@ public class ScheduleGenerationService : IScheduleGenerationService
 
         for (var date = dto.PeriodStart; date <= dto.PeriodEnd; date = date.AddDays(1))
         {
-            foreach (var rule in rules.Where(rule => rule.DayOfWeek == date.DayOfWeek))
+            var weekInCycle = GetWeekInCycle(dto.PeriodStart, date);
+
+            foreach (var rule in rules.Where(rule =>
+                rule.WeekInCycle == weekInCycle &&
+                rule.DayOfWeek == date.DayOfWeek))
             {
                 schedule.Shifts.Add(new Shift
                 {
@@ -59,5 +63,12 @@ public class ScheduleGenerationService : IScheduleGenerationService
         var created = await _scheduleRepository.CreateAsync(schedule);
         var createdWithShifts = await _scheduleRepository.GetByIdWithShiftsAsync(created.Id);
         return createdWithShifts!.ToReadDto();
+    }
+
+    private static int GetWeekInCycle(DateOnly periodStart, DateOnly date)
+    {
+        var daysFromStart = date.DayNumber - periodStart.DayNumber;
+        var weekIndex = daysFromStart / 7;
+        return weekIndex % 4 + 1;
     }
 }

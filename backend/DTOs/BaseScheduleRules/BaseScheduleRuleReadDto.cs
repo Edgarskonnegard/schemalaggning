@@ -12,6 +12,8 @@ public class BaseScheduleRuleReadDto
 
     public string ShiftTypeName { get; set; } = string.Empty;
 
+    public int WeekInCycle { get; set; }
+
     public DayOfWeek DayOfWeek { get; set; }
 
     public TimeOnly StartTime { get; set; }

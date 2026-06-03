@@ -1,0 +1,39 @@
+# Build outputs
+bin/
+obj/
+dist/
+dist-ssr/
+coverage/
+
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local config and user files
+*.local
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# IDE and OS files
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# ASP.NET / Visual Studio
+TestResults/
+*.ncrunch*
+*.DotSettings.user
+
+# EF/database local files
+*.db
+*.db-shm
+*.db-wal

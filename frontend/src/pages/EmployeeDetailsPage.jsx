@@ -1,145 +1,161 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+
+import {
+  deleteEmployeeBaseScheduleRule,
+  setEmployeeBaseScheduleRule,
+} from "../api/baseScheduleApi";
+import { getEmployeeDetails, updateEmployee } from "../api/employeesApi";
+import { getRoles } from "../api/rolesApi";
+import { getShiftTypes } from "../api/shiftTypesApi";
 import EmployeeBaseSchedule from "../components/employees/EmployeeBaseSchedule";
 import "./EmployeeDetailsPage.css";
 
-const shiftTypes = [
-  {
-    id: 1,
-    name: "Öppning",
-    role: "Butiksmedarbetare",
-    defaultStartTime: "08:00",
-    defaultEndTime: "16:00",
-  },
-  {
-    id: 2,
-    name: "Stängning",
-    role: "Butiksmedarbetare",
-    defaultStartTime: "12:00",
-    defaultEndTime: "20:00",
-  },
-  {
-    id: 3,
-    name: "Kassa",
-    role: "Kassa",
-    defaultStartTime: "10:00",
-    defaultEndTime: "18:00",
-  },
-];
+function getEmploymentLabel(percentage) {
+  if (percentage === 100) {
+    return "Heltid";
+  }
 
-const initialEmployees = [
-  {
-    id: 1,
-    name: "Anna",
-    role: "Butiksmedarbetare",
-    employmentType: "Heltid",
-    allowedShiftTypeIds: [1, 2],
-    baseSchedule: [
-      {
-        id: 1,
-        day: "monday",
-        shiftTypeId: 1,
-      },
-      {
-        id: 2,
-        day: "tuesday",
-        shiftTypeId: 2,
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Erik",
-    role: "Butiksmedarbetare",
-    employmentType: "Deltid",
-    allowedShiftTypeIds: [2],
-    baseSchedule: [
-      {
-        id: 3,
-        day: "wednesday",
-        shiftTypeId: 2,
-      },
-    ],
-  },
-];
+  if (percentage === 0) {
+    return "Timanställd";
+  }
+
+  return `${percentage}%`;
+}
 
 function EmployeeDetailsPage() {
   const { employeeId } = useParams();
 
-  const [employees, setEmployees] = useState(initialEmployees);
+  const [employee, setEmployee] = useState(null);
+  const [roles, setRoles] = useState([]);
+  const [shiftTypes, setShiftTypes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSavingEmployee, setIsSavingEmployee] = useState(false);
+  const [error, setError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
-  const employee = employees.find(
-    (employee) => employee.id === Number(employeeId)
-  );
+  const matchingShiftTypes = useMemo(() => {
+    if (!employee) {
+      return [];
+    }
+
+    return shiftTypes.filter((shiftType) =>
+      shiftType.roleIds.includes(employee.roleId)
+    );
+  }, [employee, shiftTypes]);
+
+  async function loadData() {
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const [employeeResult, rolesResult, shiftTypesResult] =
+        await Promise.all([
+          getEmployeeDetails(employeeId),
+          getRoles(),
+          getShiftTypes(),
+        ]);
+
+      setEmployee(employeeResult);
+      setRoles(rolesResult);
+      setShiftTypes(shiftTypesResult);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadData();
+  }, [employeeId]);
 
   function handleEmployeeChange(e) {
     const { name, value } = e.target;
 
-    setEmployees((prev) =>
-      prev.map((currentEmployee) =>
-        currentEmployee.id === employee.id
-          ? {
-              ...currentEmployee,
-              [name]: value,
-            }
-          : currentEmployee
-      )
-    );
+    setEmployee((prev) => ({
+      ...prev,
+      [name]: name === "employmentPercentage" || name === "roleId"
+        ? Number(value)
+        : value,
+    }));
   }
 
-  function handleAllowedShiftTypeToggle(shiftTypeId) {
-    setEmployees((prev) =>
-      prev.map((currentEmployee) => {
-        if (currentEmployee.id !== employee.id) {
-          return currentEmployee;
-        }
+  async function handleEmployeeSubmit(e) {
+    e.preventDefault();
 
-        const alreadyAllowed =
-          currentEmployee.allowedShiftTypeIds.includes(shiftTypeId);
+    if (!employee) {
+      return;
+    }
 
-        return {
-          ...currentEmployee,
-          allowedShiftTypeIds: alreadyAllowed
-            ? currentEmployee.allowedShiftTypeIds.filter(
-                (id) => id !== shiftTypeId
-              )
-            : [...currentEmployee.allowedShiftTypeIds, shiftTypeId],
-        };
-      })
-    );
+    try {
+      setError("");
+      setStatusMessage("");
+      setIsSavingEmployee(true);
+
+      await updateEmployee(employee.id, {
+        name: employee.name,
+        roleId: employee.roleId,
+        employmentPercentage: employee.employmentPercentage,
+      });
+
+      await loadData();
+      setStatusMessage("Personuppgifter sparade.");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSavingEmployee(false);
+    }
   }
 
-  function handleBaseScheduleChange(day, shiftTypeId) {
-    setEmployees((prev) =>
-      prev.map((currentEmployee) => {
-        if (currentEmployee.id !== employee.id) {
-          return currentEmployee;
-        }
+  async function handleBaseScheduleChange(changesOrWeek, dayOfWeek, shiftTypeId) {
+    if (!employee) {
+      return;
+    }
 
-        const withoutCurrentDay =
-          currentEmployee.baseSchedule.filter(
-            (rule) => rule.day !== day
-          );
+    try {
+      setError("");
+      setStatusMessage("");
 
-        if (!shiftTypeId) {
-          return {
-            ...currentEmployee,
-            baseSchedule: withoutCurrentDay,
-          };
-        }
+      const changes = Array.isArray(changesOrWeek)
+        ? changesOrWeek
+        : [{ weekInCycle: changesOrWeek, dayOfWeek, shiftTypeId }];
 
-        return {
-          ...currentEmployee,
-          baseSchedule: [
-            ...withoutCurrentDay,
-            {
-              id: Date.now(),
-              day,
-              shiftTypeId: Number(shiftTypeId),
-            },
-          ],
-        };
-      })
+      await Promise.all(
+        changes.map((change) => {
+          if (!change.shiftTypeId) {
+            return deleteEmployeeBaseScheduleRule(
+              employee.id,
+              change.weekInCycle,
+              change.dayOfWeek
+            );
+          }
+
+          return setEmployeeBaseScheduleRule(employee.id, {
+            weekInCycle: change.weekInCycle,
+            dayOfWeek: change.dayOfWeek,
+            shiftTypeId: Number(change.shiftTypeId),
+          });
+        })
+      );
+
+      const updatedEmployee = await getEmployeeDetails(employee.id);
+      setEmployee(updatedEmployee);
+      setStatusMessage("Grundschema uppdaterat.");
+    } catch (err) {
+      setError(`Kunde inte uppdatera grundschema: ${err.message}`);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <main className="employee-details-page">
+        <Link to="/employees" className="back-link">
+          Tillbaka till anställda
+        </Link>
+
+        <p className="empty-text">Laddar anställd...</p>
+      </main>
     );
   }
 
@@ -147,39 +163,32 @@ function EmployeeDetailsPage() {
     return (
       <main className="employee-details-page">
         <Link to="/employees" className="back-link">
-          ← Tillbaka till anställda
+          Tillbaka till anställda
         </Link>
 
         <h1>Anställd hittades inte</h1>
+        {error && <p className="page-error">{error}</p>}
       </main>
     );
   }
 
-  const matchingShiftTypes = shiftTypes.filter(
-    (shiftType) => shiftType.role === employee.role
-  );
-
-  const allowedShiftTypes = shiftTypes.filter((shiftType) =>
-    employee.allowedShiftTypeIds.includes(shiftType.id)
-  );
-
   return (
     <main className="employee-details-page">
       <Link to="/employees" className="back-link">
-        ← Tillbaka till anställda
+        Tillbaka till anställda
       </Link>
+
+      {error && <p className="page-error">{error}</p>}
+      {statusMessage && <p className="page-status">{statusMessage}</p>}
 
       <div className="employee-details-header">
         <div>
           <h1>{employee.name}</h1>
-          <p>
-            Hantera personuppgifter, tillåtna passtyper och
-            grundschema för den anställda.
-          </p>
+          <p>Hantera personuppgifter, roll och fyraveckors grundschema.</p>
         </div>
 
         <span className="employee-status-badge">
-          {employee.employmentType}
+          {getEmploymentLabel(employee.employmentPercentage)}
         </span>
       </div>
 
@@ -187,40 +196,51 @@ function EmployeeDetailsPage() {
         <section className="details-card">
           <h2>Personuppgifter</h2>
 
-          <div className="form-group">
-            <label>Namn</label>
-            <input
-              name="name"
-              value={employee.name}
-              onChange={handleEmployeeChange}
-            />
-          </div>
+          <form onSubmit={handleEmployeeSubmit}>
+            <div className="form-group">
+              <label>Namn</label>
+              <input
+                name="name"
+                value={employee.name}
+                onChange={handleEmployeeChange}
+              />
+            </div>
 
-          <div className="form-group">
-            <label>Roll</label>
-            <input
-              name="role"
-              value={employee.role}
-              onChange={handleEmployeeChange}
-            />
-          </div>
+            <div className="form-group">
+              <label>Roll</label>
+              <select
+                name="roleId"
+                value={employee.roleId}
+                onChange={handleEmployeeChange}
+              >
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="form-group">
-            <label>Anställningstyp</label>
-            <select
-              name="employmentType"
-              value={employee.employmentType}
-              onChange={handleEmployeeChange}
-            >
-              <option value="Heltid">Heltid</option>
-              <option value="Deltid">Deltid</option>
-              <option value="Timanställd">Timanställd</option>
-            </select>
-          </div>
+            <div className="form-group">
+              <label>Anställningsgrad</label>
+              <input
+                type="number"
+                name="employmentPercentage"
+                min="0"
+                max="100"
+                value={employee.employmentPercentage}
+                onChange={handleEmployeeChange}
+              />
+            </div>
+
+            <button type="submit" className="save-btn" disabled={isSavingEmployee}>
+              {isSavingEmployee ? "Sparar..." : "Spara"}
+            </button>
+          </form>
         </section>
 
         <section className="details-card">
-          <h2>Tillåtna passtyper</h2>
+          <h2>Passtyper via roll</h2>
 
           {matchingShiftTypes.length === 0 ? (
             <p className="empty-text">
@@ -229,28 +249,15 @@ function EmployeeDetailsPage() {
           ) : (
             <div className="shift-type-list">
               {matchingShiftTypes.map((shiftType) => (
-                <label
-                  key={shiftType.id}
-                  className="shift-type-option"
-                >
-                  <input
-                    type="checkbox"
-                    checked={employee.allowedShiftTypeIds.includes(
-                      shiftType.id
-                    )}
-                    onChange={() =>
-                      handleAllowedShiftTypeToggle(shiftType.id)
-                    }
-                  />
-
+                <article key={shiftType.id} className="shift-type-option">
                   <span>
-                    {shiftType.name}{" "}
+                    {shiftType.name}
                     <small>
-                      {shiftType.defaultStartTime}-
-                      {shiftType.defaultEndTime}
+                      {shiftType.defaultStartTime?.slice(0, 5)}-
+                      {shiftType.defaultEndTime?.slice(0, 5)}
                     </small>
                   </span>
-                </label>
+                </article>
               ))}
             </div>
           )}
@@ -259,7 +266,7 @@ function EmployeeDetailsPage() {
 
       <EmployeeBaseSchedule
         baseSchedule={employee.baseSchedule}
-        shiftTypes={allowedShiftTypes}
+        shiftTypes={matchingShiftTypes}
         onChange={handleBaseScheduleChange}
       />
     </main>

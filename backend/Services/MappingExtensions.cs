@@ -27,8 +27,10 @@ internal static class MappingExtensions
             RoleId = employee.RoleId,
             RoleName = employee.Role?.Name ?? string.Empty,
             EmploymentPercentage = employee.EmploymentPercentage,
-            AllowedShiftTypeIds = employee.EmployeeShiftTypes
-                .Select(employeeShiftType => employeeShiftType.ShiftTypeId)
+            BaseSchedule = employee.BaseScheduleRules
+                .OrderBy(rule => rule.WeekInCycle)
+                .ThenBy(rule => rule.DayOfWeek)
+                .Select(rule => rule.ToReadDto())
                 .ToList()
         };
     }
@@ -39,8 +41,13 @@ internal static class MappingExtensions
         {
             Id = shiftType.Id,
             Name = shiftType.Name,
-            RoleId = shiftType.RoleId,
-            RoleName = shiftType.Role?.Name ?? string.Empty,
+            RoleIds = shiftType.RoleShiftTypes
+                .Select(roleShiftType => roleShiftType.RoleId)
+                .ToList(),
+            RoleNames = shiftType.RoleShiftTypes
+                .Select(roleShiftType => roleShiftType.Role?.Name ?? string.Empty)
+                .Where(roleName => !string.IsNullOrWhiteSpace(roleName))
+                .ToList(),
             DefaultStartTime = shiftType.DefaultStartTime,
             DefaultEndTime = shiftType.DefaultEndTime
         };
@@ -55,6 +62,7 @@ internal static class MappingExtensions
             EmployeeName = rule.Employee?.Name ?? string.Empty,
             ShiftTypeId = rule.ShiftTypeId,
             ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
+            WeekInCycle = rule.WeekInCycle,
             DayOfWeek = rule.DayOfWeek,
             StartTime = rule.ShiftType?.DefaultStartTime ?? default,
             EndTime = rule.ShiftType?.DefaultEndTime ?? default

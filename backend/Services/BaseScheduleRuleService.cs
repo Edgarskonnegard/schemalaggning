@@ -26,24 +26,34 @@ public class BaseScheduleRuleService : IBaseScheduleRuleService
 
     public async Task<BaseScheduleRuleReadDto> SetRuleAsync(int employeeId, BaseScheduleRuleCreateDto dto)
     {
+        if (dto.WeekInCycle is < 1 or > 4)
+        {
+            throw new ArgumentException("Week in cycle must be between 1 and 4.");
+        }
+
         var employee = await _employeeRepository.GetByIdAsync(employeeId);
         if (employee is null)
         {
             throw new InvalidOperationException($"Employee {employeeId} does not exist.");
         }
 
-        if (!await _employeeRepository.HasAllowedShiftTypeAsync(employeeId, dto.ShiftTypeId))
+        if (!await _employeeRepository.CanWorkShiftTypeAsync(employeeId, dto.ShiftTypeId))
         {
-            throw new InvalidOperationException("Employee is not allowed to work this shift type.");
+            throw new InvalidOperationException("Employee role does not allow this shift type.");
         }
 
-        var existingRule = await _baseScheduleRuleRepository.GetByEmployeeAndDayAsync(employeeId, dto.DayOfWeek);
+        var existingRule = await _baseScheduleRuleRepository.GetByEmployeeWeekAndDayAsync(
+            employeeId,
+            dto.WeekInCycle,
+            dto.DayOfWeek);
+
         if (existingRule is null)
         {
             var created = await _baseScheduleRuleRepository.CreateAsync(new BaseScheduleRule
             {
                 EmployeeId = employeeId,
                 ShiftTypeId = dto.ShiftTypeId,
+                WeekInCycle = dto.WeekInCycle,
                 DayOfWeek = dto.DayOfWeek
             });
 
@@ -52,14 +62,15 @@ public class BaseScheduleRuleService : IBaseScheduleRuleService
         }
 
         existingRule.ShiftTypeId = dto.ShiftTypeId;
+        existingRule.WeekInCycle = dto.WeekInCycle;
         await _baseScheduleRuleRepository.UpdateAsync(existingRule);
 
         var updatedRules = await _baseScheduleRuleRepository.GetByEmployeeIdAsync(employeeId);
         return updatedRules.First(rule => rule.Id == existingRule.Id).ToReadDto();
     }
 
-    public Task<bool> DeleteRuleAsync(int employeeId, DayOfWeek dayOfWeek)
+    public Task<bool> DeleteRuleAsync(int employeeId, int weekInCycle, DayOfWeek dayOfWeek)
     {
-        return _baseScheduleRuleRepository.DeleteByEmployeeAndDayAsync(employeeId, dayOfWeek);
+        return _baseScheduleRuleRepository.DeleteByEmployeeWeekAndDayAsync(employeeId, weekInCycle, dayOfWeek);
     }
 }

@@ -12,7 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<ShiftType> ShiftTypes => Set<ShiftType>();
-    public DbSet<EmployeeShiftType> EmployeeShiftTypes => Set<EmployeeShiftType>();
+    public DbSet<RoleShiftType> RoleShiftTypes => Set<RoleShiftType>();
     public DbSet<BaseScheduleRule> BaseScheduleRules => Set<BaseScheduleRule>();
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Shift> Shifts => Set<Shift>();
@@ -21,33 +21,106 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<EmployeeShiftType>()
-            .HasKey(est => new { est.EmployeeId, est.ShiftTypeId });
-
-        modelBuilder.Entity<EmployeeShiftType>()
-            .HasOne(est => est.Employee)
-            .WithMany(e => e.EmployeeShiftTypes)
-            .HasForeignKey(est => est.EmployeeId);
-
-        modelBuilder.Entity<EmployeeShiftType>()
-            .HasOne(est => est.ShiftType)
-            .WithMany(st => st.EmployeeShiftTypes)
-            .HasForeignKey(est => est.ShiftTypeId);
-
-        modelBuilder.Entity<BaseScheduleRule>()
-            .HasIndex(r => new { r.EmployeeId, r.DayOfWeek })
-            .IsUnique();
+        modelBuilder.Entity<Role>()
+            .Property(r => r.Name)
+            .HasMaxLength(100)
+            .IsRequired();
 
         modelBuilder.Entity<Role>()
             .HasIndex(r => r.Name)
             .IsUnique();
 
-        modelBuilder.Entity<ShiftType>()
-            .HasIndex(st => st.Name)
-            .IsUnique();
+        modelBuilder.Entity<Role>()
+            .HasMany(r => r.Employees)
+            .WithOne(e => e.Role)
+            .HasForeignKey(e => e.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Employee>()
+            .Property(e => e.Name)
+            .HasMaxLength(100)
+            .IsRequired();
 
         modelBuilder.Entity<Employee>()
             .Property(e => e.EmploymentPercentage)
             .HasColumnType("decimal(5,2)");
+
+        modelBuilder.Entity<Employee>()
+            .HasMany(e => e.BaseScheduleRules)
+            .WithOne(r => r.Employee)
+            .HasForeignKey(r => r.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Employee>()
+            .HasMany(e => e.Shifts)
+            .WithOne(s => s.Employee)
+            .HasForeignKey(s => s.EmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ShiftType>()
+            .Property(st => st.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        modelBuilder.Entity<ShiftType>()
+            .HasIndex(st => st.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<RoleShiftType>()
+            .HasKey(rst => new { rst.RoleId, rst.ShiftTypeId });
+
+        modelBuilder.Entity<RoleShiftType>()
+            .HasOne(rst => rst.Role)
+            .WithMany(r => r.RoleShiftTypes)
+            .HasForeignKey(rst => rst.RoleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RoleShiftType>()
+            .HasOne(rst => rst.ShiftType)
+            .WithMany(st => st.RoleShiftTypes)
+            .HasForeignKey(rst => rst.ShiftTypeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ShiftType>()
+            .HasMany(st => st.BaseScheduleRules)
+            .WithOne(r => r.ShiftType)
+            .HasForeignKey(r => r.ShiftTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ShiftType>()
+            .HasMany(st => st.Shifts)
+            .WithOne(s => s.ShiftType)
+            .HasForeignKey(s => s.ShiftTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<BaseScheduleRule>()
+            .HasIndex(r => new { r.EmployeeId, r.WeekInCycle, r.DayOfWeek })
+            .IsUnique();
+
+        modelBuilder.Entity<Schedule>()
+            .Property(s => s.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        modelBuilder.Entity<Schedule>()
+            .Property(s => s.Status)
+            .HasMaxLength(30)
+            .IsRequired();
+
+        modelBuilder.Entity<Schedule>()
+            .HasMany(s => s.Shifts)
+            .WithOne(s => s.Schedule)
+            .HasForeignKey(s => s.ScheduleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Shift>()
+            .Property(s => s.Source)
+            .HasMaxLength(50)
+            .IsRequired();
+
+        modelBuilder.Entity<Shift>()
+            .Property(s => s.Status)
+            .HasMaxLength(30)
+            .IsRequired();
     }
 }

@@ -1,10 +1,10 @@
 namespace Schemalaggning.Models;
 
-public class EmployeeShiftType
+public class RoleShiftType
 {
-    public int EmployeeId { get; set; }
+    public int RoleId { get; set; }
 
-    public Employee Employee { get; set; } = null!;
+    public Role Role { get; set; } = null!;
 
     public int ShiftTypeId { get; set; }
 

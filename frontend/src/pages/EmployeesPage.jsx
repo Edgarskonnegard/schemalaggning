@@ -1,48 +1,72 @@
-import { useState } from "react";
-import "./EmployeesPage.css";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-const shiftTypes = [
-  {
-    id: 1,
-    name: "Öppning",
-    role: "Butiksmedarbetare",
-  },
-  {
-    id: 2,
-    name: "Stängning",
-    role: "Butiksmedarbetare",
-  },
-  {
-    id: 3,
-    name: "Kassa",
-    role: "Kassa",
-  },
-];
+import { createEmployee, getEmployees } from "../api/employeesApi";
+import { createRole, getRoles, updateRole } from "../api/rolesApi";
+import { getShiftTypes } from "../api/shiftTypesApi";
+import "./EmployeesPage.css";
+
+function getEmploymentLabel(percentage) {
+  if (percentage === 100) {
+    return "Heltid";
+  }
+
+  if (percentage === 0) {
+    return "Timanställd";
+  }
+
+  return `${percentage}%`;
+}
 
 function EmployeesPage() {
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: "Anna",
-      role: "Butiksmedarbetare",
-      employmentType: "Heltid",
-      allowedShiftTypeIds: [1],
-    },
-    {
-      id: 2,
-      name: "Erik",
-      role: "Butiksmedarbetare",
-      employmentType: "Deltid",
-      allowedShiftTypeIds: [2],
-    },
-  ]);
+  const [employees, setEmployees] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [shiftTypes, setShiftTypes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [newRoleName, setNewRoleName] = useState("");
+  const [editingRoleId, setEditingRoleId] = useState(null);
+  const [editingRoleName, setEditingRoleName] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
-    role: "",
-    employmentType: "Heltid",
+    roleId: "",
+    employmentPercentage: 100,
   });
+
+  const shiftTypesByRoleId = useMemo(() => {
+    return shiftTypes.reduce((groups, shiftType) => {
+      return shiftType.roleIds.reduce((nextGroups, roleId) => {
+        const current = nextGroups[roleId] || [];
+        return {
+          ...nextGroups,
+          [roleId]: [...current, shiftType],
+        };
+      }, groups);
+    }, {});
+  }, [shiftTypes]);
+
+  async function loadData() {
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const [employeesResult, rolesResult, shiftTypesResult] =
+        await Promise.all([getEmployees(), getRoles(), getShiftTypes()]);
+
+      setEmployees(employeesResult);
+      setRoles(rolesResult);
+      setShiftTypes(shiftTypesResult);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -53,158 +77,244 @@ function EmployeesPage() {
     }));
   }
 
-  function handleSubmit(e) {
+  async function handleCreateRole(e) {
     e.preventDefault();
 
-    if (!formData.name.trim() || !formData.role.trim()) {
+    if (!newRoleName.trim()) {
       return;
     }
 
-    const newEmployee = {
-      id: Date.now(),
-      name: formData.name,
-      role: formData.role,
-      employmentType: formData.employmentType,
-      allowedShiftTypeIds: [],
-    };
-
-    setEmployees((prev) => [...prev, newEmployee]);
-
-    setFormData({
-      name: "",
-      role: "",
-      employmentType: "Heltid",
-    });
+    try {
+      setError("");
+      const role = await createRole({ name: newRoleName.trim() });
+      setRoles((prev) => [...prev, role].sort((a, b) => a.name.localeCompare(b.name)));
+      setFormData((prev) => ({ ...prev, roleId: String(role.id) }));
+      setNewRoleName("");
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
-  function handleShiftTypeToggle(employeeId, shiftTypeId) {
-    setEmployees((prev) =>
-      prev.map((employee) => {
-        if (employee.id !== employeeId) {
-          return employee;
-        }
+  function startEditRole(role) {
+    setEditingRoleId(role.id);
+    setEditingRoleName(role.name);
+  }
 
-        const alreadyAllowed =
-          employee.allowedShiftTypeIds.includes(shiftTypeId);
+  function cancelEditRole() {
+    setEditingRoleId(null);
+    setEditingRoleName("");
+  }
 
-        return {
-          ...employee,
-          allowedShiftTypeIds: alreadyAllowed
-            ? employee.allowedShiftTypeIds.filter((id) => id !== shiftTypeId)
-            : [...employee.allowedShiftTypeIds, shiftTypeId],
-        };
-      })
-    );
+  async function handleUpdateRole(e) {
+    e.preventDefault();
+
+    if (!editingRoleName.trim()) {
+      return;
+    }
+
+    try {
+      setError("");
+      await updateRole(editingRoleId, { name: editingRoleName.trim() });
+      await loadData();
+      cancelEditRole();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    if (!formData.name.trim() || !formData.roleId) {
+      return;
+    }
+
+    try {
+      setError("");
+      const employee = await createEmployee({
+        name: formData.name.trim(),
+        roleId: Number(formData.roleId),
+        employmentPercentage: Number(formData.employmentPercentage),
+      });
+
+      setEmployees((prev) =>
+        [...prev, employee].sort((a, b) => a.name.localeCompare(b.name))
+      );
+
+      setFormData({
+        name: "",
+        roleId: formData.roleId,
+        employmentPercentage: 100,
+      });
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   return (
     <main className="employees-page">
       <h1 className="employees-title">Anställda</h1>
 
+      {error && <p className="page-error">{error}</p>}
+
       <div className="employee-layout">
-        <section className="form-card">
-          <h2 className="section-title">Skapa anställd</h2>
+        <div className="employee-sidebar">
+          <section className="form-card">
+            <h2 className="section-title">Skapa roll</h2>
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Namn</label>
+            <form onSubmit={handleCreateRole}>
+              <div className="form-group">
+                <label>Namn</label>
 
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Ex. Anna Andersson"
-              />
+                <input
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  placeholder="Ex. Butiksmedarbetare"
+                />
+              </div>
+
+              <button type="submit" className="add-btn">
+                Lägg till roll
+              </button>
+            </form>
+
+            <div className="role-list">
+              {roles.length === 0 ? (
+                <p className="empty-text">Inga roller skapade ännu.</p>
+              ) : (
+                roles.map((role) => (
+                  <div key={role.id} className="role-row">
+                    {editingRoleId === role.id ? (
+                      <form onSubmit={handleUpdateRole} className="role-edit-form">
+                        <input
+                          value={editingRoleName}
+                          onChange={(e) => setEditingRoleName(e.target.value)}
+                        />
+                        <div className="role-actions">
+                          <button type="submit">Spara</button>
+                          <button type="button" onClick={cancelEditRole}>
+                            Avbryt
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <span>{role.name}</span>
+                        <button type="button" onClick={() => startEditRole(role)}>
+                          Redigera
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
+          </section>
 
-            <div className="form-group">
-              <label>Roll</label>
+          <section className="form-card">
+            <h2 className="section-title">Skapa anställd</h2>
 
-              <input
-                type="text"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                placeholder="Ex. Butiksmedarbetare"
-              />
-            </div>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Namn</label>
 
-            <div className="form-group">
-              <label>Anställningstyp</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Ex. Anna Andersson"
+                />
+              </div>
 
-              <select
-                name="employmentType"
-                value={formData.employmentType}
-                onChange={handleChange}
-              >
-                <option value="Heltid">Heltid</option>
-                <option value="Deltid">Deltid</option>
-                <option value="Timanställd">Timanställd</option>
-              </select>
-            </div>
+              <div className="form-group">
+                <label>Roll</label>
 
-            <button type="submit" className="add-btn">
-              Lägg till anställd
-            </button>
-          </form>
-        </section>
+                <select
+                  name="roleId"
+                  value={formData.roleId}
+                  onChange={handleChange}
+                >
+                  <option value="">Välj roll</option>
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Anställningsgrad</label>
+
+                <input
+                  type="number"
+                  name="employmentPercentage"
+                  min="0"
+                  max="100"
+                  value={formData.employmentPercentage}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <button type="submit" className="add-btn">
+                Lägg till anställd
+              </button>
+            </form>
+          </section>
+        </div>
 
         <section>
           <h2 className="section-title">Lista över anställda</h2>
 
-          <div className="employee-list">
-            {employees.map((employee) => {
-              const matchingShiftTypes = shiftTypes.filter(
-                (shiftType) => shiftType.role === employee.role
-              );
+          {isLoading ? (
+            <p className="empty-text">Laddar anställda...</p>
+          ) : employees.length === 0 ? (
+            <p className="empty-text">Inga anställda skapade ännu.</p>
+          ) : (
+            <div className="employee-list">
+              {employees.map((employee) => {
+                const matchingShiftTypes =
+                  shiftTypesByRoleId[employee.roleId] || [];
 
-              return (
-                <Link
+                return (
+                  <Link
                     key={employee.id}
                     to={`/employees/${employee.id}`}
                     className="employee-card"
-                    >
-                  <div className="employee-header">
-                    <span className="employee-name">{employee.name}</span>
+                  >
+                    <div className="employee-header">
+                      <span className="employee-name">{employee.name}</span>
 
-                    <span className="badge">{employee.employmentType}</span>
-                  </div>
+                      <span className="badge">
+                        {getEmploymentLabel(employee.employmentPercentage)}
+                      </span>
+                    </div>
 
-                  <div className="employee-info">Roll: {employee.role}</div>
+                    <div className="employee-info">
+                      Roll: {employee.roleName}
+                    </div>
 
-                  <div className="shift-access">
-                    <h3>Tillåtna passtyper</h3>
+                    <div className="shift-access">
+                      <h3>Passtyper via roll</h3>
 
-                    {matchingShiftTypes.length === 0 ? (
-                      <p className="empty-text">
-                        Inga passtyper matchar denna roll.
-                      </p>
-                    ) : (
-                      matchingShiftTypes.map((shiftType) => (
-                        <label
-                          key={shiftType.id}
-                          className="shift-access-option"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={employee.allowedShiftTypeIds.includes(
-                              shiftType.id
-                            )}
-                            onChange={() =>
-                              handleShiftTypeToggle(employee.id, shiftType.id)
-                            }
-                          />
-
-                          <span>{shiftType.name}</span>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                      {matchingShiftTypes.length === 0 ? (
+                        <p className="empty-text">
+                          Inga passtyper matchar denna roll.
+                        </p>
+                      ) : (
+                        matchingShiftTypes.map((shiftType) => (
+                          <span key={shiftType.id} className="shift-chip">
+                            {shiftType.name}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
     </main>

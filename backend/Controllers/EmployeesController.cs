@@ -77,18 +77,4 @@ public class EmployeesController : ControllerBase
         var deleted = await _employeeService.DeleteAsync(id);
         return deleted ? NoContent() : NotFound();
     }
-
-    [HttpPut("{id:int}/shift-types")]
-    public async Task<IActionResult> UpdateAllowedShiftTypes(int id, EmployeeShiftTypesUpdateDto dto)
-    {
-        try
-        {
-            var updated = await _employeeService.UpdateAllowedShiftTypesAsync(id, dto.ShiftTypeIds);
-            return updated ? NoContent() : NotFound();
-        }
-        catch (InvalidOperationException exception)
-        {
-            return Conflict(exception.Message);
-        }
-    }
 }

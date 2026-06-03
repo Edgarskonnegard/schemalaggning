@@ -4,7 +4,7 @@ public class ShiftTypeCreateDto
 {
     public string Name { get; set; } = string.Empty;
 
-    public int RoleId { get; set; }
+    public List<int> RoleIds { get; set; } = new();
 
     public TimeOnly DefaultStartTime { get; set; }
 
