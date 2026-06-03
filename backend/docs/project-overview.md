@@ -151,6 +151,8 @@ Den planerade modellen är:
 
 Se `docs/todo.md` för föreslagen implementationordning och öppna beslut.
 
+Första skivan av `Store` är införd: butiker kan skapas och anställda kopplas till butik. Nästa större steg är konton/JWT innan employee- och adminflöden byggs skarpt.
+
 ## Dokumentationskarta
 
 - `docs/domain-model.md` beskriver entiteter, relationer och UML/Mermaid-diagram.

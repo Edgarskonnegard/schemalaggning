@@ -8,6 +8,7 @@ import {
 import { getEmployeeDetails, updateEmployee } from "../api/employeesApi";
 import { getRoles } from "../api/rolesApi";
 import { getShiftTypes } from "../api/shiftTypesApi";
+import { getStores } from "../api/storesApi";
 import EmployeeBaseSchedule from "../components/employees/EmployeeBaseSchedule";
 import "./EmployeeDetailsPage.css";
 
@@ -27,6 +28,7 @@ function EmployeeDetailsPage() {
   const { employeeId } = useParams();
 
   const [employee, setEmployee] = useState(null);
+  const [stores, setStores] = useState([]);
   const [roles, setRoles] = useState([]);
   const [shiftTypes, setShiftTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,14 +51,16 @@ function EmployeeDetailsPage() {
     setIsLoading(true);
 
     try {
-      const [employeeResult, rolesResult, shiftTypesResult] =
+      const [employeeResult, storesResult, rolesResult, shiftTypesResult] =
         await Promise.all([
           getEmployeeDetails(employeeId),
+          getStores(),
           getRoles(),
           getShiftTypes(),
         ]);
 
       setEmployee(employeeResult);
+      setStores(storesResult);
       setRoles(rolesResult);
       setShiftTypes(shiftTypesResult);
     } catch (err) {
@@ -75,7 +79,7 @@ function EmployeeDetailsPage() {
 
     setEmployee((prev) => ({
       ...prev,
-      [name]: name === "employmentPercentage" || name === "roleId"
+      [name]: name === "employmentPercentage" || name === "roleId" || name === "storeId"
         ? Number(value)
         : value,
     }));
@@ -95,6 +99,7 @@ function EmployeeDetailsPage() {
 
       await updateEmployee(employee.id, {
         name: employee.name,
+        storeId: employee.storeId,
         roleId: employee.roleId,
         employmentPercentage: employee.employmentPercentage,
       });
@@ -204,6 +209,21 @@ function EmployeeDetailsPage() {
                 value={employee.name}
                 onChange={handleEmployeeChange}
               />
+            </div>
+
+            <div className="form-group">
+              <label>Butik</label>
+              <select
+                name="storeId"
+                value={employee.storeId}
+                onChange={handleEmployeeChange}
+              >
+                {stores.map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">

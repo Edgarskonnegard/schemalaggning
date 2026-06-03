@@ -229,9 +229,11 @@ Backend-regler:
 ### Rekommenderad ny implementationordning
 
 1. Inför `Store`
-   - Lägg till `Store`-modell.
-   - Koppla `Employee` till `Store`.
-   - Lägg till enkla CRUD-endpoints och frontendvy för butik.
+   - Status: infört som första skiva.
+   - `Store`-modell finns.
+   - `Employee` är kopplad till `Store`.
+   - Enkla CRUD-endpoints finns för butik.
+   - Frontend kan skapa butik och välja butik vid skapande/uppdatering av anställd.
 
 2. Inför konton och auth-grund
    - Skapa `UserAccount`.

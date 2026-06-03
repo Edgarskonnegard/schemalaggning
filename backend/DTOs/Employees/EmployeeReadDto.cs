@@ -8,6 +8,10 @@ public class EmployeeReadDto
 
     public string Name { get; set; } = string.Empty;
 
+    public int StoreId { get; set; }
+
+    public string StoreName { get; set; } = string.Empty;
+
     public int RoleId { get; set; }
 
     public string RoleName { get; set; } = string.Empty;

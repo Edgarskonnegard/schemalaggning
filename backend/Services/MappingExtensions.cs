@@ -3,6 +3,7 @@ using Schemalaggning.DTOs.Employees;
 using Schemalaggning.DTOs.Roles;
 using Schemalaggning.DTOs.Schedules;
 using Schemalaggning.DTOs.ShiftTypes;
+using Schemalaggning.DTOs.Stores;
 using Schemalaggning.Models;
 
 namespace Schemalaggning.Services;
@@ -18,12 +19,23 @@ internal static class MappingExtensions
         };
     }
 
+    public static StoreReadDto ToReadDto(this Store store)
+    {
+        return new StoreReadDto
+        {
+            Id = store.Id,
+            Name = store.Name
+        };
+    }
+
     public static EmployeeReadDto ToReadDto(this Employee employee)
     {
         return new EmployeeReadDto
         {
             Id = employee.Id,
             Name = employee.Name,
+            StoreId = employee.StoreId,
+            StoreName = employee.Store?.Name ?? string.Empty,
             RoleId = employee.RoleId,
             RoleName = employee.Role?.Name ?? string.Empty,
             EmploymentPercentage = employee.EmploymentPercentage,

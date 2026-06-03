@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { createEmployee, getEmployees } from "../api/employeesApi";
 import { createRole, getRoles, updateRole } from "../api/rolesApi";
 import { getShiftTypes } from "../api/shiftTypesApi";
+import { createStore, getStores } from "../api/storesApi";
 import "./EmployeesPage.css";
 
 function getEmploymentLabel(percentage) {
@@ -20,16 +21,19 @@ function getEmploymentLabel(percentage) {
 
 function EmployeesPage() {
   const [employees, setEmployees] = useState([]);
+  const [stores, setStores] = useState([]);
   const [roles, setRoles] = useState([]);
   const [shiftTypes, setShiftTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [newStoreName, setNewStoreName] = useState("");
   const [newRoleName, setNewRoleName] = useState("");
   const [editingRoleId, setEditingRoleId] = useState(null);
   const [editingRoleName, setEditingRoleName] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
+    storeId: "",
     roleId: "",
     employmentPercentage: 100,
   });
@@ -51,16 +55,42 @@ function EmployeesPage() {
     setIsLoading(true);
 
     try {
-      const [employeesResult, rolesResult, shiftTypesResult] =
-        await Promise.all([getEmployees(), getRoles(), getShiftTypes()]);
+      const [employeesResult, storesResult, rolesResult, shiftTypesResult] =
+        await Promise.all([
+          getEmployees(),
+          getStores(),
+          getRoles(),
+          getShiftTypes(),
+        ]);
 
       setEmployees(employeesResult);
+      setStores(storesResult);
       setRoles(rolesResult);
       setShiftTypes(shiftTypesResult);
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleCreateStore(e) {
+    e.preventDefault();
+
+    if (!newStoreName.trim()) {
+      return;
+    }
+
+    try {
+      setError("");
+      const store = await createStore({ name: newStoreName.trim() });
+      setStores((prev) =>
+        [...prev, store].sort((a, b) => a.name.localeCompare(b.name))
+      );
+      setFormData((prev) => ({ ...prev, storeId: String(store.id) }));
+      setNewStoreName("");
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -125,7 +155,7 @@ function EmployeesPage() {
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (!formData.name.trim() || !formData.roleId) {
+    if (!formData.name.trim() || !formData.storeId || !formData.roleId) {
       return;
     }
 
@@ -133,6 +163,7 @@ function EmployeesPage() {
       setError("");
       const employee = await createEmployee({
         name: formData.name.trim(),
+        storeId: Number(formData.storeId),
         roleId: Number(formData.roleId),
         employmentPercentage: Number(formData.employmentPercentage),
       });
@@ -143,6 +174,7 @@ function EmployeesPage() {
 
       setFormData({
         name: "",
+        storeId: formData.storeId,
         roleId: formData.roleId,
         employmentPercentage: 100,
       });
@@ -159,6 +191,38 @@ function EmployeesPage() {
 
       <div className="employee-layout">
         <div className="employee-sidebar">
+          <section className="form-card">
+            <h2 className="section-title">Skapa butik</h2>
+
+            <form onSubmit={handleCreateStore}>
+              <div className="form-group">
+                <label>Namn</label>
+
+                <input
+                  value={newStoreName}
+                  onChange={(e) => setNewStoreName(e.target.value)}
+                  placeholder="Ex. Centrum"
+                />
+              </div>
+
+              <button type="submit" className="add-btn">
+                Lägg till butik
+              </button>
+            </form>
+
+            <div className="role-list">
+              {stores.length === 0 ? (
+                <p className="empty-text">Inga butiker skapade ännu.</p>
+              ) : (
+                stores.map((store) => (
+                  <div key={store.id} className="role-row">
+                    <span>{store.name}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
           <section className="form-card">
             <h2 className="section-title">Skapa roll</h2>
 
@@ -228,6 +292,23 @@ function EmployeesPage() {
               </div>
 
               <div className="form-group">
+                <label>Butik</label>
+
+                <select
+                  name="storeId"
+                  value={formData.storeId}
+                  onChange={handleChange}
+                >
+                  <option value="">Välj butik</option>
+                  {stores.map((store) => (
+                    <option key={store.id} value={store.id}>
+                      {store.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
                 <label>Roll</label>
 
                 <select
@@ -289,6 +370,10 @@ function EmployeesPage() {
                       <span className="badge">
                         {getEmploymentLabel(employee.employmentPercentage)}
                       </span>
+                    </div>
+
+                    <div className="employee-info">
+                      Butik: {employee.storeName}
                     </div>
 
                     <div className="employee-info">

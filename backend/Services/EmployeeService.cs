@@ -9,13 +9,16 @@ public class EmployeeService : IEmployeeService
 {
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IRoleRepository _roleRepository;
+    private readonly IStoreRepository _storeRepository;
 
     public EmployeeService(
         IEmployeeRepository employeeRepository,
-        IRoleRepository roleRepository)
+        IRoleRepository roleRepository,
+        IStoreRepository storeRepository)
     {
         _employeeRepository = employeeRepository;
         _roleRepository = roleRepository;
+        _storeRepository = storeRepository;
     }
 
     public async Task<List<EmployeeReadDto>> GetAllAsync()
@@ -38,11 +41,12 @@ public class EmployeeService : IEmployeeService
 
     public async Task<EmployeeReadDto> CreateAsync(EmployeeCreateDto dto)
     {
-        await ValidateEmployeeAsync(dto.Name, dto.RoleId, dto.EmploymentPercentage);
+        await ValidateEmployeeAsync(dto.Name, dto.StoreId, dto.RoleId, dto.EmploymentPercentage);
 
         var employee = await _employeeRepository.CreateAsync(new Employee
         {
             Name = dto.Name.Trim(),
+            StoreId = dto.StoreId,
             RoleId = dto.RoleId,
             EmploymentPercentage = dto.EmploymentPercentage
         });
@@ -53,7 +57,7 @@ public class EmployeeService : IEmployeeService
 
     public async Task<bool> UpdateAsync(int id, EmployeeUpdateDto dto)
     {
-        await ValidateEmployeeAsync(dto.Name, dto.RoleId, dto.EmploymentPercentage);
+        await ValidateEmployeeAsync(dto.Name, dto.StoreId, dto.RoleId, dto.EmploymentPercentage);
 
         var employee = await _employeeRepository.GetByIdAsync(id);
         if (employee is null)
@@ -62,6 +66,7 @@ public class EmployeeService : IEmployeeService
         }
 
         employee.Name = dto.Name.Trim();
+        employee.StoreId = dto.StoreId;
         employee.RoleId = dto.RoleId;
         employee.EmploymentPercentage = dto.EmploymentPercentage;
 
@@ -73,7 +78,7 @@ public class EmployeeService : IEmployeeService
         return _employeeRepository.DeleteAsync(id);
     }
 
-    private async Task ValidateEmployeeAsync(string name, int roleId, decimal employmentPercentage)
+    private async Task ValidateEmployeeAsync(string name, int storeId, int roleId, decimal employmentPercentage)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -83,6 +88,11 @@ public class EmployeeService : IEmployeeService
         if (employmentPercentage < 0 || employmentPercentage > 100)
         {
             throw new ArgumentException("Employment percentage must be between 0 and 100.");
+        }
+
+        if (!await _storeRepository.ExistsAsync(storeId))
+        {
+            throw new InvalidOperationException($"Store {storeId} does not exist.");
         }
 
         if (!await _roleRepository.ExistsAsync(roleId))

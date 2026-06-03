@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Role> Roles => Set<Role>();
+    public DbSet<Store> Stores => Set<Store>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<ShiftType> ShiftTypes => Set<ShiftType>();
     public DbSet<RoleShiftType> RoleShiftTypes => Set<RoleShiftType>();
@@ -34,6 +35,21 @@ public class AppDbContext : DbContext
             .HasMany(r => r.Employees)
             .WithOne(e => e.Role)
             .HasForeignKey(e => e.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Store>()
+            .Property(s => s.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        modelBuilder.Entity<Store>()
+            .HasIndex(s => s.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<Store>()
+            .HasMany(s => s.Employees)
+            .WithOne(e => e.Store)
+            .HasForeignKey(e => e.StoreId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Employee>()

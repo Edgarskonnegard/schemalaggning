@@ -14,12 +14,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IStoreRepository, StoreRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IShiftTypeRepository, ShiftTypeRepository>();
 builder.Services.AddScoped<IBaseScheduleRuleRepository, BaseScheduleRuleRepository>();
 builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
 
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IStoreService, StoreService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IShiftTypeService, ShiftTypeService>();
 builder.Services.AddScoped<IBaseScheduleRuleService, BaseScheduleRuleService>();

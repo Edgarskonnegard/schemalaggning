@@ -18,6 +18,7 @@ public class EmployeeRepository : IEmployeeRepository
     {
         return _context.Employees
             .AsNoTracking()
+            .Include(employee => employee.Store)
             .Include(employee => employee.Role)
             .OrderBy(employee => employee.Name)
             .ToListAsync();
@@ -26,6 +27,7 @@ public class EmployeeRepository : IEmployeeRepository
     public Task<Employee?> GetByIdAsync(int id)
     {
         return _context.Employees
+            .Include(employee => employee.Store)
             .Include(employee => employee.Role)
             .FirstOrDefaultAsync(employee => employee.Id == id);
     }
@@ -34,6 +36,7 @@ public class EmployeeRepository : IEmployeeRepository
     {
         return _context.Employees
             .AsNoTracking()
+            .Include(employee => employee.Store)
             .Include(employee => employee.Role)
             .Include(employee => employee.BaseScheduleRules)
                 .ThenInclude(rule => rule.ShiftType)
