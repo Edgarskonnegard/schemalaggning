@@ -267,23 +267,27 @@ Backend-regler:
    - `RequiredCount` stöds så flera personer kan behövas på samma pass.
 
 4. Bestäm relation mellan anställdas grundschema och butikens behov
-   - Status: första beslut infört.
-   - Butikens behov används som input för att generera anställdas `BaseScheduleRule`.
-   - Första versionen genererar direkt till grundschema, utan `AssignmentProposal`.
-   - Grundschemat upprepar butikens veckobehov över fyra cykelveckor.
+   - Status: första beslut infört med godkännandesteg.
+   - Butikens behov används som input för att generera ett grundschemaförslag.
+   - Förslaget sparas som `BaseScheduleGenerationBatch` och `BaseScheduleDraftRule`.
+   - Godkännande kopierar draft-regler till skarpa `BaseScheduleRule`.
+   - Grundschemaförslaget upprepar butikens veckobehov över fyra cykelveckor.
 
 5. Bygg fördelningstjänst
    - Status: första enkel version införd.
    - Input: butikens grundbehov, anställda, roller och sysselsättningsgrad.
-   - Output: `BaseScheduleRule` direkt.
+   - Output: väntande `BaseScheduleDraftRule`.
    - Matchar passtyp mot anställdas roll.
    - Försöker balansera timmar där 100% motsvarar 40 timmar per vecka.
    - Kvar: dygnsvila, helglogik, maxpass, preferenser och bättre rättvisa.
 
 6. Lägg till admin-godkännande
-   - Admin ser förslag.
-   - Admin kan godkänna, avvisa eller manuellt ändra.
-   - Godkända förslag skapar faktiska `Shift`.
+   - Status: första version införd för grundschemaförslag.
+   - Header visar notis för väntande godkännanden.
+   - Admin kan se en anställds förslag, timsammanfattning och fyraveckorsrutnät.
+   - Admin kan godkänna eller avvisa en anställd i taget.
+   - Godkännande rensar och skriver bara den valda anställdas grundschema.
+   - Kvar: manuell ändring i godkännandevyn.
 
 7. Skapa allmänt schema från godkända pass och händelser
    - `Schedule` skapas per butik och period.

@@ -17,6 +17,10 @@ public class AppDbContext : DbContext
     public DbSet<ShiftType> ShiftTypes => Set<ShiftType>();
     public DbSet<RoleShiftType> RoleShiftTypes => Set<RoleShiftType>();
     public DbSet<BaseScheduleRule> BaseScheduleRules => Set<BaseScheduleRule>();
+    public DbSet<BaseScheduleGenerationBatch> BaseScheduleGenerationBatches => Set<BaseScheduleGenerationBatch>();
+    public DbSet<BaseScheduleDraftRule> BaseScheduleDraftRules => Set<BaseScheduleDraftRule>();
+    public DbSet<BaseScheduleEmployeeApproval> BaseScheduleEmployeeApprovals => Set<BaseScheduleEmployeeApproval>();
+    public DbSet<BaseScheduleUnassignedDraftRule> BaseScheduleUnassignedDraftRules => Set<BaseScheduleUnassignedDraftRule>();
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Shift> Shifts => Set<Shift>();
 
@@ -157,6 +161,68 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<BaseScheduleRule>()
             .HasIndex(r => new { r.EmployeeId, r.WeekInCycle, r.DayOfWeek })
             .IsUnique();
+
+        modelBuilder.Entity<BaseScheduleGenerationBatch>()
+            .Property(batch => batch.Status)
+            .HasMaxLength(30)
+            .IsRequired();
+
+        modelBuilder.Entity<BaseScheduleGenerationBatch>()
+            .HasMany(batch => batch.DraftRules)
+            .WithOne(rule => rule.Batch)
+            .HasForeignKey(rule => rule.BatchId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<BaseScheduleGenerationBatch>()
+            .HasMany(batch => batch.EmployeeApprovals)
+            .WithOne(approval => approval.Batch)
+            .HasForeignKey(approval => approval.BatchId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<BaseScheduleGenerationBatch>()
+            .HasMany(batch => batch.UnassignedDraftRules)
+            .WithOne(rule => rule.Batch)
+            .HasForeignKey(rule => rule.BatchId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<BaseScheduleGenerationBatch>()
+            .HasOne(batch => batch.Store)
+            .WithMany()
+            .HasForeignKey(batch => batch.StoreId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<BaseScheduleDraftRule>()
+            .HasOne(rule => rule.Employee)
+            .WithMany()
+            .HasForeignKey(rule => rule.EmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<BaseScheduleDraftRule>()
+            .HasOne(rule => rule.ShiftType)
+            .WithMany()
+            .HasForeignKey(rule => rule.ShiftTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<BaseScheduleEmployeeApproval>()
+            .Property(approval => approval.Status)
+            .HasMaxLength(30)
+            .IsRequired();
+
+        modelBuilder.Entity<BaseScheduleEmployeeApproval>()
+            .HasOne(approval => approval.Employee)
+            .WithMany()
+            .HasForeignKey(approval => approval.EmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<BaseScheduleEmployeeApproval>()
+            .HasIndex(approval => new { approval.BatchId, approval.EmployeeId })
+            .IsUnique();
+
+        modelBuilder.Entity<BaseScheduleUnassignedDraftRule>()
+            .HasOne(rule => rule.ShiftType)
+            .WithMany()
+            .HasForeignKey(rule => rule.ShiftTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<StoreCoverageRule>()
             .HasIndex(r => new { r.StoreId, r.DayOfWeek, r.ShiftTypeId })

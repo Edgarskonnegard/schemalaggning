@@ -1,4 +1,5 @@
 using Schemalaggning.DTOs.BaseScheduleGeneration;
+using Schemalaggning.Data;
 using Schemalaggning.Models;
 using Schemalaggning.Repositories.Interfaces;
 using Schemalaggning.Services.Interfaces;
@@ -10,21 +11,21 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
     private const decimal FullTimeWeeklyHours = 40m;
     private const int WeeksInCycle = 4;
 
-    private readonly IBaseScheduleRuleRepository _baseScheduleRuleRepository;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IStoreCoverageRuleRepository _coverageRuleRepository;
     private readonly IStoreRepository _storeRepository;
+    private readonly AppDbContext _context;
 
     public BaseScheduleGenerationService(
-        IBaseScheduleRuleRepository baseScheduleRuleRepository,
         IEmployeeRepository employeeRepository,
         IStoreCoverageRuleRepository coverageRuleRepository,
-        IStoreRepository storeRepository)
+        IStoreRepository storeRepository,
+        AppDbContext context)
     {
-        _baseScheduleRuleRepository = baseScheduleRuleRepository;
         _employeeRepository = employeeRepository;
         _coverageRuleRepository = coverageRuleRepository;
         _storeRepository = storeRepository;
+        _context = context;
     }
 
     public async Task<BaseScheduleGenerationResultDto> GenerateForStoreAsync(int storeId)
@@ -56,11 +57,9 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
             return result;
         }
 
-        var employeeIds = employees.Select(employee => employee.Id).ToList();
-        await _baseScheduleRuleRepository.DeleteByEmployeeIdsAsync(employeeIds);
-
         var canWorkCache = await BuildCanWorkCacheAsync(employees, coverageRules);
-        var generatedRules = new List<BaseScheduleRule>();
+        var generatedRules = new List<BaseScheduleDraftRule>();
+        var unassignedRules = new List<BaseScheduleUnassignedDraftRule>();
         var employeeHours = employees.ToDictionary(employee => employee.Id, _ => 0m);
         var occupiedDays = employees.ToDictionary(
             employee => employee.Id,
@@ -81,10 +80,16 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
                 if (employee is null)
                 {
                     result.UnassignedNeedCount++;
+                    unassignedRules.Add(new BaseScheduleUnassignedDraftRule
+                    {
+                        ShiftTypeId = need.ShiftTypeId,
+                        WeekInCycle = week,
+                        DayOfWeek = need.DayOfWeek
+                    });
                     continue;
                 }
 
-                generatedRules.Add(new BaseScheduleRule
+                generatedRules.Add(new BaseScheduleDraftRule
                 {
                     EmployeeId = employee.Id,
                     ShiftTypeId = need.ShiftTypeId,
@@ -97,11 +102,6 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
             }
         }
 
-        if (generatedRules.Count > 0)
-        {
-            await _baseScheduleRuleRepository.AddRangeAsync(generatedRules);
-        }
-
         result.CreatedRuleCount = generatedRules.Count;
 
         if (result.UnassignedNeedCount > 0)
@@ -109,6 +109,28 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
             result.Warnings.Add($"{result.UnassignedNeedCount} behov kunde inte placeras eftersom ingen ledig anställd matchade roll/passtyp den dagen.");
         }
 
+        var batch = new BaseScheduleGenerationBatch
+        {
+            StoreId = storeId,
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow,
+            WarningText = string.Join('\n', result.Warnings),
+            DraftRules = generatedRules,
+            UnassignedDraftRules = unassignedRules,
+            EmployeeApprovals = employees
+                .Select(employee => new BaseScheduleEmployeeApproval
+                {
+                    EmployeeId = employee.Id,
+                    Status = "Pending"
+                })
+                .ToList()
+        };
+
+        _context.BaseScheduleGenerationBatches.Add(batch);
+        await _context.SaveChangesAsync();
+
+        result.BatchId = batch.Id;
+        result.Status = batch.Status;
         return result;
     }
 

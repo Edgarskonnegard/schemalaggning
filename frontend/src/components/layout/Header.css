@@ -11,9 +11,10 @@ header {
 
 header h1 {
   font-size: 22px;
+  flex: 1;
 }
 
-header button {
+header .menu-button {
   padding: 10px 14px;
   border: none;
   border-radius: 8px;
@@ -22,6 +23,44 @@ header button {
   cursor: pointer;
 }
 
-header button:hover {
+header .menu-button:hover {
   background: #1d4ed8;
+}
+
+.notification-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: #eef2ff;
+  color: #3730a3;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.notification-link:hover {
+  background: #e0e7ff;
+}
+
+.notification-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  padding: 0 6px;
+  background: #dc2626;
+  color: white;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
 }

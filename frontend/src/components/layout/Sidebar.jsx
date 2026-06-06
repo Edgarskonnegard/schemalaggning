@@ -36,6 +36,10 @@ function Sidebar({ isOpen, onClose }) {
           <NavLink to="/store-coverage" onClick={onClose}>
             Bemanningsbehov
           </NavLink>
+
+          <NavLink to="/approvals" onClick={onClose}>
+            Godkännanden
+          </NavLink>
         </nav>
       </aside>
     </>

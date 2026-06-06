@@ -2,7 +2,11 @@ namespace Schemalaggning.DTOs.BaseScheduleGeneration;
 
 public class BaseScheduleGenerationResultDto
 {
+    public int BatchId { get; set; }
+
     public int StoreId { get; set; }
+
+    public string Status { get; set; } = string.Empty;
 
     public int EmployeeCount { get; set; }
 

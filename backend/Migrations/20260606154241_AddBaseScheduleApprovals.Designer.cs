@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Schemalaggning.Data;
 
@@ -11,9 +12,11 @@ using Schemalaggning.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260606154241_AddBaseScheduleApprovals")]
+    partial class AddBaseScheduleApprovals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,41 +57,6 @@ namespace backend.Migrations
                     b.HasIndex("ShiftTypeId");
 
                     b.ToTable("BaseScheduleDraftRules");
-                });
-
-            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleEmployeeApproval", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("BatchId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("RejectedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("BatchId", "EmployeeId")
-                        .IsUnique();
-
-                    b.ToTable("BaseScheduleEmployeeApprovals");
                 });
 
             modelBuilder.Entity("Schemalaggning.Models.BaseScheduleGenerationBatch", b =>
@@ -155,35 +123,6 @@ namespace backend.Migrations
                         .IsUnique();
 
                     b.ToTable("BaseScheduleRules");
-                });
-
-            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleUnassignedDraftRule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BatchId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ShiftTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WeekInCycle")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BatchId");
-
-                    b.HasIndex("ShiftTypeId");
-
-                    b.ToTable("BaseScheduleUnassignedDraftRules");
                 });
 
             modelBuilder.Entity("Schemalaggning.Models.Employee", b =>
@@ -486,25 +425,6 @@ namespace backend.Migrations
                     b.Navigation("ShiftType");
                 });
 
-            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleEmployeeApproval", b =>
-                {
-                    b.HasOne("Schemalaggning.Models.BaseScheduleGenerationBatch", "Batch")
-                        .WithMany("EmployeeApprovals")
-                        .HasForeignKey("BatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Schemalaggning.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Batch");
-
-                    b.Navigation("Employee");
-                });
-
             modelBuilder.Entity("Schemalaggning.Models.BaseScheduleGenerationBatch", b =>
                 {
                     b.HasOne("Schemalaggning.Models.Store", "Store")
@@ -531,25 +451,6 @@ namespace backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Employee");
-
-                    b.Navigation("ShiftType");
-                });
-
-            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleUnassignedDraftRule", b =>
-                {
-                    b.HasOne("Schemalaggning.Models.BaseScheduleGenerationBatch", "Batch")
-                        .WithMany("UnassignedDraftRules")
-                        .HasForeignKey("BatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Schemalaggning.Models.ShiftType", "ShiftType")
-                        .WithMany()
-                        .HasForeignKey("ShiftTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Batch");
 
                     b.Navigation("ShiftType");
                 });
@@ -658,10 +559,6 @@ namespace backend.Migrations
             modelBuilder.Entity("Schemalaggning.Models.BaseScheduleGenerationBatch", b =>
                 {
                     b.Navigation("DraftRules");
-
-                    b.Navigation("EmployeeApprovals");
-
-                    b.Navigation("UnassignedDraftRules");
                 });
 
             modelBuilder.Entity("Schemalaggning.Models.Employee", b =>

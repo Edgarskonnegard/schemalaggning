@@ -201,6 +201,7 @@ function EmployeesPage() {
       setIsGenerating(true);
       const result = await generateBaseSchedules(generationStoreId);
       setGenerationResult(result);
+      window.dispatchEvent(new Event("approvals-updated"));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -390,16 +391,16 @@ function EmployeesPage() {
               </div>
 
               <button type="submit" className="add-btn" disabled={isGenerating}>
-                {isGenerating ? "Genererar..." : "Generera grundscheman"}
+                {isGenerating ? "Genererar..." : "Generera förslag"}
               </button>
             </form>
 
             {generationResult && (
               <div className="generation-result">
-                <strong>{generationResult.createdRuleCount} regler skapades</strong>
+                <strong>Förslag skapat för godkännande</strong>
                 <span>
-                  {generationResult.employeeCount} anställda ·{" "}
-                  {generationResult.coverageRuleCount} behovsregler
+                  {generationResult.createdRuleCount} regler ·{" "}
+                  {generationResult.employeeCount} anställda
                 </span>
 
                 {generationResult.unassignedNeedCount > 0 && (
