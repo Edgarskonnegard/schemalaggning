@@ -239,6 +239,12 @@ public class AppDbContext : DbContext
             .IsRequired();
 
         modelBuilder.Entity<Schedule>()
+            .HasOne(s => s.Store)
+            .WithMany()
+            .HasForeignKey(s => s.StoreId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Schedule>()
             .HasMany(s => s.Shifts)
             .WithOne(s => s.Schedule)
             .HasForeignKey(s => s.ScheduleId)

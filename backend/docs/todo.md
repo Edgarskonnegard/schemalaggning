@@ -290,8 +290,12 @@ Backend-regler:
    - Kvar: manuell ändring i godkännandevyn.
 
 7. Skapa allmänt schema från godkända pass och händelser
+   - Status: första version införd.
    - `Schedule` skapas per butik och period.
    - Faktiska `Shift` sparas på schemat.
+   - Generering utgår från godkända `BaseScheduleRule`.
+   - Cykelveckor rullar 1-4 och börjar om på 1 för längre perioder.
+   - Frontend kan generera och godkänna/publicera ett schema som helhet.
    - Händelser integreras som justeringar eller blockeringar.
 
 8. Stöd schemaändringar och byten

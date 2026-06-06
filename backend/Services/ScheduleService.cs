@@ -40,6 +40,16 @@ public class ScheduleService : IScheduleService
             return false;
         }
 
+        if (shift.Schedule.Status != "Draft")
+        {
+            throw new InvalidOperationException("Only draft schedule shifts can be updated.");
+        }
+
+        if (dto.Date != shift.Date)
+        {
+            throw new ArgumentException("Shift date cannot be changed from this view.");
+        }
+
         if (dto.Date < shift.Schedule.PeriodStart || dto.Date > shift.Schedule.PeriodEnd)
         {
             throw new ArgumentException("Shift date must be within the schedule period.");
@@ -57,6 +67,53 @@ public class ScheduleService : IScheduleService
         shift.EndTime = dto.EndTime;
 
         return await _scheduleRepository.UpdateShiftAsync(shift);
+    }
+
+    public async Task<bool> SwapShiftEmployeesAsync(int shiftId, ShiftSwapDto dto)
+    {
+        if (shiftId == dto.TargetShiftId)
+        {
+            throw new ArgumentException("Cannot swap a shift with itself.");
+        }
+
+        var sourceShift = await _scheduleRepository.GetShiftByIdAsync(shiftId);
+        var targetShift = await _scheduleRepository.GetShiftByIdAsync(dto.TargetShiftId);
+
+        if (sourceShift is null || targetShift is null)
+        {
+            return false;
+        }
+
+        if (sourceShift.ScheduleId != targetShift.ScheduleId)
+        {
+            throw new ArgumentException("Shifts must belong to the same schedule.");
+        }
+
+        if (sourceShift.Schedule.Status != "Draft" || targetShift.Schedule.Status != "Draft")
+        {
+            throw new InvalidOperationException("Only draft schedule shifts can be swapped.");
+        }
+
+        if (sourceShift.Date != targetShift.Date)
+        {
+            throw new ArgumentException("Only shifts on the same date can be swapped.");
+        }
+
+        if (!await _employeeRepository.CanWorkShiftTypeAsync(targetShift.EmployeeId, sourceShift.ShiftTypeId))
+        {
+            throw new InvalidOperationException("Target employee role does not allow the source shift type.");
+        }
+
+        if (!await _employeeRepository.CanWorkShiftTypeAsync(sourceShift.EmployeeId, targetShift.ShiftTypeId))
+        {
+            throw new InvalidOperationException("Source employee role does not allow the target shift type.");
+        }
+
+        var sourceEmployeeId = sourceShift.EmployeeId;
+        sourceShift.EmployeeId = targetShift.EmployeeId;
+        targetShift.EmployeeId = sourceEmployeeId;
+
+        return await _scheduleRepository.UpdateShiftsAsync([sourceShift, targetShift]);
     }
 
     public async Task<bool> PublishScheduleAsync(int scheduleId)

@@ -309,11 +309,16 @@ Returnerar ett schema med dess pass.
 
 Genererar ett nytt schema från grundscheman.
 
+### POST `/api/stores/{storeId}/schedules/generate`
+
+Genererar ett nytt schema för en specifik butik från godkända grundscheman. Detta är den rekommenderade endpointen framåt.
+
 Exempel:
 
 ```json
 {
   "name": "Juni 2026",
+  "storeId": 1,
   "periodStart": "2026-06-01",
   "periodEnd": "2026-06-30"
 }
@@ -322,7 +327,9 @@ Exempel:
 Förväntat beteende:
 
 - skapar ett nytt schema med status `Draft`
+- kopplar schemat till butik via `StoreId`
 - skapar faktiska pass från `BaseScheduleRule` genom att matcha fyraveckorscykel och veckodag
+- cykelveckor rullar 1, 2, 3, 4 och börjar sedan om på 1 för längre perioder
 - kopierar tider från `ShiftType` till varje `Shift`
 - ändrar inte `ShiftType`
 - ändrar inte `BaseScheduleRule`
@@ -333,6 +340,8 @@ Exempel på svar:
 {
   "id": 1,
   "name": "Juni 2026",
+  "storeId": 1,
+  "storeName": "Centrum",
   "periodStart": "2026-06-01",
   "periodEnd": "2026-06-30",
   "status": "Draft",

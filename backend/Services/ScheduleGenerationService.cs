@@ -9,13 +9,16 @@ public class ScheduleGenerationService : IScheduleGenerationService
 {
     private readonly IBaseScheduleRuleRepository _baseScheduleRuleRepository;
     private readonly IScheduleRepository _scheduleRepository;
+    private readonly IStoreRepository _storeRepository;
 
     public ScheduleGenerationService(
         IBaseScheduleRuleRepository baseScheduleRuleRepository,
-        IScheduleRepository scheduleRepository)
+        IScheduleRepository scheduleRepository,
+        IStoreRepository storeRepository)
     {
         _baseScheduleRuleRepository = baseScheduleRuleRepository;
         _scheduleRepository = scheduleRepository;
+        _storeRepository = storeRepository;
     }
 
     public async Task<ScheduleReadDto> GenerateFromBaseScheduleAsync(ScheduleCreateDto dto)
@@ -30,10 +33,19 @@ public class ScheduleGenerationService : IScheduleGenerationService
             throw new ArgumentException("Period end must be after or equal to period start.");
         }
 
-        var rules = await _baseScheduleRuleRepository.GetAllWithDetailsAsync();
+        if (!await _storeRepository.ExistsAsync(dto.StoreId))
+        {
+            throw new InvalidOperationException($"Store {dto.StoreId} does not exist.");
+        }
+
+        var rules = (await _baseScheduleRuleRepository.GetAllWithDetailsAsync())
+            .Where(rule => rule.Employee.StoreId == dto.StoreId)
+            .ToList();
+
         var schedule = new Schedule
         {
             Name = dto.Name.Trim(),
+            StoreId = dto.StoreId,
             PeriodStart = dto.PeriodStart,
             PeriodEnd = dto.PeriodEnd,
             Status = "Draft"

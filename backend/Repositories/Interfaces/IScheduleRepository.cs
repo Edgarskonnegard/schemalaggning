@@ -12,4 +12,5 @@ public interface IScheduleRepository
     Task<bool> DeleteAsync(int id);
     Task<Shift?> GetShiftByIdAsync(int shiftId);
     Task<bool> UpdateShiftAsync(Shift shift);
+    Task<bool> UpdateShiftsAsync(IEnumerable<Shift> shifts);
 }

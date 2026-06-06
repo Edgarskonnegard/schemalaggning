@@ -18,6 +18,7 @@ public class ScheduleRepository : IScheduleRepository
     {
         return _context.Schedules
             .AsNoTracking()
+            .Include(schedule => schedule.Store)
             .OrderByDescending(schedule => schedule.PeriodStart)
             .ToListAsync();
     }
@@ -30,8 +31,10 @@ public class ScheduleRepository : IScheduleRepository
     public Task<Schedule?> GetByIdWithShiftsAsync(int id)
     {
         return _context.Schedules
+            .Include(schedule => schedule.Store)
             .Include(schedule => schedule.Shifts)
                 .ThenInclude(shift => shift.Employee)
+                    .ThenInclude(employee => employee.Role)
             .Include(schedule => schedule.Shifts)
                 .ThenInclude(shift => shift.ShiftType)
             .FirstOrDefaultAsync(schedule => schedule.Id == id);
@@ -67,6 +70,7 @@ public class ScheduleRepository : IScheduleRepository
         return _context.Shifts
             .Include(shift => shift.Schedule)
             .Include(shift => shift.Employee)
+                .ThenInclude(employee => employee.Role)
             .Include(shift => shift.ShiftType)
             .FirstOrDefaultAsync(shift => shift.Id == shiftId);
     }
@@ -74,6 +78,12 @@ public class ScheduleRepository : IScheduleRepository
     public async Task<bool> UpdateShiftAsync(Shift shift)
     {
         _context.Shifts.Update(shift);
+        return await _context.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> UpdateShiftsAsync(IEnumerable<Shift> shifts)
+    {
+        _context.Shifts.UpdateRange(shifts);
         return await _context.SaveChangesAsync() > 0;
     }
 }

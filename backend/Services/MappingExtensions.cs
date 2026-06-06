@@ -118,6 +118,8 @@ internal static class MappingExtensions
         {
             Id = schedule.Id,
             Name = schedule.Name,
+            StoreId = schedule.StoreId,
+            StoreName = schedule.Store?.Name ?? string.Empty,
             PeriodStart = schedule.PeriodStart,
             PeriodEnd = schedule.PeriodEnd,
             Status = schedule.Status,
@@ -136,6 +138,7 @@ internal static class MappingExtensions
             Id = shift.Id,
             EmployeeId = shift.EmployeeId,
             EmployeeName = shift.Employee?.Name ?? string.Empty,
+            EmployeeRoleName = shift.Employee?.Role?.Name ?? string.Empty,
             ShiftTypeId = shift.ShiftTypeId,
             ShiftTypeName = shift.ShiftType?.Name ?? string.Empty,
             Date = shift.Date,

@@ -8,6 +8,8 @@ public class ShiftReadDto
 
     public string EmployeeName { get; set; } = string.Empty;
 
+    public string EmployeeRoleName { get; set; } = string.Empty;
+
     public int ShiftTypeId { get; set; }
 
     public string ShiftTypeName { get; set; } = string.Empty;
