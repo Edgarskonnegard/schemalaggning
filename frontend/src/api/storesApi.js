@@ -11,3 +11,7 @@ export function createStore(store) {
 export function updateStore(id, store) {
   return put(`/api/stores/${id}`, store);
 }
+
+export function generateBaseSchedules(storeId) {
+  return post(`/api/stores/${storeId}/base-schedules/generate`);
+}

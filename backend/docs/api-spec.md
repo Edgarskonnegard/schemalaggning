@@ -219,6 +219,34 @@ Regeln betyder: butiken behöver två pass av passtypen varje måndag.
 
 Tar bort en behovsregel för butiken.
 
+## Base Schedule Generation
+
+### POST `/api/stores/{storeId}/base-schedules/generate`
+
+Genererar anställdas grundschemaregler från butikens bemanningsbehov.
+
+Första versionen är avsiktligt enkel:
+
+- rensar befintliga `BaseScheduleRule` för anställda i butiken
+- upprepar butikens veckobehov i grundschemats fyra veckor
+- matchar passtyp mot anställdas roll
+- försöker balansera timmar mot `EmploymentPercentage`
+- räknar `100%` som `40` timmar per vecka
+- hoppar över behov som inte kan placeras utan att fastna
+
+Svarsexempel:
+
+```json
+{
+  "storeId": 1,
+  "employeeCount": 5,
+  "coverageRuleCount": 8,
+  "createdRuleCount": 32,
+  "unassignedNeedCount": 0,
+  "warnings": []
+}
+```
+
 ## Schedules
 
 ### GET `/api/schedules`

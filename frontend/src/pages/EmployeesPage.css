@@ -85,6 +85,27 @@
   opacity: 0.9;
 }
 
+.add-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.generation-result {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  padding: 12px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 14px;
+}
+
+.generation-result strong {
+  color: #1e40af;
+}
+
 /* EMPLOYEES */
 
 .employee-list {

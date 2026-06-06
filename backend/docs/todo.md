@@ -267,13 +267,18 @@ Backend-regler:
    - `RequiredCount` stöds så flera personer kan behövas på samma pass.
 
 4. Bestäm relation mellan anställdas grundschema och butikens behov
-   - Utred om anställdas nuvarande `BaseScheduleRule` ska tas bort, behållas som preferens/tillgänglighet, eller användas som input till fördelning.
-   - Dokumentera beslut innan migration.
+   - Status: första beslut infört.
+   - Butikens behov används som input för att generera anställdas `BaseScheduleRule`.
+   - Första versionen genererar direkt till grundschema, utan `AssignmentProposal`.
+   - Grundschemat upprepar butikens veckobehov över fyra cykelveckor.
 
 5. Bygg fördelningstjänst
-   - Input: butikens grundbehov, anställda, roller, sysselsättningsgrad och eventuella händelser.
-   - Output: `AssignmentProposal`.
-   - Första versionen kan vara regelbaserad och enkel.
+   - Status: första enkel version införd.
+   - Input: butikens grundbehov, anställda, roller och sysselsättningsgrad.
+   - Output: `BaseScheduleRule` direkt.
+   - Matchar passtyp mot anställdas roll.
+   - Försöker balansera timmar där 100% motsvarar 40 timmar per vecka.
+   - Kvar: dygnsvila, helglogik, maxpass, preferenser och bättre rättvisa.
 
 6. Lägg till admin-godkännande
    - Admin ser förslag.

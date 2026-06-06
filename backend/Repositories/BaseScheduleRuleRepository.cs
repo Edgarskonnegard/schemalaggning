@@ -53,6 +53,12 @@ public class BaseScheduleRuleRepository : IBaseScheduleRuleRepository
         return rule;
     }
 
+    public async Task AddRangeAsync(List<BaseScheduleRule> rules)
+    {
+        _context.BaseScheduleRules.AddRange(rules);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<bool> UpdateAsync(BaseScheduleRule rule)
     {
         _context.BaseScheduleRules.Update(rule);
@@ -69,6 +75,16 @@ public class BaseScheduleRuleRepository : IBaseScheduleRuleRepository
 
         _context.BaseScheduleRules.Remove(rule);
         return await _context.SaveChangesAsync() > 0;
+    }
+
+    public async Task DeleteByEmployeeIdsAsync(List<int> employeeIds)
+    {
+        var rules = await _context.BaseScheduleRules
+            .Where(rule => employeeIds.Contains(rule.EmployeeId))
+            .ToListAsync();
+
+        _context.BaseScheduleRules.RemoveRange(rules);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<bool> DeleteByEmployeeWeekAndDayAsync(int employeeId, int weekInCycle, DayOfWeek dayOfWeek)

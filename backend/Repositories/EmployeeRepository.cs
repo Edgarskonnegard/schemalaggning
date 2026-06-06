@@ -24,6 +24,17 @@ public class EmployeeRepository : IEmployeeRepository
             .ToListAsync();
     }
 
+    public Task<List<Employee>> GetByStoreIdAsync(int storeId)
+    {
+        return _context.Employees
+            .AsNoTracking()
+            .Include(employee => employee.Store)
+            .Include(employee => employee.Role)
+            .Where(employee => employee.StoreId == storeId)
+            .OrderBy(employee => employee.Name)
+            .ToListAsync();
+    }
+
     public Task<Employee?> GetByIdAsync(int id)
     {
         return _context.Employees

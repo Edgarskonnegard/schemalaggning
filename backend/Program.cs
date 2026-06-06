@@ -30,6 +30,7 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IShiftTypeService, ShiftTypeService>();
 builder.Services.AddScoped<IBaseScheduleRuleService, BaseScheduleRuleService>();
+builder.Services.AddScoped<IBaseScheduleGenerationService, BaseScheduleGenerationService>();
 builder.Services.AddScoped<IStoreCoverageRuleService, StoreCoverageRuleService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IScheduleGenerationService, ScheduleGenerationService>();

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { createEmployee, getEmployees } from "../api/employeesApi";
 import { createRole, getRoles, updateRole } from "../api/rolesApi";
 import { getShiftTypes } from "../api/shiftTypesApi";
-import { createStore, getStores } from "../api/storesApi";
+import { createStore, generateBaseSchedules, getStores } from "../api/storesApi";
 import "./EmployeesPage.css";
 
 function getEmploymentLabel(percentage) {
@@ -25,9 +25,12 @@ function EmployeesPage() {
   const [roles, setRoles] = useState([]);
   const [shiftTypes, setShiftTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [generationResult, setGenerationResult] = useState(null);
   const [newStoreName, setNewStoreName] = useState("");
   const [newRoleName, setNewRoleName] = useState("");
+  const [generationStoreId, setGenerationStoreId] = useState("");
   const [editingRoleId, setEditingRoleId] = useState(null);
   const [editingRoleName, setEditingRoleName] = useState("");
 
@@ -67,6 +70,7 @@ function EmployeesPage() {
       setStores(storesResult);
       setRoles(rolesResult);
       setShiftTypes(shiftTypesResult);
+      setGenerationStoreId((prev) => prev || storesResult[0]?.id?.toString() || "");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -180,6 +184,27 @@ function EmployeesPage() {
       });
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  async function handleGenerateBaseSchedules(e) {
+    e.preventDefault();
+
+    if (!generationStoreId) {
+      setError("Välj butik först.");
+      return;
+    }
+
+    try {
+      setError("");
+      setGenerationResult(null);
+      setIsGenerating(true);
+      const result = await generateBaseSchedules(generationStoreId);
+      setGenerationResult(result);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsGenerating(false);
     }
   }
 
@@ -342,6 +367,50 @@ function EmployeesPage() {
                 Lägg till anställd
               </button>
             </form>
+          </section>
+
+          <section className="form-card">
+            <h2 className="section-title">Generera grundschema</h2>
+
+            <form onSubmit={handleGenerateBaseSchedules}>
+              <div className="form-group">
+                <label>Butik</label>
+
+                <select
+                  value={generationStoreId}
+                  onChange={(e) => setGenerationStoreId(e.target.value)}
+                >
+                  <option value="">Välj butik</option>
+                  {stores.map((store) => (
+                    <option key={store.id} value={store.id}>
+                      {store.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button type="submit" className="add-btn" disabled={isGenerating}>
+                {isGenerating ? "Genererar..." : "Generera grundscheman"}
+              </button>
+            </form>
+
+            {generationResult && (
+              <div className="generation-result">
+                <strong>{generationResult.createdRuleCount} regler skapades</strong>
+                <span>
+                  {generationResult.employeeCount} anställda ·{" "}
+                  {generationResult.coverageRuleCount} behovsregler
+                </span>
+
+                {generationResult.unassignedNeedCount > 0 && (
+                  <span>{generationResult.unassignedNeedCount} behov kunde inte placeras.</span>
+                )}
+
+                {generationResult.warnings?.map((warning) => (
+                  <span key={warning}>{warning}</span>
+                ))}
+              </div>
+            )}
           </section>
         </div>
 
