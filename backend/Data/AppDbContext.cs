@@ -159,7 +159,7 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<StoreCoverageRule>()
-            .HasIndex(r => new { r.StoreId, r.WeekInCycle, r.DayOfWeek, r.ShiftTypeId })
+            .HasIndex(r => new { r.StoreId, r.DayOfWeek, r.ShiftTypeId })
             .IsUnique();
 
         modelBuilder.Entity<Schedule>()

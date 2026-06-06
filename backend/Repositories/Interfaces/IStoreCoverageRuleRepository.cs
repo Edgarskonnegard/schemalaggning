@@ -5,9 +5,8 @@ namespace Schemalaggning.Repositories.Interfaces;
 public interface IStoreCoverageRuleRepository
 {
     Task<List<StoreCoverageRule>> GetByStoreIdAsync(int storeId);
-    Task<StoreCoverageRule?> GetByStoreWeekDayAndShiftTypeAsync(
+    Task<StoreCoverageRule?> GetByStoreDayAndShiftTypeAsync(
         int storeId,
-        int weekInCycle,
         DayOfWeek dayOfWeek,
         int shiftTypeId);
     Task<StoreCoverageRule> CreateAsync(StoreCoverageRule rule);

@@ -21,15 +21,13 @@ public class StoreCoverageRuleRepository : IStoreCoverageRuleRepository
             .Include(rule => rule.Store)
             .Include(rule => rule.ShiftType)
             .Where(rule => rule.StoreId == storeId)
-            .OrderBy(rule => rule.WeekInCycle)
-            .ThenBy(rule => rule.DayOfWeek)
+            .OrderBy(rule => rule.DayOfWeek)
             .ThenBy(rule => rule.StartTime)
             .ToListAsync();
     }
 
-    public Task<StoreCoverageRule?> GetByStoreWeekDayAndShiftTypeAsync(
+    public Task<StoreCoverageRule?> GetByStoreDayAndShiftTypeAsync(
         int storeId,
-        int weekInCycle,
         DayOfWeek dayOfWeek,
         int shiftTypeId)
     {
@@ -38,7 +36,6 @@ public class StoreCoverageRuleRepository : IStoreCoverageRuleRepository
             .Include(rule => rule.ShiftType)
             .FirstOrDefaultAsync(rule =>
                 rule.StoreId == storeId &&
-                rule.WeekInCycle == weekInCycle &&
                 rule.DayOfWeek == dayOfWeek &&
                 rule.ShiftTypeId == shiftTypeId);
     }

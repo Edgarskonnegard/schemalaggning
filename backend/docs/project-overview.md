@@ -151,7 +151,7 @@ Den planerade modellen är:
 
 Se `docs/todo.md` för föreslagen implementationordning och öppna beslut.
 
-Första skivan av `Store` är införd: butiker kan skapas och anställda kopplas till butik. `StoreCoverageRule` är införd som butikens fyraveckors grundbehov, och frontend har en första vy för att registrera vilka pass som behöver täckas. Första backend-skivan av konton/JWT är också införd: konton kan skapas och login kan returnera en JWT. Nästa auth-steg är att lägga på JWT bearer-validering, policies och frontend-login.
+Första skivan av `Store` är införd: butiker kan skapas och anställda kopplas till butik. `StoreCoverageRule` är införd som butikens repeterande veckobehov, och frontend har en första vy för att registrera vilka pass som behöver täckas. Första backend-skivan av konton/JWT är också införd: konton kan skapas och login kan returnera en JWT. Nästa auth-steg är att lägga på JWT bearer-validering, policies och frontend-login.
 
 ## Dokumentationskarta
 

@@ -105,7 +105,6 @@ internal static class MappingExtensions
             StoreName = rule.Store?.Name ?? string.Empty,
             ShiftTypeId = rule.ShiftTypeId,
             ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
-            WeekInCycle = rule.WeekInCycle,
             DayOfWeek = rule.DayOfWeek,
             RequiredCount = rule.RequiredCount,
             StartTime = rule.StartTime,

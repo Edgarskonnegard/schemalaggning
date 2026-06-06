@@ -60,7 +60,7 @@ Den nuvarande modellen räcker för att hantera roller, anställda, passtyper oc
 - En `Store` representerar en butik/verksamhet.
 - Anställda kopplas till en butik.
 - Roller och passtyper kan vara butiksspecifika eller globala. Detta behöver beslutas.
-- Butiken har ett grundbehov: vilka pass som behöver täckas i en fyraveckorscykel.
+- Butiken har ett grundbehov: vilka pass som behöver täckas i en normalvecka som upprepas.
 - En schemagenereringstjänst fördelar butikens behovspass till anställda utifrån regler.
 - Fördelade pass blir först förslag.
 - Admin granskar och godkänner förslag innan passen blir del av schemat.
@@ -71,7 +71,7 @@ Den nuvarande modellen räcker för att hantera roller, anställda, passtyper oc
 
 - `Store` finns och anställda kan kopplas till butik.
 - `UserAccount` finns som separat konto från `Employee`, med första login/JWT-grunden.
-- `StoreCoverageRule` finns för butikens grundbehov i en fyraveckorscykel.
+- `StoreCoverageRule` finns för butikens grundbehov i en repeterande normalvecka.
 - Frontend har en första vy för att lägga till, ändra och ta bort bemanningsbehov per butik.
 
 ### Nästa rekommenderade steg
@@ -110,7 +110,6 @@ Employee
 StoreCoverageRule / StoreBaseShiftNeed
 - StoreId
 - ShiftTypeId
-- WeekInCycle
 - DayOfWeek
 - RequiredCount
 - StartTime
@@ -122,8 +121,8 @@ StoreCoverageRule / StoreBaseShiftNeed
 Exempel:
 
 ```text
-Butiken behöver 2 mellanpass tisdag vecka 1.
-Butiken behöver 1 stängningspass fredag vecka 3.
+Butiken behöver 2 mellanpass varje tisdag.
+Butiken behöver 1 stängningspass varje fredag.
 ```
 
 ```text

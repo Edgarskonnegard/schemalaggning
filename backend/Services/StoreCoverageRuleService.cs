@@ -31,9 +31,8 @@ public class StoreCoverageRuleService : IStoreCoverageRuleService
     {
         await ValidateRuleAsync(storeId, dto);
 
-        var existingRule = await _coverageRuleRepository.GetByStoreWeekDayAndShiftTypeAsync(
+        var existingRule = await _coverageRuleRepository.GetByStoreDayAndShiftTypeAsync(
             storeId,
-            dto.WeekInCycle,
             dto.DayOfWeek,
             dto.ShiftTypeId);
 
@@ -43,7 +42,6 @@ public class StoreCoverageRuleService : IStoreCoverageRuleService
             {
                 StoreId = storeId,
                 ShiftTypeId = dto.ShiftTypeId,
-                WeekInCycle = dto.WeekInCycle,
                 DayOfWeek = dto.DayOfWeek,
                 RequiredCount = dto.RequiredCount,
                 StartTime = dto.StartTime,
@@ -78,11 +76,6 @@ public class StoreCoverageRuleService : IStoreCoverageRuleService
         if (!await _shiftTypeRepository.ExistsAsync(dto.ShiftTypeId))
         {
             throw new InvalidOperationException($"ShiftType {dto.ShiftTypeId} does not exist.");
-        }
-
-        if (dto.WeekInCycle is < 1 or > 4)
-        {
-            throw new ArgumentException("Week in cycle must be between 1 and 4.");
         }
 
         if (dto.RequiredCount < 1)
