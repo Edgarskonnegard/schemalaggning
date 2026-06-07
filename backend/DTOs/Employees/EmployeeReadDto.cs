@@ -18,5 +18,13 @@ public class EmployeeReadDto
 
     public decimal EmploymentPercentage { get; set; }
 
+    public int? AccountId { get; set; }
+
+    public string AccountEmail { get; set; } = string.Empty;
+
+    public string AccountAccessRole { get; set; } = string.Empty;
+
+    public bool AccountIsActive { get; set; }
+
     public List<BaseScheduleRuleReadDto> BaseSchedule { get; set; } = new();
 }

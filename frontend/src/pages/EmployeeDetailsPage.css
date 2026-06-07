@@ -107,6 +107,21 @@
   border-color: #4f46e5;
 }
 
+.details-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.details-checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
 .shift-type-list {
   display: grid;
   gap: 10px;

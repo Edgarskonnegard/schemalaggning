@@ -54,6 +54,10 @@ internal static class MappingExtensions
             RoleId = employee.RoleId,
             RoleName = employee.Role?.Name ?? string.Empty,
             EmploymentPercentage = employee.EmploymentPercentage,
+            AccountId = employee.UserAccount?.Id,
+            AccountEmail = employee.UserAccount?.Email ?? string.Empty,
+            AccountAccessRole = employee.UserAccount?.AccessRole ?? string.Empty,
+            AccountIsActive = employee.UserAccount?.IsActive ?? true,
             BaseSchedule = employee.BaseScheduleRules
                 .OrderBy(rule => rule.WeekInCycle)
                 .ThenBy(rule => rule.DayOfWeek)

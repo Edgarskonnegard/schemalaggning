@@ -253,7 +253,7 @@ Backend-regler:
    - Password hashing finns.
    - Login-endpoint som returnerar JWT finns.
    - Lägg till admin/employee accessroller.
-   - Koppla employee-konto till `Employee`.
+   - Employee-konto kan kopplas till `Employee` från anställd-vyn.
    - Koppla admin-konto till butik eller systemnivå.
    - Frontend API-wrapper för auth finns.
    - Kvar: skydda admin-endpoints och employee-endpoints med JWT bearer och policies.

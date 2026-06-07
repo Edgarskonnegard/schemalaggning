@@ -20,6 +20,7 @@ public class EmployeeRepository : IEmployeeRepository
             .AsNoTracking()
             .Include(employee => employee.Store)
             .Include(employee => employee.Role)
+            .Include(employee => employee.UserAccount)
             .OrderBy(employee => employee.Name)
             .ToListAsync();
     }
@@ -30,6 +31,7 @@ public class EmployeeRepository : IEmployeeRepository
             .AsNoTracking()
             .Include(employee => employee.Store)
             .Include(employee => employee.Role)
+            .Include(employee => employee.UserAccount)
             .Where(employee => employee.StoreId == storeId)
             .OrderBy(employee => employee.Name)
             .ToListAsync();
@@ -40,6 +42,7 @@ public class EmployeeRepository : IEmployeeRepository
         return _context.Employees
             .Include(employee => employee.Store)
             .Include(employee => employee.Role)
+            .Include(employee => employee.UserAccount)
             .FirstOrDefaultAsync(employee => employee.Id == id);
     }
 
@@ -49,6 +52,7 @@ public class EmployeeRepository : IEmployeeRepository
             .AsNoTracking()
             .Include(employee => employee.Store)
             .Include(employee => employee.Role)
+            .Include(employee => employee.UserAccount)
             .Include(employee => employee.BaseScheduleRules)
                 .ThenInclude(rule => rule.ShiftType)
             .FirstOrDefaultAsync(employee => employee.Id == id);

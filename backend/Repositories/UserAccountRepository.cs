@@ -34,6 +34,12 @@ public class UserAccountRepository : IUserAccountRepository
             .FirstOrDefaultAsync(userAccount => userAccount.Email == normalizedEmail);
     }
 
+    public Task<UserAccount?> GetByEmployeeIdAsync(int employeeId)
+    {
+        return _context.UserAccounts
+            .FirstOrDefaultAsync(userAccount => userAccount.EmployeeId == employeeId);
+    }
+
     public async Task<UserAccount> CreateAsync(UserAccount userAccount)
     {
         _context.UserAccounts.Add(userAccount);
@@ -41,9 +47,23 @@ public class UserAccountRepository : IUserAccountRepository
         return userAccount;
     }
 
+    public async Task<bool> UpdateAsync(UserAccount userAccount)
+    {
+        _context.UserAccounts.Update(userAccount);
+        return await _context.SaveChangesAsync() > 0;
+    }
+
     public Task<bool> EmailExistsAsync(string email)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
         return _context.UserAccounts.AnyAsync(userAccount => userAccount.Email == normalizedEmail);
+    }
+
+    public Task<bool> EmailExistsForOtherAccountAsync(string email, int accountId)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        return _context.UserAccounts.AnyAsync(userAccount =>
+            userAccount.Email == normalizedEmail &&
+            userAccount.Id != accountId);
     }
 }

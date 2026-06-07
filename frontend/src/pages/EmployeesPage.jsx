@@ -39,6 +39,10 @@ function EmployeesPage() {
     storeId: "",
     roleId: "",
     employmentPercentage: 100,
+    accountEmail: "",
+    accountPassword: "",
+    accountAccessRole: "Employee",
+    accountIsActive: true,
   });
 
   const shiftTypesByRoleId = useMemo(() => {
@@ -107,7 +111,7 @@ function EmployeesPage() {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: e.target.type === "checkbox" ? e.target.checked : value,
     }));
   }
 
@@ -170,6 +174,10 @@ function EmployeesPage() {
         storeId: Number(formData.storeId),
         roleId: Number(formData.roleId),
         employmentPercentage: Number(formData.employmentPercentage),
+        accountEmail: formData.accountEmail.trim(),
+        accountPassword: formData.accountPassword,
+        accountAccessRole: formData.accountAccessRole,
+        accountIsActive: formData.accountIsActive,
       });
 
       setEmployees((prev) =>
@@ -181,6 +189,10 @@ function EmployeesPage() {
         storeId: formData.storeId,
         roleId: formData.roleId,
         employmentPercentage: 100,
+        accountEmail: "",
+        accountPassword: "",
+        accountAccessRole: "Employee",
+        accountIsActive: true,
       });
     } catch (err) {
       setError(err.message);
@@ -364,6 +376,53 @@ function EmployeesPage() {
                 />
               </div>
 
+              <div className="form-group">
+                <label>Email för inloggning</label>
+
+                <input
+                  type="email"
+                  name="accountEmail"
+                  value={formData.accountEmail}
+                  onChange={handleChange}
+                  placeholder="namn@example.com"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Initialt lösenord</label>
+
+                <input
+                  type="password"
+                  name="accountPassword"
+                  value={formData.accountPassword}
+                  onChange={handleChange}
+                  placeholder="Minst 8 tecken"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Access</label>
+
+                <select
+                  name="accountAccessRole"
+                  value={formData.accountAccessRole}
+                  onChange={handleChange}
+                >
+                  <option value="Employee">Anställd</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+
+              <label className="form-checkbox">
+                <input
+                  type="checkbox"
+                  name="accountIsActive"
+                  checked={formData.accountIsActive}
+                  onChange={handleChange}
+                />
+                <span>Kontot är aktivt</span>
+              </label>
+
               <button type="submit" className="add-btn">
                 Lägg till anställd
               </button>
@@ -448,6 +507,13 @@ function EmployeesPage() {
 
                     <div className="employee-info">
                       Roll: {employee.roleName}
+                    </div>
+
+                    <div className="employee-info">
+                      Konto:{" "}
+                      {employee.accountEmail
+                        ? `${employee.accountEmail} · ${employee.accountAccessRole}`
+                        : "Ej skapat"}
                     </div>
 
                     <div className="shift-access">

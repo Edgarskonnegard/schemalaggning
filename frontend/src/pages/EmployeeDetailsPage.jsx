@@ -79,9 +79,12 @@ function EmployeeDetailsPage() {
 
     setEmployee((prev) => ({
       ...prev,
-      [name]: name === "employmentPercentage" || name === "roleId" || name === "storeId"
-        ? Number(value)
-        : value,
+      [name]:
+        e.target.type === "checkbox"
+          ? e.target.checked
+          : name === "employmentPercentage" || name === "roleId" || name === "storeId"
+            ? Number(value)
+            : value,
     }));
   }
 
@@ -102,6 +105,10 @@ function EmployeeDetailsPage() {
         storeId: employee.storeId,
         roleId: employee.roleId,
         employmentPercentage: employee.employmentPercentage,
+        accountEmail: employee.accountEmail,
+        accountPassword: employee.accountPassword || "",
+        accountAccessRole: employee.accountAccessRole || "Employee",
+        accountIsActive: employee.accountIsActive,
       });
 
       await loadData();
@@ -257,6 +264,64 @@ function EmployeeDetailsPage() {
 
             <button type="submit" className="save-btn" disabled={isSavingEmployee}>
               {isSavingEmployee ? "Sparar..." : "Spara"}
+            </button>
+          </form>
+        </section>
+
+        <section className="details-card">
+          <h2>Inloggning</h2>
+
+          <form onSubmit={handleEmployeeSubmit}>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="accountEmail"
+                value={employee.accountEmail || ""}
+                onChange={handleEmployeeChange}
+                placeholder="namn@example.com"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Nytt lösenord</label>
+              <input
+                type="password"
+                name="accountPassword"
+                value={employee.accountPassword || ""}
+                onChange={handleEmployeeChange}
+                placeholder={
+                  employee.accountId
+                    ? "Lämna tomt för att behålla"
+                    : "Minst 8 tecken"
+                }
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Access</label>
+              <select
+                name="accountAccessRole"
+                value={employee.accountAccessRole || "Employee"}
+                onChange={handleEmployeeChange}
+              >
+                <option value="Employee">Anställd</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+
+            <label className="details-checkbox">
+              <input
+                type="checkbox"
+                name="accountIsActive"
+                checked={Boolean(employee.accountIsActive)}
+                onChange={handleEmployeeChange}
+              />
+              <span>Kontot är aktivt</span>
+            </label>
+
+            <button type="submit" className="save-btn" disabled={isSavingEmployee}>
+              {isSavingEmployee ? "Sparar..." : "Spara inloggning"}
             </button>
           </form>
         </section>
