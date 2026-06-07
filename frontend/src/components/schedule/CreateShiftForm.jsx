@@ -1,5 +1,9 @@
 import { useState } from "react";
 
+import Button from "../ui/Button";
+import Card from "../ui/Card";
+import Input from "../ui/Input";
+
 function normalizeTime(value) {
   return value.length === 5 ? `${value}:00` : value;
 }
@@ -62,20 +66,17 @@ function CreateShiftForm({ roles, onCreateShiftType }) {
   }
 
   return (
-    <section className="shift-form-card">
+    <Card>
       <h2>Skapa passtyp</h2>
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Namn</label>
-
-          <input
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Ex. Öppning"
-          />
-        </div>
+        <Input
+          label="Namn"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder="Ex. Öppning"
+        />
 
         <div className="form-group">
           <label>Roller</label>
@@ -95,34 +96,28 @@ function CreateShiftForm({ roles, onCreateShiftType }) {
         </div>
 
         <div className="time-row">
-          <div className="form-group">
-            <label>Start</label>
+          <Input
+            label="Start"
+            type="time"
+            name="defaultStartTime"
+            value={formData.defaultStartTime}
+            onChange={handleChange}
+          />
 
-            <input
-              type="time"
-              name="defaultStartTime"
-              value={formData.defaultStartTime}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Slut</label>
-
-            <input
-              type="time"
-              name="defaultEndTime"
-              value={formData.defaultEndTime}
-              onChange={handleChange}
-            />
-          </div>
+          <Input
+            label="Slut"
+            type="time"
+            name="defaultEndTime"
+            value={formData.defaultEndTime}
+            onChange={handleChange}
+          />
         </div>
 
-        <button type="submit" className="primary-btn">
+        <Button type="submit" fullWidth>
           Skapa passtyp
-        </button>
+        </Button>
       </form>
-    </section>
+    </Card>
   );
 }
 

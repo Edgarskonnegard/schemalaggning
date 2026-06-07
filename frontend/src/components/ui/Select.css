@@ -1,15 +1,27 @@
-.select-wrapper{
- display:flex;
-
- flex-direction:column;
-
- gap:8px;
+.select-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.select{
- padding:10px;
+.select-wrapper span {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+}
 
- border-radius:8px;
+.select {
+  min-height: 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #111827;
+  font: inherit;
+}
 
- border:1px solid #ddd;
+.select:focus {
+  border-color: #2563eb;
+  outline: 2px solid #bfdbfe;
+  outline-offset: 0;
 }

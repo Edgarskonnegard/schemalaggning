@@ -39,6 +39,17 @@
   gap: 8px;
 }
 
+.form-group {
+  display: grid;
+  gap: 8px;
+}
+
+.form-group > label {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .role-checkbox {
   display: flex;
   align-items: center;

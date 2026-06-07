@@ -1,5 +1,9 @@
 import { useState } from "react";
 
+import Button from "../ui/Button";
+import Card from "../ui/Card";
+import Input from "../ui/Input";
+
 function formatTime(value) {
   return value?.slice(0, 5) || "";
 }
@@ -73,38 +77,32 @@ function ScheduleList({ roles, shifts, onUpdateShiftType }) {
             const isEditing = editingId === shift.id;
 
             return (
-              <div key={shift.id} className="shift-card">
+              <Card key={shift.id} className="shift-card">
                 {isEditing ? (
                   <form onSubmit={handleSubmit} className="shift-edit-form">
-                    <div className="form-group">
-                      <label>Namn</label>
-                      <input
-                        name="name"
-                        value={editData.name}
-                        onChange={handleChange}
-                      />
-                    </div>
+                    <Input
+                      label="Namn"
+                      name="name"
+                      value={editData.name}
+                      onChange={handleChange}
+                    />
 
                     <div className="time-row">
-                      <div className="form-group">
-                        <label>Start</label>
-                        <input
-                          type="time"
-                          name="defaultStartTime"
-                          value={editData.defaultStartTime}
-                          onChange={handleChange}
-                        />
-                      </div>
+                      <Input
+                        label="Start"
+                        type="time"
+                        name="defaultStartTime"
+                        value={editData.defaultStartTime}
+                        onChange={handleChange}
+                      />
 
-                      <div className="form-group">
-                        <label>Slut</label>
-                        <input
-                          type="time"
-                          name="defaultEndTime"
-                          value={editData.defaultEndTime}
-                          onChange={handleChange}
-                        />
-                      </div>
+                      <Input
+                        label="Slut"
+                        type="time"
+                        name="defaultEndTime"
+                        value={editData.defaultEndTime}
+                        onChange={handleChange}
+                      />
                     </div>
 
                     <div className="form-group">
@@ -124,16 +122,16 @@ function ScheduleList({ roles, shifts, onUpdateShiftType }) {
                     </div>
 
                     <div className="button-row">
-                      <button type="submit" className="primary-btn">
+                      <Button type="submit">
                         Spara
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="secondary-btn"
+                        variant="secondary"
                         onClick={cancelEdit}
                       >
                         Avbryt
-                      </button>
+                      </Button>
                     </div>
                   </form>
                 ) : (
@@ -145,16 +143,16 @@ function ScheduleList({ roles, shifts, onUpdateShiftType }) {
                       {formatTime(shift.defaultEndTime)}
                     </p>
 
-                    <button
+                    <Button
                       type="button"
-                      className="secondary-btn"
+                      variant="secondary"
                       onClick={() => startEdit(shift)}
                     >
                       Redigera
-                    </button>
+                    </Button>
                   </>
                 )}
-              </div>
+              </Card>
             );
           })
         )}

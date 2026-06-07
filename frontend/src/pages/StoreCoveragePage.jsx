@@ -8,8 +8,10 @@ import {
 import { getShiftTypes } from "../api/shiftTypesApi";
 import { getStores } from "../api/storesApi";
 import ShiftNote from "../components/schedule/ShiftNote";
+import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import PageHeader from "../components/ui/PageHeader";
 import Select from "../components/ui/Select";
 import "./StoreCoveragePage.css";
 
@@ -250,14 +252,12 @@ function StoreCoveragePage() {
 
   return (
     <main className="store-coverage-page">
-      <div className="page-header">
-        <h1>Bemanningsbehov</h1>
-        <p>
-          Definiera en normalvecka med pass som butiken behöver täcka.
-        </p>
-      </div>
+      <PageHeader
+        title="Bemanningsbehov"
+        description="Definiera en normalvecka med pass som butiken behöver täcka."
+      />
 
-      {error && <p className="page-error">{error}</p>}
+      <Alert>{error}</Alert>
 
       <section className="coverage-board-card">
         <div className="coverage-board-header">

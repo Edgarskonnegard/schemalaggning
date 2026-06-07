@@ -7,7 +7,9 @@ import {
   getBaseScheduleApprovals,
   rejectBaseScheduleEmployee,
 } from "../api/approvalsApi";
+import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
+import PageHeader from "../components/ui/PageHeader";
 import Select from "../components/ui/Select";
 import "./ApprovalsPage.css";
 
@@ -221,12 +223,12 @@ function ApprovalsPage() {
 
   return (
     <main className="approvals-page">
-      <div className="page-header">
-        <h1>Godkännanden</h1>
-        <p>Granska en anställds genererade grundschema åt gången.</p>
-      </div>
+      <PageHeader
+        title="Godkännanden"
+        description="Granska en anställds genererade grundschema åt gången."
+      />
 
-      {error && <p className="page-error">{error}</p>}
+      <Alert>{error}</Alert>
 
       <div className="approvals-layout">
         <aside className="approvals-list">

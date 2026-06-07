@@ -5,6 +5,13 @@ import { createEmployee, getEmployees } from "../api/employeesApi";
 import { createRole, getRoles, updateRole } from "../api/rolesApi";
 import { getShiftTypes } from "../api/shiftTypesApi";
 import { createStore, generateBaseSchedules, getStores } from "../api/storesApi";
+import Alert from "../components/ui/Alert";
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import PageHeader from "../components/ui/PageHeader";
+import Select from "../components/ui/Select";
 import "./EmployeesPage.css";
 
 function getEmploymentLabel(percentage) {
@@ -223,29 +230,29 @@ function EmployeesPage() {
 
   return (
     <main className="employees-page">
-      <h1 className="employees-title">Anställda</h1>
+      <PageHeader
+        title="Anställda"
+        description="Hantera butiker, roller, konton och grundschemaförslag."
+      />
 
-      {error && <p className="page-error">{error}</p>}
+      <Alert>{error}</Alert>
 
       <div className="employee-layout">
         <div className="employee-sidebar">
-          <section className="form-card">
+          <Card>
             <h2 className="section-title">Skapa butik</h2>
 
             <form onSubmit={handleCreateStore}>
-              <div className="form-group">
-                <label>Namn</label>
+              <Input
+                label="Namn"
+                value={newStoreName}
+                onChange={(e) => setNewStoreName(e.target.value)}
+                placeholder="Ex. Centrum"
+              />
 
-                <input
-                  value={newStoreName}
-                  onChange={(e) => setNewStoreName(e.target.value)}
-                  placeholder="Ex. Centrum"
-                />
-              </div>
-
-              <button type="submit" className="add-btn">
+              <Button type="submit" fullWidth>
                 Lägg till butik
-              </button>
+              </Button>
             </form>
 
             <div className="role-list">
@@ -259,25 +266,22 @@ function EmployeesPage() {
                 ))
               )}
             </div>
-          </section>
+          </Card>
 
-          <section className="form-card">
+          <Card>
             <h2 className="section-title">Skapa roll</h2>
 
             <form onSubmit={handleCreateRole}>
-              <div className="form-group">
-                <label>Namn</label>
+              <Input
+                label="Namn"
+                value={newRoleName}
+                onChange={(e) => setNewRoleName(e.target.value)}
+                placeholder="Ex. Butiksmedarbetare"
+              />
 
-                <input
-                  value={newRoleName}
-                  onChange={(e) => setNewRoleName(e.target.value)}
-                  placeholder="Ex. Butiksmedarbetare"
-                />
-              </div>
-
-              <button type="submit" className="add-btn">
+              <Button type="submit" fullWidth>
                 Lägg till roll
-              </button>
+              </Button>
             </form>
 
             <div className="role-list">
@@ -288,130 +292,109 @@ function EmployeesPage() {
                   <div key={role.id} className="role-row">
                     {editingRoleId === role.id ? (
                       <form onSubmit={handleUpdateRole} className="role-edit-form">
-                        <input
+                        <Input
                           value={editingRoleName}
                           onChange={(e) => setEditingRoleName(e.target.value)}
                         />
                         <div className="role-actions">
-                          <button type="submit">Spara</button>
-                          <button type="button" onClick={cancelEditRole}>
+                          <Button type="submit">Spara</Button>
+                          <Button type="button" variant="secondary" onClick={cancelEditRole}>
                             Avbryt
-                          </button>
+                          </Button>
                         </div>
                       </form>
                     ) : (
                       <>
                         <span>{role.name}</span>
-                        <button type="button" onClick={() => startEditRole(role)}>
+                        <Button type="button" variant="ghost" onClick={() => startEditRole(role)}>
                           Redigera
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
                 ))
               )}
             </div>
-          </section>
+          </Card>
 
-          <section className="form-card">
+          <Card>
             <h2 className="section-title">Skapa anställd</h2>
 
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Namn</label>
+              <Input
+                label="Namn"
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Ex. Anna Andersson"
+              />
 
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Ex. Anna Andersson"
-                />
-              </div>
+              <Select
+                label="Butik"
+                name="storeId"
+                value={formData.storeId}
+                onChange={handleChange}
+              >
+                <option value="">Välj butik</option>
+                {stores.map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
+              </Select>
 
-              <div className="form-group">
-                <label>Butik</label>
+              <Select
+                label="Roll"
+                name="roleId"
+                value={formData.roleId}
+                onChange={handleChange}
+              >
+                <option value="">Välj roll</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
+                  </option>
+                ))}
+              </Select>
 
-                <select
-                  name="storeId"
-                  value={formData.storeId}
-                  onChange={handleChange}
-                >
-                  <option value="">Välj butik</option>
-                  {stores.map((store) => (
-                    <option key={store.id} value={store.id}>
-                      {store.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Input
+                label="Anställningsgrad"
+                type="number"
+                name="employmentPercentage"
+                min="0"
+                max="100"
+                value={formData.employmentPercentage}
+                onChange={handleChange}
+              />
 
-              <div className="form-group">
-                <label>Roll</label>
+              <Input
+                label="Email för inloggning"
+                type="email"
+                name="accountEmail"
+                value={formData.accountEmail}
+                onChange={handleChange}
+                placeholder="namn@example.com"
+              />
 
-                <select
-                  name="roleId"
-                  value={formData.roleId}
-                  onChange={handleChange}
-                >
-                  <option value="">Välj roll</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Input
+                label="Initialt lösenord"
+                type="password"
+                name="accountPassword"
+                value={formData.accountPassword}
+                onChange={handleChange}
+                placeholder="Minst 8 tecken"
+              />
 
-              <div className="form-group">
-                <label>Anställningsgrad</label>
-
-                <input
-                  type="number"
-                  name="employmentPercentage"
-                  min="0"
-                  max="100"
-                  value={formData.employmentPercentage}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Email för inloggning</label>
-
-                <input
-                  type="email"
-                  name="accountEmail"
-                  value={formData.accountEmail}
-                  onChange={handleChange}
-                  placeholder="namn@example.com"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Initialt lösenord</label>
-
-                <input
-                  type="password"
-                  name="accountPassword"
-                  value={formData.accountPassword}
-                  onChange={handleChange}
-                  placeholder="Minst 8 tecken"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Access</label>
-
-                <select
-                  name="accountAccessRole"
-                  value={formData.accountAccessRole}
-                  onChange={handleChange}
-                >
-                  <option value="Employee">Anställd</option>
-                  <option value="Admin">Admin</option>
-                </select>
-              </div>
+              <Select
+                label="Access"
+                name="accountAccessRole"
+                value={formData.accountAccessRole}
+                onChange={handleChange}
+              >
+                <option value="Employee">Anställd</option>
+                <option value="Admin">Admin</option>
+              </Select>
 
               <label className="form-checkbox">
                 <input
@@ -423,35 +406,32 @@ function EmployeesPage() {
                 <span>Kontot är aktivt</span>
               </label>
 
-              <button type="submit" className="add-btn">
+              <Button type="submit" fullWidth>
                 Lägg till anställd
-              </button>
+              </Button>
             </form>
-          </section>
+          </Card>
 
-          <section className="form-card">
+          <Card>
             <h2 className="section-title">Generera grundschema</h2>
 
             <form onSubmit={handleGenerateBaseSchedules}>
-              <div className="form-group">
-                <label>Butik</label>
+              <Select
+                label="Butik"
+                value={generationStoreId}
+                onChange={(e) => setGenerationStoreId(e.target.value)}
+              >
+                <option value="">Välj butik</option>
+                {stores.map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.name}
+                  </option>
+                ))}
+              </Select>
 
-                <select
-                  value={generationStoreId}
-                  onChange={(e) => setGenerationStoreId(e.target.value)}
-                >
-                  <option value="">Välj butik</option>
-                  {stores.map((store) => (
-                    <option key={store.id} value={store.id}>
-                      {store.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button type="submit" className="add-btn" disabled={isGenerating}>
+              <Button type="submit" fullWidth disabled={isGenerating}>
                 {isGenerating ? "Genererar..." : "Generera förslag"}
-              </button>
+              </Button>
             </form>
 
             {generationResult && (
@@ -471,10 +451,10 @@ function EmployeesPage() {
                 ))}
               </div>
             )}
-          </section>
+          </Card>
         </div>
 
-        <section>
+        <Card>
           <h2 className="section-title">Lista över anställda</h2>
 
           {isLoading ? (
@@ -496,9 +476,9 @@ function EmployeesPage() {
                     <div className="employee-header">
                       <span className="employee-name">{employee.name}</span>
 
-                      <span className="badge">
+                      <Badge>
                         {getEmploymentLabel(employee.employmentPercentage)}
-                      </span>
+                      </Badge>
                     </div>
 
                     <div className="employee-info">
@@ -525,9 +505,9 @@ function EmployeesPage() {
                         </p>
                       ) : (
                         matchingShiftTypes.map((shiftType) => (
-                          <span key={shiftType.id} className="shift-chip">
+                          <Badge key={shiftType.id} variant="neutral">
                             {shiftType.name}
-                          </span>
+                          </Badge>
                         ))
                       )}
                     </div>
@@ -536,7 +516,7 @@ function EmployeesPage() {
               })}
             </div>
           )}
-        </section>
+        </Card>
       </div>
     </main>
   );

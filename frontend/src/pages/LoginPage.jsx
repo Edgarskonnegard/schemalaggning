@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../auth/AuthContext";
+import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import "./LoginPage.css";
@@ -52,7 +53,7 @@ function LoginPage() {
           <p>Använd ditt konto för att komma åt schemaläggningen.</p>
         </div>
 
-        {error && <p className="page-error">{error}</p>}
+        <Alert>{error}</Alert>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <Input

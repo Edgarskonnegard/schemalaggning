@@ -9,8 +9,10 @@ import {
 } from "../api/schedulesApi";
 import { getStores } from "../api/storesApi";
 import ShiftNote from "../components/schedule/ShiftNote";
+import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import PageHeader from "../components/ui/PageHeader";
 import Select from "../components/ui/Select";
 import "../components/calendar/Calendar.css";
 import "./EditSchedulePage.css";
@@ -448,12 +450,12 @@ function EditSchedulePage() {
 
   return (
     <main className="schedule-draft-page">
-      <div className="page-header">
-        <h1>Skapa schema</h1>
-        <p>Generera ett allmänt schema från godkända grundscheman.</p>
-      </div>
+      <PageHeader
+        title="Skapa schema"
+        description="Generera ett allmänt schema från godkända grundscheman."
+      />
 
-      {error && <p className="page-error">{error}</p>}
+      <Alert>{error}</Alert>
 
       <section className="schedule-generator-card">
         <form className="schedule-generator-form" onSubmit={handleGenerate}>

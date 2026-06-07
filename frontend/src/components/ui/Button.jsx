@@ -1,15 +1,17 @@
 import "./Button.css";
+
 function Button({
   children,
   className = "",
   onClick,
   type = "button",
-  variant,
+  variant = "primary",
+  fullWidth = false,
   ...props
 }) {
   return (
     <button
-      className={`button ${variant ? `button-${variant}` : ""} ${className}`.trim()}
+      className={`button button-${variant} ${fullWidth ? "button-full" : ""} ${className}`.trim()}
       type={type}
       onClick={onClick}
       {...props}

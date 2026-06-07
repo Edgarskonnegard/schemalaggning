@@ -5,8 +5,10 @@ import {
   updateScheduleGenerationSettings,
 } from "../api/scheduleGenerationSettingsApi";
 import { getStores } from "../api/storesApi";
+import Alert from "../components/ui/Alert";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import PageHeader from "../components/ui/PageHeader";
 import Select from "../components/ui/Select";
 import "./ScheduleRulesPage.css";
 
@@ -110,13 +112,13 @@ function ScheduleRulesPage() {
 
   return (
     <main className="schedule-rules-page">
-      <div className="page-header">
-        <h1>Schemagenereringsregler</h1>
-        <p>Styr vilka regler som ska gälla när grundscheman genereras.</p>
-      </div>
+      <PageHeader
+        title="Schemagenereringsregler"
+        description="Styr vilka regler som ska gälla när grundscheman genereras."
+      />
 
-      {error && <p className="page-error">{error}</p>}
-      {statusMessage && <p className="page-status">{statusMessage}</p>}
+      <Alert>{error}</Alert>
+      <Alert variant="success">{statusMessage}</Alert>
 
       <section className="schedule-rules-card">
         <form className="schedule-rules-form" onSubmit={handleSubmit}>
