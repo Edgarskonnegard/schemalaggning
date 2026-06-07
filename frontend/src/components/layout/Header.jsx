@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { getPendingBaseScheduleApprovalCount } from "../../api/approvalsApi";
+import { useAuth } from "../../auth/AuthContext";
 import "./Header.css";
 function Header({ onToggleMenu }) {
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
   const [pendingCount, setPendingCount] = useState(0);
+
+  function handleLogout() {
+    logout();
+    navigate("/login", { replace: true });
+  }
 
   useEffect(() => {
     async function loadPendingCount() {
@@ -38,6 +46,15 @@ function Header({ onToggleMenu }) {
           <span className="notification-badge">{pendingCount}</span>
         )}
       </Link>
+
+      <div className="header-user">
+        <span>{user?.email}</span>
+        <small>{user?.accessRole}</small>
+      </div>
+
+      <button className="logout-button" type="button" onClick={handleLogout}>
+        Logga ut
+      </button>
     </header>
   );
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Schemalaggning.DTOs.ScheduleGenerationSettings;
 using Schemalaggning.Services.Interfaces;
@@ -5,6 +6,7 @@ using Schemalaggning.Services.Interfaces;
 namespace Schemalaggning.Controllers;
 
 [ApiController]
+[Authorize(Policy = "AdminOnly")]
 [Route("api/stores/{storeId:int}/schedule-generation-settings")]
 public class ScheduleGenerationSettingsController : ControllerBase
 {

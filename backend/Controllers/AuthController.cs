@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Schemalaggning.DTOs.Auth;
 using Schemalaggning.Services.Interfaces;
@@ -15,12 +16,14 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
+    [Authorize(Policy = "AdminOnly")]
     [HttpGet("accounts")]
     public async Task<ActionResult<List<UserAccountReadDto>>> GetAccounts()
     {
         return Ok(await _authService.GetAccountsAsync());
     }
 
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost("accounts")]
     public async Task<ActionResult<UserAccountReadDto>> CreateAccount(UserAccountCreateDto dto)
     {
@@ -38,6 +41,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginRequestDto dto)
     {

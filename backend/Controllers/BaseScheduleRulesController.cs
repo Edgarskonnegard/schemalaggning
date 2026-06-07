@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Schemalaggning.DTOs.BaseScheduleRules;
 using Schemalaggning.Services.Interfaces;
@@ -5,6 +6,7 @@ using Schemalaggning.Services.Interfaces;
 namespace Schemalaggning.Controllers;
 
 [ApiController]
+[Authorize(Policy = "AdminOnly")]
 [Route("api/employees/{employeeId:int}/base-schedule")]
 public class BaseScheduleRulesController : ControllerBase
 {

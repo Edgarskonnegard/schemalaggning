@@ -1,0 +1,33 @@
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: #f3f4f6;
+}
+
+.login-card {
+  display: grid;
+  gap: 20px;
+  width: min(100%, 420px);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 24px;
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.12);
+}
+
+.login-card h1 {
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.login-card p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.login-form {
+  display: grid;
+  gap: 14px;
+}

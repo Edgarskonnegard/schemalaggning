@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 
 import DashboardPage from "./pages/DashboardPage";
@@ -11,22 +12,86 @@ import EmployeeDetailsPage from "./pages/EmployeeDetailsPage";
 import StoreCoveragePage from "./pages/StoreCoveragePage";
 import ApprovalsPage from "./pages/ApprovalsPage";
 import ScheduleRulesPage from "./pages/ScheduleRulesPage";
+import LoginPage from "./pages/LoginPage";
+
+function AdminRoute({ children }) {
+  return <ProtectedRoute requireAdmin>{children}</ProtectedRoute>;
+}
 
 function App() {
   return (
-    <AppLayout>
-      <Routes>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/schedule" element={<SchedulePage />} />
-        <Route path="/edit-schedule" element={<EditSchedulePage />} />
-        <Route path="/employees" element={<EmployeesPage />} />
-        <Route path="/employees/:employeeId" element={<EmployeeDetailsPage />} />
-        <Route path="/create-shift" element={<CreateShiftPage />} />
-        <Route path="/store-coverage" element={<StoreCoveragePage />} />
-        <Route path="/schedule-rules" element={<ScheduleRulesPage />} />
-        <Route path="/approvals" element={<ApprovalsPage />} />
-      </Routes>
-    </AppLayout>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/schedule" element={<SchedulePage />} />
+                <Route
+                  path="/edit-schedule"
+                  element={
+                    <AdminRoute>
+                      <EditSchedulePage />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/employees"
+                  element={
+                    <AdminRoute>
+                      <EmployeesPage />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/employees/:employeeId"
+                  element={
+                    <AdminRoute>
+                      <EmployeeDetailsPage />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/create-shift"
+                  element={
+                    <AdminRoute>
+                      <CreateShiftPage />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/store-coverage"
+                  element={
+                    <AdminRoute>
+                      <StoreCoveragePage />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/schedule-rules"
+                  element={
+                    <AdminRoute>
+                      <ScheduleRulesPage />
+                    </AdminRoute>
+                  }
+                />
+                <Route
+                  path="/approvals"
+                  element={
+                    <AdminRoute>
+                      <ApprovalsPage />
+                    </AdminRoute>
+                  }
+                />
+              </Routes>
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 

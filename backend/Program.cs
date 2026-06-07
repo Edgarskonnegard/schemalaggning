@@ -1,5 +1,9 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Schemalaggning.Data;
+using Schemalaggning.Models;
 using Schemalaggning.Repositories;
 using Schemalaggning.Repositories.Interfaces;
 using Schemalaggning.Services;
@@ -9,6 +13,33 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "Schemalaggning";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "Schemalaggning";
+var jwtSigningKey = builder.Configuration["Jwt:SigningKey"]
+    ?? throw new InvalidOperationException("JWT signing key is missing.");
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(2)
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -42,10 +73,38 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    await SeedDevelopmentAdminAsync(app.Services);
 }
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();
+
+static async Task SeedDevelopmentAdminAsync(IServiceProvider services)
+{
+    using var scope = services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+
+    const string adminLogin = "admin";
+
+    if (await context.UserAccounts.AnyAsync(account => account.Email == adminLogin))
+    {
+        return;
+    }
+
+    context.UserAccounts.Add(new UserAccount
+    {
+        Email = adminLogin,
+        PasswordHash = passwordHasher.Hash("admin"),
+        AccessRole = "Admin",
+        IsActive = true
+    });
+
+    await context.SaveChangesAsync();
+}

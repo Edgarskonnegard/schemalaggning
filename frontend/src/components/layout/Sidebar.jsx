@@ -1,7 +1,10 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
 import "./Sidebar.css";
 
 function Sidebar({ isOpen, onClose }) {
+  const { isAdmin } = useAuth();
+
   return (
     <>
       <div
@@ -21,29 +24,33 @@ function Sidebar({ isOpen, onClose }) {
             Schema
           </NavLink>
 
-          <NavLink to="/edit-schedule" onClick={onClose}>
-            Skapa schema
-          </NavLink>
+          {isAdmin && (
+            <>
+              <NavLink to="/edit-schedule" onClick={onClose}>
+                Skapa schema
+              </NavLink>
 
-          <NavLink to="/employees" onClick={onClose}>
-            Anställda
-          </NavLink>
+              <NavLink to="/employees" onClick={onClose}>
+                Anställda
+              </NavLink>
 
-          <NavLink to="/create-shift" onClick={onClose}>
-            Skapa pass
-          </NavLink>
+              <NavLink to="/create-shift" onClick={onClose}>
+                Skapa pass
+              </NavLink>
 
-          <NavLink to="/store-coverage" onClick={onClose}>
-            Bemanningsbehov
-          </NavLink>
+              <NavLink to="/store-coverage" onClick={onClose}>
+                Bemanningsbehov
+              </NavLink>
 
-          <NavLink to="/schedule-rules" onClick={onClose}>
-            Genereringsregler
-          </NavLink>
+              <NavLink to="/schedule-rules" onClick={onClose}>
+                Genereringsregler
+              </NavLink>
 
-          <NavLink to="/approvals" onClick={onClose}>
-            Godkännanden
-          </NavLink>
+              <NavLink to="/approvals" onClick={onClose}>
+                Godkännanden
+              </NavLink>
+            </>
+          )}
         </nav>
       </aside>
     </>
