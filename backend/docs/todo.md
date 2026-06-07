@@ -279,7 +279,12 @@ Backend-regler:
    - Output: väntande `BaseScheduleDraftRule`.
    - Matchar passtyp mot anställdas roll.
    - Försöker balansera timmar där 100% motsvarar 40 timmar per vecka.
-   - Kvar: dygnsvila, helglogik, maxpass, preferenser och bättre rättvisa.
+   - Admin kan ställa in minsta dygnsvila per butik via genereringsregler.
+   - Generering tar hänsyn till minsta dygnsvila, även över fyraveckorscykelns gräns.
+   - Admin kan ställa in max antal arbetsdagar i rad per butik.
+   - Admin kan aktivera regeln ledig minst varannan helg.
+   - Generering använder max arbetsdagar och ledig minst varannan helg som hårda regler.
+   - Kvar: maxpass, preferenser och bättre rättvisa.
 
 6. Lägg till admin-godkännande
    - Status: första version införd för grundschemaförslag.

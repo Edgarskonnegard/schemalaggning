@@ -7,4 +7,8 @@ public class BaseScheduleRuleCreateDto
     public DayOfWeek DayOfWeek { get; set; }
 
     public int ShiftTypeId { get; set; }
+
+    public TimeOnly? StartTime { get; set; }
+
+    public TimeOnly? EndTime { get; set; }
 }

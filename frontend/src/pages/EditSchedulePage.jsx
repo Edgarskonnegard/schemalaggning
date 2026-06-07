@@ -8,6 +8,7 @@ import {
   updateShift,
 } from "../api/schedulesApi";
 import { getStores } from "../api/storesApi";
+import ShiftNote from "../components/schedule/ShiftNote";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -425,7 +426,7 @@ function EditSchedulePage() {
     if (
       event.button !== 0 ||
       draggedShift ||
-      event.target.closest(".calendar-shift")
+      event.target.closest(".shift-note")
     ) {
       return;
     }
@@ -634,12 +635,13 @@ function EditSchedulePage() {
                               <span className="calendar-empty">Ledig</span>
                             ) : (
                               shifts.map((shift) => (
-                                <div
-                                  className="calendar-shift"
+                                <ShiftNote
                                   draggable={selectedSchedule.status === "Draft"}
                                   key={shift.id}
-                                  role="button"
-                                  tabIndex={0}
+                                  title={shift.shiftTypeName}
+                                  time={`${formatTime(shift.startTime)}-${formatTime(
+                                    shift.endTime
+                                  )}`}
                                   onClick={() => openShiftEditor(shift)}
                                   onDragStart={() => setDraggedShift(shift)}
                                   onDragEnd={() => setDraggedShift(null)}
@@ -652,13 +654,7 @@ function EditSchedulePage() {
                                       openShiftEditor(shift);
                                     }
                                   }}
-                                >
-                                  <strong>{shift.shiftTypeName}</strong>
-                                  <span>
-                                    {formatTime(shift.startTime)}-
-                                    {formatTime(shift.endTime)}
-                                  </span>
-                                </div>
+                                />
                               ))
                             )}
                           </div>

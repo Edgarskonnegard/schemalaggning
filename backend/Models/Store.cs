@@ -11,4 +11,6 @@ public class Store
     public ICollection<UserAccount> UserAccounts { get; set; } = new List<UserAccount>();
 
     public ICollection<StoreCoverageRule> CoverageRules { get; set; } = new List<StoreCoverageRule>();
+
+    public ScheduleGenerationSettings? ScheduleGenerationSettings { get; set; }
 }

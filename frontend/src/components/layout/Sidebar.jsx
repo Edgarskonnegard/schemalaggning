@@ -37,6 +37,10 @@ function Sidebar({ isOpen, onClose }) {
             Bemanningsbehov
           </NavLink>
 
+          <NavLink to="/schedule-rules" onClick={onClose}>
+            Genereringsregler
+          </NavLink>
+
           <NavLink to="/approvals" onClick={onClose}>
             Godkännanden
           </NavLink>

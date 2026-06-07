@@ -7,6 +7,7 @@ import {
 } from "../api/storeCoverageApi";
 import { getShiftTypes } from "../api/shiftTypesApi";
 import { getStores } from "../api/storesApi";
+import ShiftNote from "../components/schedule/ShiftNote";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
@@ -314,24 +315,17 @@ function StoreCoveragePage() {
                   ) : (
                     <div className="coverage-rule-list">
                       {dayRules.map((rule) => (
-                        <article
-                          className="coverage-rule"
+                        <ShiftNote
                           draggable
                           key={rule.id}
+                          title={rule.shiftTypeName}
+                          time={`${rule.requiredCount} st · ${formatTime(
+                            rule.startTime
+                          )}-${formatTime(rule.endTime)}`}
                           onClick={() => openEditModal(rule)}
                           onDragStart={() => setDraggedRule(rule)}
                           onDragEnd={() => setDraggedRule(null)}
                         >
-                          <div>
-                            <strong>{rule.shiftTypeName}</strong>
-                            <span>
-                              {rule.requiredCount} st ·{" "}
-                              {formatTime(rule.startTime)}
-                              {"-"}
-                              {formatTime(rule.endTime)}
-                            </span>
-                          </div>
-
                           <button
                             className="coverage-rule-remove"
                             type="button"
@@ -342,7 +336,7 @@ function StoreCoveragePage() {
                           >
                             Ta bort
                           </button>
-                        </article>
+                        </ShiftNote>
                       ))}
                     </div>
                   )}

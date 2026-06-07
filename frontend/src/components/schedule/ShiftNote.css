@@ -1,0 +1,43 @@
+.shift-note {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px;
+  background: #eef2ff;
+  color: #3730a3;
+  box-shadow: inset 3px 0 0 #4f46e5;
+  cursor: grab;
+  text-align: left;
+  user-select: none;
+  transition: box-shadow 150ms ease, transform 150ms ease;
+}
+
+.shift-note:hover,
+.shift-note:focus-visible {
+  box-shadow: inset 3px 0 0 #4f46e5, 0 0 0 2px #c4b5fd;
+  outline: none;
+}
+
+.shift-note:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.shift-note strong,
+.shift-note span,
+.shift-note small {
+  display: block;
+}
+
+.shift-note strong {
+  color: #312e81;
+  font-size: 14px;
+}
+
+.shift-note span,
+.shift-note small {
+  color: #4338ca;
+  font-size: 13px;
+}

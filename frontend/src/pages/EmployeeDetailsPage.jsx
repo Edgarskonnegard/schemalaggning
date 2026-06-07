@@ -140,6 +140,8 @@ function EmployeeDetailsPage() {
             weekInCycle: change.weekInCycle,
             dayOfWeek: change.dayOfWeek,
             shiftTypeId: Number(change.shiftTypeId),
+            startTime: change.startTime,
+            endTime: change.endTime,
           });
         })
       );

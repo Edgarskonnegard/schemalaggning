@@ -104,30 +104,6 @@
   background: #fafbff;
 }
 
-.shift-note {
-  display: grid;
-  gap: 4px;
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  background: #eef2ff;
-  color: #3730a3;
-  box-shadow: inset 3px 0 0 #4f46e5;
-  cursor: grab;
-}
-
-.shift-note:active {
-  cursor: grabbing;
-}
-
-.shift-note strong {
-  font-size: 14px;
-}
-
-.shift-note small {
-  color: #4338ca;
-}
-
 .remove-shift {
   margin-top: 4px;
   color: #b91c1c;

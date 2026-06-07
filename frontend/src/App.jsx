@@ -10,6 +10,7 @@ import CreateShiftPage from "./pages/CreateShiftPage";
 import EmployeeDetailsPage from "./pages/EmployeeDetailsPage";
 import StoreCoveragePage from "./pages/StoreCoveragePage";
 import ApprovalsPage from "./pages/ApprovalsPage";
+import ScheduleRulesPage from "./pages/ScheduleRulesPage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/employees/:employeeId" element={<EmployeeDetailsPage />} />
         <Route path="/create-shift" element={<CreateShiftPage />} />
         <Route path="/store-coverage" element={<StoreCoveragePage />} />
+        <Route path="/schedule-rules" element={<ScheduleRulesPage />} />
         <Route path="/approvals" element={<ApprovalsPage />} />
       </Routes>
     </AppLayout>

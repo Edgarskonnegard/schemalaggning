@@ -92,37 +92,6 @@
   text-align: center;
 }
 
-.coverage-rule {
-  display: grid;
-  gap: 8px;
-  border-radius: 8px;
-  padding: 10px;
-  background: #eef2ff;
-  color: #3730a3;
-  box-shadow: inset 3px 0 0 #4f46e5;
-  cursor: grab;
-}
-
-.coverage-rule:active {
-  cursor: grabbing;
-}
-
-.coverage-rule strong,
-.coverage-rule span {
-  display: block;
-}
-
-.coverage-rule strong {
-  color: #312e81;
-  font-size: 14px;
-}
-
-.coverage-rule span {
-  margin-top: 3px;
-  color: #4338ca;
-  font-size: 13px;
-}
-
 .coverage-rule-remove {
   width: fit-content;
   border: 0;

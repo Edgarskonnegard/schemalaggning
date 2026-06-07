@@ -64,8 +64,8 @@ public class ScheduleGenerationService : IScheduleGenerationService
                     EmployeeId = rule.EmployeeId,
                     ShiftTypeId = rule.ShiftTypeId,
                     Date = date,
-                    StartTime = rule.ShiftType.DefaultStartTime,
-                    EndTime = rule.ShiftType.DefaultEndTime,
+                    StartTime = rule.StartTime,
+                    EndTime = rule.EndTime,
                     Source = "BaseSchedule",
                     Status = "Draft"
                 });

@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Store> Stores => Set<Store>();
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
     public DbSet<StoreCoverageRule> StoreCoverageRules => Set<StoreCoverageRule>();
+    public DbSet<ScheduleGenerationSettings> ScheduleGenerationSettings => Set<ScheduleGenerationSettings>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<ShiftType> ShiftTypes => Set<ShiftType>();
     public DbSet<RoleShiftType> RoleShiftTypes => Set<RoleShiftType>();
@@ -69,6 +70,28 @@ public class AppDbContext : DbContext
             .WithOne(r => r.Store)
             .HasForeignKey(r => r.StoreId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Store>()
+            .HasOne(s => s.ScheduleGenerationSettings)
+            .WithOne(settings => settings.Store)
+            .HasForeignKey<ScheduleGenerationSettings>(settings => settings.StoreId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ScheduleGenerationSettings>()
+            .Property(settings => settings.MinimumRestHours)
+            .HasColumnType("decimal(5,2)");
+
+        modelBuilder.Entity<ScheduleGenerationSettings>()
+            .Property(settings => settings.MaxConsecutiveWorkDays)
+            .HasDefaultValue(5);
+
+        modelBuilder.Entity<ScheduleGenerationSettings>()
+            .Property(settings => settings.BalanceWeekends)
+            .HasDefaultValue(true);
+
+        modelBuilder.Entity<ScheduleGenerationSettings>()
+            .HasIndex(settings => settings.StoreId)
+            .IsUnique();
 
         modelBuilder.Entity<UserAccount>()
             .Property(ua => ua.Email)

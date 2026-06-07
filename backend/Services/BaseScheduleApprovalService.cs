@@ -70,7 +70,9 @@ public class BaseScheduleApprovalService : IBaseScheduleApprovalService
             EmployeeId = rule.EmployeeId,
             ShiftTypeId = rule.ShiftTypeId,
             WeekInCycle = rule.WeekInCycle,
-            DayOfWeek = rule.DayOfWeek
+            DayOfWeek = rule.DayOfWeek,
+            StartTime = rule.StartTime,
+            EndTime = rule.EndTime
         }).ToList();
 
         if (rules.Count > 0)
@@ -144,7 +146,9 @@ public class BaseScheduleApprovalService : IBaseScheduleApprovalService
                 EmployeeId = rule.EmployeeId,
                 ShiftTypeId = rule.ShiftTypeId,
                 WeekInCycle = rule.WeekInCycle,
-                DayOfWeek = rule.DayOfWeek
+                DayOfWeek = rule.DayOfWeek,
+                StartTime = rule.StartTime,
+                EndTime = rule.EndTime
             })
             .ToList();
 
@@ -239,7 +243,9 @@ public class BaseScheduleApprovalService : IBaseScheduleApprovalService
             EmployeeId = employeeId,
             ShiftTypeId = unassignedRule.ShiftTypeId,
             WeekInCycle = unassignedRule.WeekInCycle,
-            DayOfWeek = unassignedRule.DayOfWeek
+            DayOfWeek = unassignedRule.DayOfWeek,
+            StartTime = unassignedRule.StartTime,
+            EndTime = unassignedRule.EndTime
         };
 
         _context.BaseScheduleDraftRules.Add(rule);
@@ -283,7 +289,9 @@ public class BaseScheduleApprovalService : IBaseScheduleApprovalService
             BatchId = batchId,
             ShiftTypeId = rule.ShiftTypeId,
             WeekInCycle = rule.WeekInCycle,
-            DayOfWeek = rule.DayOfWeek
+            DayOfWeek = rule.DayOfWeek,
+            StartTime = rule.StartTime,
+            EndTime = rule.EndTime
         });
         _context.BaseScheduleDraftRules.Remove(rule);
         await _context.SaveChangesAsync();
@@ -351,9 +359,9 @@ public class BaseScheduleApprovalService : IBaseScheduleApprovalService
             ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
             WeekInCycle = rule.WeekInCycle,
             DayOfWeek = rule.DayOfWeek,
-            StartTime = rule.ShiftType?.DefaultStartTime ?? default,
-            EndTime = rule.ShiftType?.DefaultEndTime ?? default,
-            Hours = GetHours(rule.ShiftType?.DefaultStartTime ?? default, rule.ShiftType?.DefaultEndTime ?? default)
+            StartTime = rule.StartTime,
+            EndTime = rule.EndTime,
+            Hours = GetHours(rule.StartTime, rule.EndTime)
         };
     }
 
@@ -380,9 +388,9 @@ public class BaseScheduleApprovalService : IBaseScheduleApprovalService
             ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
             WeekInCycle = rule.WeekInCycle,
             DayOfWeek = rule.DayOfWeek,
-            StartTime = rule.ShiftType?.DefaultStartTime ?? default,
-            EndTime = rule.ShiftType?.DefaultEndTime ?? default,
-            Hours = GetHours(rule.ShiftType?.DefaultStartTime ?? default, rule.ShiftType?.DefaultEndTime ?? default)
+            StartTime = rule.StartTime,
+            EndTime = rule.EndTime,
+            Hours = GetHours(rule.StartTime, rule.EndTime)
         };
     }
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import ShiftNote from "../schedule/ShiftNote";
 import "./EmployeeBaseSchedule.css";
 
 const cycleWeeks = [
@@ -85,6 +86,8 @@ function EmployeeBaseSchedule({ baseSchedule, shiftTypes, onChange }) {
         weekInCycle: targetWeekInCycle,
         dayOfWeek: targetDay.value,
         shiftTypeId: draggedRule.shiftTypeId,
+        startTime: draggedRule.startTime,
+        endTime: draggedRule.endTime,
       },
     ]);
     setDraggedRule(null);
@@ -150,9 +153,12 @@ function EmployeeBaseSchedule({ baseSchedule, shiftTypes, onChange }) {
                   onDrop={() => handleDrop(week.id, day)}
                 >
                   {selectedShiftType ? (
-                    <span
-                      className="shift-note"
+                    <ShiftNote
                       draggable
+                      title={selectedShiftType.name}
+                      time={`${formatTime(rule.startTime)}-${formatTime(
+                        rule.endTime
+                      )}`}
                       onClick={(e) => e.stopPropagation()}
                       onDragStart={() =>
                         setDraggedRule({
@@ -160,15 +166,12 @@ function EmployeeBaseSchedule({ baseSchedule, shiftTypes, onChange }) {
                           dayOfWeek: day.id,
                           dayOfWeekValue: day.value,
                           shiftTypeId: selectedShiftType.id,
+                          startTime: rule.startTime,
+                          endTime: rule.endTime,
                         })
                       }
                       onDragEnd={() => setDraggedRule(null)}
                     >
-                      <strong>{selectedShiftType.name}</strong>
-                      <small>
-                        {formatTime(selectedShiftType.defaultStartTime)}-
-                        {formatTime(selectedShiftType.defaultEndTime)}
-                      </small>
                       <span
                         className="remove-shift"
                         role="button"
@@ -180,7 +183,7 @@ function EmployeeBaseSchedule({ baseSchedule, shiftTypes, onChange }) {
                       >
                         Ta bort
                       </span>
-                    </span>
+                    </ShiftNote>
                   ) : (
                     <span className="empty-cell">
                       {selectedShiftTypeId ? "Klicka för att lägga till" : ""}

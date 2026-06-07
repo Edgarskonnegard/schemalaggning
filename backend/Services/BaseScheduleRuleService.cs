@@ -9,13 +9,16 @@ public class BaseScheduleRuleService : IBaseScheduleRuleService
 {
     private readonly IBaseScheduleRuleRepository _baseScheduleRuleRepository;
     private readonly IEmployeeRepository _employeeRepository;
+    private readonly IShiftTypeRepository _shiftTypeRepository;
 
     public BaseScheduleRuleService(
         IBaseScheduleRuleRepository baseScheduleRuleRepository,
-        IEmployeeRepository employeeRepository)
+        IEmployeeRepository employeeRepository,
+        IShiftTypeRepository shiftTypeRepository)
     {
         _baseScheduleRuleRepository = baseScheduleRuleRepository;
         _employeeRepository = employeeRepository;
+        _shiftTypeRepository = shiftTypeRepository;
     }
 
     public async Task<List<BaseScheduleRuleReadDto>> GetByEmployeeIdAsync(int employeeId)
@@ -42,6 +45,20 @@ public class BaseScheduleRuleService : IBaseScheduleRuleService
             throw new InvalidOperationException("Employee role does not allow this shift type.");
         }
 
+        var shiftType = await _shiftTypeRepository.GetByIdAsync(dto.ShiftTypeId);
+        if (shiftType is null)
+        {
+            throw new InvalidOperationException($"Shift type {dto.ShiftTypeId} does not exist.");
+        }
+
+        var startTime = dto.StartTime ?? shiftType.DefaultStartTime;
+        var endTime = dto.EndTime ?? shiftType.DefaultEndTime;
+
+        if (endTime <= startTime)
+        {
+            throw new ArgumentException("End time must be after start time.");
+        }
+
         var existingRule = await _baseScheduleRuleRepository.GetByEmployeeWeekAndDayAsync(
             employeeId,
             dto.WeekInCycle,
@@ -54,7 +71,9 @@ public class BaseScheduleRuleService : IBaseScheduleRuleService
                 EmployeeId = employeeId,
                 ShiftTypeId = dto.ShiftTypeId,
                 WeekInCycle = dto.WeekInCycle,
-                DayOfWeek = dto.DayOfWeek
+                DayOfWeek = dto.DayOfWeek,
+                StartTime = startTime,
+                EndTime = endTime
             });
 
             var rules = await _baseScheduleRuleRepository.GetByEmployeeIdAsync(employeeId);
@@ -63,6 +82,8 @@ public class BaseScheduleRuleService : IBaseScheduleRuleService
 
         existingRule.ShiftTypeId = dto.ShiftTypeId;
         existingRule.WeekInCycle = dto.WeekInCycle;
+        existingRule.StartTime = startTime;
+        existingRule.EndTime = endTime;
         await _baseScheduleRuleRepository.UpdateAsync(existingRule);
 
         var updatedRules = await _baseScheduleRuleRepository.GetByEmployeeIdAsync(employeeId);

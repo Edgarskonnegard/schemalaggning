@@ -91,8 +91,8 @@ internal static class MappingExtensions
             ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
             WeekInCycle = rule.WeekInCycle,
             DayOfWeek = rule.DayOfWeek,
-            StartTime = rule.ShiftType?.DefaultStartTime ?? default,
-            EndTime = rule.ShiftType?.DefaultEndTime ?? default
+            StartTime = rule.StartTime,
+            EndTime = rule.EndTime
         };
     }
 

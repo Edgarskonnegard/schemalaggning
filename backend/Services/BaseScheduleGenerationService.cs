@@ -3,6 +3,7 @@ using Schemalaggning.Data;
 using Schemalaggning.Models;
 using Schemalaggning.Repositories.Interfaces;
 using Schemalaggning.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Schemalaggning.Services;
 
@@ -37,6 +38,15 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
 
         var employees = await _employeeRepository.GetByStoreIdAsync(storeId);
         var coverageRules = await _coverageRuleRepository.GetByStoreIdAsync(storeId);
+        var settings = await _context.ScheduleGenerationSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.StoreId == storeId);
+        var minimumRestHours =
+            settings?.MinimumRestHours ?? ScheduleGenerationSettingsService.DefaultMinimumRestHours;
+        var maxConsecutiveWorkDays =
+            settings?.MaxConsecutiveWorkDays ?? ScheduleGenerationSettingsService.DefaultMaxConsecutiveWorkDays;
+        var balanceWeekends =
+            settings?.BalanceWeekends ?? ScheduleGenerationSettingsService.DefaultBalanceWeekends;
 
         var result = new BaseScheduleGenerationResultDto
         {
@@ -64,6 +74,10 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
         var occupiedDays = employees.ToDictionary(
             employee => employee.Id,
             _ => new HashSet<(int WeekInCycle, DayOfWeek DayOfWeek)>());
+        var assignedShifts = employees.ToDictionary(
+            employee => employee.Id,
+            _ => new List<AssignedShiftWindow>());
+        var occupiedWeekends = employees.ToDictionary(employee => employee.Id, _ => new HashSet<int>());
 
         foreach (var week in Enumerable.Range(1, WeeksInCycle))
         {
@@ -75,7 +89,12 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
                     week,
                     employeeHours,
                     occupiedDays,
-                    canWorkCache);
+                    assignedShifts,
+                    occupiedWeekends,
+                    canWorkCache,
+                    minimumRestHours,
+                    maxConsecutiveWorkDays,
+                    balanceWeekends);
 
                 if (employee is null)
                 {
@@ -84,7 +103,9 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
                     {
                         ShiftTypeId = need.ShiftTypeId,
                         WeekInCycle = week,
-                        DayOfWeek = need.DayOfWeek
+                        DayOfWeek = need.DayOfWeek,
+                        StartTime = need.StartTime,
+                        EndTime = need.EndTime
                     });
                     continue;
                 }
@@ -94,11 +115,23 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
                     EmployeeId = employee.Id,
                     ShiftTypeId = need.ShiftTypeId,
                     WeekInCycle = week,
-                    DayOfWeek = need.DayOfWeek
+                    DayOfWeek = need.DayOfWeek,
+                    StartTime = need.StartTime,
+                    EndTime = need.EndTime
                 });
 
                 employeeHours[employee.Id] += GetHours(need.StartTime, need.EndTime);
                 occupiedDays[employee.Id].Add((week, need.DayOfWeek));
+                assignedShifts[employee.Id].Add(new AssignedShiftWindow(
+                    week,
+                    need.DayOfWeek,
+                    need.StartTime,
+                    need.EndTime));
+
+                if (IsWeekend(need.DayOfWeek))
+                {
+                    occupiedWeekends[employee.Id].Add(week);
+                }
             }
         }
 
@@ -106,7 +139,7 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
 
         if (result.UnassignedNeedCount > 0)
         {
-            result.Warnings.Add($"{result.UnassignedNeedCount} behov kunde inte placeras eftersom ingen ledig anställd matchade roll/passtyp den dagen.");
+            result.Warnings.Add($"{result.UnassignedNeedCount} behov kunde inte placeras eftersom ingen ledig anställd matchade roll/passtyp och schemaregler.");
         }
 
         var batch = new BaseScheduleGenerationBatch
@@ -171,11 +204,33 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
         int weekInCycle,
         Dictionary<int, decimal> employeeHours,
         Dictionary<int, HashSet<(int WeekInCycle, DayOfWeek DayOfWeek)>> occupiedDays,
-        Dictionary<(int EmployeeId, int ShiftTypeId), bool> canWorkCache)
+        Dictionary<int, List<AssignedShiftWindow>> assignedShifts,
+        Dictionary<int, HashSet<int>> occupiedWeekends,
+        Dictionary<(int EmployeeId, int ShiftTypeId), bool> canWorkCache,
+        decimal minimumRestHours,
+        int maxConsecutiveWorkDays,
+        bool balanceWeekends)
     {
         var availableEmployees = employees
             .Where(employee => canWorkCache.GetValueOrDefault((employee.Id, need.ShiftTypeId)))
             .Where(employee => !occupiedDays[employee.Id].Contains((weekInCycle, need.DayOfWeek)))
+            .Where(employee => HasMaxConsecutiveWorkDays(
+                occupiedDays[employee.Id],
+                weekInCycle,
+                need.DayOfWeek,
+                maxConsecutiveWorkDays))
+            .Where(employee => HasWeekendRest(
+                occupiedWeekends[employee.Id],
+                weekInCycle,
+                need.DayOfWeek,
+                balanceWeekends))
+            .Where(employee => HasMinimumRest(
+                assignedShifts[employee.Id],
+                weekInCycle,
+                need.DayOfWeek,
+                need.StartTime,
+                need.EndTime,
+                minimumRestHours))
             .ToList();
 
         if (availableEmployees.Count == 0)
@@ -189,7 +244,6 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
             .ToList();
 
         var candidates = underTarget.Count > 0 ? underTarget : availableEmployees;
-
         return candidates
             .OrderBy(employee => GetLoadRatio(employee, employeeHours[employee.Id]))
             .ThenBy(_ => Random.Shared.Next())
@@ -211,5 +265,126 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
     {
         var hours = (decimal)(endTime - startTime).TotalHours;
         return hours > 0 ? hours : 0;
+    }
+
+    private static bool HasMinimumRest(
+        List<AssignedShiftWindow> assignedShifts,
+        int weekInCycle,
+        DayOfWeek dayOfWeek,
+        TimeOnly startTime,
+        TimeOnly endTime,
+        decimal minimumRestHours)
+    {
+        var candidate = new AssignedShiftWindow(weekInCycle, dayOfWeek, startTime, endTime);
+        var minimumRestMinutes = (int)(minimumRestHours * 60m);
+        const int cycleMinutes = WeeksInCycle * 7 * 24 * 60;
+
+        return assignedShifts.All(assignedShift =>
+            HasRestBetweenWindows(candidate, assignedShift, minimumRestMinutes) &&
+            HasRestBetweenWindows(candidate with { MinuteOffset = -cycleMinutes }, assignedShift, minimumRestMinutes) &&
+            HasRestBetweenWindows(candidate with { MinuteOffset = cycleMinutes }, assignedShift, minimumRestMinutes));
+    }
+
+    private static bool HasMaxConsecutiveWorkDays(
+        HashSet<(int WeekInCycle, DayOfWeek DayOfWeek)> occupiedDays,
+        int candidateWeekInCycle,
+        DayOfWeek candidateDayOfWeek,
+        int maxConsecutiveWorkDays)
+    {
+        var workDays = new bool[WeeksInCycle * 7];
+        foreach (var occupiedDay in occupiedDays)
+        {
+            workDays[GetCycleDayIndex(occupiedDay.WeekInCycle, occupiedDay.DayOfWeek)] = true;
+        }
+
+        workDays[GetCycleDayIndex(candidateWeekInCycle, candidateDayOfWeek)] = true;
+        return GetLongestConsecutiveWorkDays(workDays) <= maxConsecutiveWorkDays;
+    }
+
+    private static bool HasWeekendRest(
+        HashSet<int> occupiedWeekends,
+        int candidateWeekInCycle,
+        DayOfWeek candidateDayOfWeek,
+        bool balanceWeekends)
+    {
+        if (!balanceWeekends || !IsWeekend(candidateDayOfWeek))
+        {
+            return true;
+        }
+
+        var previousWeekend = candidateWeekInCycle == 1 ? WeeksInCycle : candidateWeekInCycle - 1;
+        var nextWeekend = candidateWeekInCycle == WeeksInCycle ? 1 : candidateWeekInCycle + 1;
+
+        return !occupiedWeekends.Contains(previousWeekend) &&
+            !occupiedWeekends.Contains(nextWeekend);
+    }
+
+    private static int GetLongestConsecutiveWorkDays(bool[] workDays)
+    {
+        var longestRun = 0;
+
+        for (var start = 0; start < workDays.Length; start++)
+        {
+            var currentRun = 0;
+
+            for (var offset = 0; offset < workDays.Length; offset++)
+            {
+                if (!workDays[(start + offset) % workDays.Length])
+                {
+                    break;
+                }
+
+                currentRun++;
+            }
+
+            longestRun = Math.Max(longestRun, currentRun);
+        }
+
+        return longestRun;
+    }
+
+    private static bool IsWeekend(DayOfWeek dayOfWeek)
+    {
+        return dayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+    }
+
+    private static int GetCycleDayIndex(int weekInCycle, DayOfWeek dayOfWeek)
+    {
+        var dayIndex = dayOfWeek == DayOfWeek.Sunday ? 6 : (int)dayOfWeek - 1;
+        return (weekInCycle - 1) * 7 + dayIndex;
+    }
+
+    private static bool HasRestBetweenWindows(
+        AssignedShiftWindow first,
+        AssignedShiftWindow second,
+        int minimumRestMinutes)
+    {
+        return Math.Abs(first.StartMinute - second.EndMinute) >= minimumRestMinutes &&
+            Math.Abs(second.StartMinute - first.EndMinute) >= minimumRestMinutes;
+    }
+
+    private sealed record AssignedShiftWindow(
+        int WeekInCycle,
+        DayOfWeek DayOfWeek,
+        TimeOnly StartTime,
+        TimeOnly EndTime)
+    {
+        public int MinuteOffset { get; init; }
+
+        public int StartMinute => GetAbsoluteMinute(WeekInCycle, DayOfWeek, StartTime) + MinuteOffset;
+
+        public int EndMinute
+        {
+            get
+            {
+                var endMinute = GetAbsoluteMinute(WeekInCycle, DayOfWeek, EndTime);
+                return endMinute <= StartMinute ? endMinute + 24 * 60 : endMinute;
+            }
+        }
+
+        private static int GetAbsoluteMinute(int weekInCycle, DayOfWeek dayOfWeek, TimeOnly time)
+        {
+            return GetCycleDayIndex(weekInCycle, dayOfWeek) * 24 * 60 + time.Hour * 60 + time.Minute;
+        }
     }
 }

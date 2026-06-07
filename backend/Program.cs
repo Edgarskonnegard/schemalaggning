@@ -35,6 +35,7 @@ builder.Services.AddScoped<IBaseScheduleApprovalService, BaseScheduleApprovalSer
 builder.Services.AddScoped<IStoreCoverageRuleService, StoreCoverageRuleService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IScheduleGenerationService, ScheduleGenerationService>();
+builder.Services.AddScoped<IScheduleGenerationSettingsService, ScheduleGenerationSettingsService>();
 
 var app = builder.Build();
 
