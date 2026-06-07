@@ -40,9 +40,9 @@ public class ScheduleService : IScheduleService
             return false;
         }
 
-        if (shift.Schedule.Status != "Draft")
+        if (shift.Schedule.Status != "Draft" && shift.Schedule.Status != "Published")
         {
-            throw new InvalidOperationException("Only draft schedule shifts can be updated.");
+            throw new InvalidOperationException("Only draft or published schedule shifts can be updated.");
         }
 
         if (dto.Date != shift.Date)
@@ -89,9 +89,9 @@ public class ScheduleService : IScheduleService
             throw new ArgumentException("Shifts must belong to the same schedule.");
         }
 
-        if (sourceShift.Schedule.Status != "Draft" || targetShift.Schedule.Status != "Draft")
+        if (!CanEditSchedule(sourceShift.Schedule.Status) || !CanEditSchedule(targetShift.Schedule.Status))
         {
-            throw new InvalidOperationException("Only draft schedule shifts can be swapped.");
+            throw new InvalidOperationException("Only draft or published schedule shifts can be swapped.");
         }
 
         if (sourceShift.Date != targetShift.Date)
@@ -136,5 +136,10 @@ public class ScheduleService : IScheduleService
         }
 
         return await _scheduleRepository.UpdateAsync(schedule);
+    }
+
+    private static bool CanEditSchedule(string status)
+    {
+        return status == "Draft" || status == "Published";
     }
 }
