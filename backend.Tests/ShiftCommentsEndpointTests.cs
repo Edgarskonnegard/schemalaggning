@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Schemalaggning.Data;
@@ -11,7 +10,6 @@ namespace backend.Tests;
 
 public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
 {
-    private const string EmployeePassword = "Password123!";
     private readonly TestApplicationFactory _factory;
 
     public ShiftCommentsEndpointTests(TestApplicationFactory factory)
@@ -25,7 +23,7 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         await _factory.ResetDatabaseAsync();
         var seed = await SeedScenarioAsync();
         using var client = _factory.CreateClient();
-        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+        await AuthTestHelper.AuthenticateAsync(client, seed.FirstEmployeeEmail);
 
         var response = await client.PostAsJsonAsync(
             $"/api/me/shifts/{seed.FirstEmployeeShiftId}/comments",
@@ -44,7 +42,7 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         await _factory.ResetDatabaseAsync();
         var seed = await SeedScenarioAsync();
         using var client = _factory.CreateClient();
-        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+        await AuthTestHelper.AuthenticateAsync(client, seed.FirstEmployeeEmail);
 
         var response = await client.PostAsJsonAsync(
             $"/api/me/shifts/{seed.SecondEmployeeShiftId}/comments",
@@ -59,7 +57,7 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         await _factory.ResetDatabaseAsync();
         var seed = await SeedScenarioAsync();
         using var client = _factory.CreateClient();
-        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+        await AuthTestHelper.AuthenticateAsync(client, seed.FirstEmployeeEmail);
 
         var response = await client.PostAsJsonAsync(
             $"/api/me/shifts/{seed.FirstEmployeeShiftId}/comments",
@@ -74,7 +72,7 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         await _factory.ResetDatabaseAsync();
         var seed = await SeedScenarioAsync();
         using var client = _factory.CreateClient();
-        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+        await AuthTestHelper.AuthenticateAsync(client, seed.FirstEmployeeEmail);
 
         var response = await client.PostAsJsonAsync(
             $"/api/me/shifts/{seed.DraftShiftId}/comments",
@@ -89,14 +87,14 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         await _factory.ResetDatabaseAsync();
         var seed = await SeedScenarioAsync();
         using var client = _factory.CreateClient();
-        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+        await AuthTestHelper.AuthenticateAsync(client, seed.FirstEmployeeEmail);
 
         var createResponse = await client.PostAsJsonAsync(
             $"/api/me/shifts/{seed.FirstEmployeeShiftId}/comments",
             new { message = "Kan admin se den här kommentaren?" });
         createResponse.EnsureSuccessStatusCode();
 
-        await AuthenticateAsync(client, seed.AdminEmail);
+        await AuthTestHelper.AuthenticateAsync(client, seed.AdminEmail);
 
         var response = await client.GetAsync("/api/admin/shift-comments/pending-count");
         var count = await response.Content.ReadFromJsonAsync<int>();
@@ -111,7 +109,7 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         await _factory.ResetDatabaseAsync();
         var seed = await SeedScenarioAsync();
         using var client = _factory.CreateClient();
-        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+        await AuthTestHelper.AuthenticateAsync(client, seed.FirstEmployeeEmail);
 
         var createResponse = await client.PostAsJsonAsync(
             $"/api/me/shifts/{seed.FirstEmployeeShiftId}/comments",
@@ -125,7 +123,7 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
             commentId = context.ShiftComments.Single().Id;
         }
 
-        await AuthenticateAsync(client, seed.AdminEmail);
+        await AuthTestHelper.AuthenticateAsync(client, seed.AdminEmail);
 
         var response = await client.PostAsync($"/api/admin/shift-comments/{commentId}/resolve", null);
 
@@ -134,19 +132,6 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         using var verifyScope = _factory.Services.CreateScope();
         var verifyContext = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
         Assert.Equal("Resolved", verifyContext.ShiftComments.Single().Status);
-    }
-
-    private async Task AuthenticateAsync(HttpClient client, string email)
-    {
-        var response = await client.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email, password = EmployeePassword });
-
-        response.EnsureSuccessStatusCode();
-
-        var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
-        client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", login!.AccessToken);
     }
 
     private async Task<SeedResult> SeedScenarioAsync()
@@ -187,7 +172,7 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         var firstAccount = new UserAccount
         {
             Email = firstEmployeeEmail,
-            PasswordHash = passwordHasher.Hash(EmployeePassword),
+            PasswordHash = passwordHasher.Hash(AuthTestHelper.Password),
             AccessRole = "Employee",
             Employee = firstEmployee,
             Store = store,
@@ -197,7 +182,7 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         var secondAccount = new UserAccount
         {
             Email = secondEmployeeEmail,
-            PasswordHash = passwordHasher.Hash(EmployeePassword),
+            PasswordHash = passwordHasher.Hash(AuthTestHelper.Password),
             AccessRole = "Employee",
             Employee = secondEmployee,
             Store = store,
@@ -208,7 +193,7 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         var adminAccount = new UserAccount
         {
             Email = adminEmail,
-            PasswordHash = passwordHasher.Hash(EmployeePassword),
+            PasswordHash = passwordHasher.Hash(AuthTestHelper.Password),
             AccessRole = "Admin",
             Store = store,
             IsActive = true
@@ -300,8 +285,4 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         int SecondEmployeeShiftId,
         int DraftShiftId);
 
-    private sealed class LoginResponse
-    {
-        public string AccessToken { get; set; } = string.Empty;
-    }
 }
