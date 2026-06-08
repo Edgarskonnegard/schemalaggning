@@ -2,6 +2,20 @@
 
 Det här dokumentet samlar saker som ska göras senare och rekommenderad ordning för större arbetsflöden.
 
+## Utredning och teststrategi
+
+- [x] Skriv en teknisk utredning om riskbaserad teststrategi, endpointtester och CI-pipeline.
+- [x] Lägg utredningen lokalt i `backend/docs/testing-investigation.txt`.
+- [x] Lägg utredningsfilen i `.gitignore` så rapportunderlag inte följer med till GitHub.
+- [x] Skapa GitHub Actions workflow för backend/frontend-build.
+- [x] Skapa `backend.Tests` som första backend-testprojekt.
+- [x] Bygg integrationstestmiljö med `WebApplicationFactory` och in-memory SQLite.
+- [x] Lägg till första endpointtester för ett auth-känsligt flöde: employee får kommentera egna publicerade pass men inte andras.
+- [x] Koppla `dotnet test` till CI så tester körs vid pull request/merge.
+- [ ] Bygg vidare med endpointtester för ledighetsansökan, schema-publicering och passbyte.
+- [ ] Lägg till fokuserade unit tests för schemagenereringens viktigaste affärsregler.
+- [ ] Utvärdera om frontend behöver komponenttester eller om build + manuella smoke tests räcker i projektets nuvarande storlek.
+
 ## Rekommenderad genomförandeordning
 
 1. Rensa projektgrunden

@@ -27,10 +27,13 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Restore backend
-        run: dotnet restore backend/backend.csproj
+        run: dotnet restore schemalaggning.sln
 
       - name: Build backend
-        run: dotnet build backend/backend.csproj --configuration Release --no-restore
+        run: dotnet build schemalaggning.sln --configuration Release --no-restore
+
+      - name: Test backend
+        run: dotnet test schemalaggning.sln --configuration Release --no-build
 
       - name: Install frontend dependencies
         run: npm ci

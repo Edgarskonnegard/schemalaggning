@@ -108,3 +108,7 @@ static async Task SeedDevelopmentAdminAsync(IServiceProvider services)
 
     await context.SaveChangesAsync();
 }
+
+public partial class Program
+{
+}
