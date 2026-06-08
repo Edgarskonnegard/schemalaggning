@@ -15,6 +15,7 @@ import ScheduleRulesPage from "./pages/ScheduleRulesPage";
 import LoginPage from "./pages/LoginPage";
 import UserPage from "./pages/UserPage";
 import MySchedulePage from "./pages/MySchedulePage";
+import LeavePage from "./pages/LeavePage";
 
 function AdminRoute({ children }) {
   return <ProtectedRoute requireAdmin>{children}</ProtectedRoute>;
@@ -41,6 +42,14 @@ function App() {
                   element={
                     <EmployeeRoute>
                       <MySchedulePage />
+                    </EmployeeRoute>
+                  }
+                />
+                <Route
+                  path="/leave"
+                  element={
+                    <EmployeeRoute>
+                      <LeavePage />
                     </EmployeeRoute>
                   }
                 />

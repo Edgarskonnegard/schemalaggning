@@ -62,6 +62,10 @@ function Sidebar({ isOpen, onClose }) {
                 Mitt schema
               </NavLink>
 
+              <NavLink to="/leave" onClick={onClose}>
+                Ledighet
+              </NavLink>
+
               <NavLink to="/me" onClick={onClose}>
                 Min profil
               </NavLink>

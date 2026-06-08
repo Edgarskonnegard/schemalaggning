@@ -171,6 +171,53 @@ function DashboardPage() {
             </div>
           )}
         </section>
+
+        <section className="dashboard-content-grid dashboard-employee-grid">
+          <article className="dashboard-panel">
+            <div className="dashboard-panel-header">
+              <div>
+                <h2>Semesterdagar</h2>
+                <p>Ditt saldo för innevarande år.</p>
+              </div>
+              <Link to="/leave">Ansök</Link>
+            </div>
+
+            {isLoading ? (
+              <p className="dashboard-muted">Laddar semestersaldo...</p>
+            ) : employeeOverview?.leaveBalance ? (
+              <div className="dashboard-leave-balance">
+                <div>
+                  <span>Kvar</span>
+                  <strong>{employeeOverview.leaveBalance.remainingDays}</strong>
+                </div>
+                <div>
+                  <span>Använda</span>
+                  <strong>{employeeOverview.leaveBalance.usedDays}</strong>
+                </div>
+                <div>
+                  <span>Väntar</span>
+                  <strong>{employeeOverview.leaveBalance.pendingDays}</strong>
+                </div>
+              </div>
+            ) : (
+              <p className="dashboard-muted">
+                Inget semestersaldo hittades för kontot.
+              </p>
+            )}
+          </article>
+
+          <article className="dashboard-panel">
+            <div className="dashboard-panel-header">
+              <div>
+                <h2>Kommande funktioner</h2>
+                <p>Här kommer status för byten och ledighet visas.</p>
+              </div>
+            </div>
+            <p className="dashboard-muted">
+              Nästa steg är admin-godkännande av ledighetsansökningar.
+            </p>
+          </article>
+        </section>
       </main>
     );
   }

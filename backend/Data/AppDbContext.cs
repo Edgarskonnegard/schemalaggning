@@ -24,6 +24,8 @@ public class AppDbContext : DbContext
     public DbSet<BaseScheduleUnassignedDraftRule> BaseScheduleUnassignedDraftRules => Set<BaseScheduleUnassignedDraftRule>();
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<LeaveAllowance> LeaveAllowances => Set<LeaveAllowance>();
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -137,6 +139,45 @@ public class AppDbContext : DbContext
             .HasMany(e => e.Shifts)
             .WithOne(s => s.Employee)
             .HasForeignKey(s => s.EmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Employee>()
+            .HasMany(e => e.LeaveAllowances)
+            .WithOne(allowance => allowance.Employee)
+            .HasForeignKey(allowance => allowance.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Employee>()
+            .HasMany(e => e.LeaveRequests)
+            .WithOne(request => request.Employee)
+            .HasForeignKey(request => request.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<LeaveAllowance>()
+            .HasIndex(allowance => new { allowance.EmployeeId, allowance.Year })
+            .IsUnique();
+
+        modelBuilder.Entity<LeaveAllowance>()
+            .Property(allowance => allowance.TotalDays)
+            .HasDefaultValue(25);
+
+        modelBuilder.Entity<LeaveRequest>()
+            .Property(request => request.Reason)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<LeaveRequest>()
+            .Property(request => request.Status)
+            .HasMaxLength(30)
+            .IsRequired();
+
+        modelBuilder.Entity<LeaveRequest>()
+            .Property(request => request.AdminComment)
+            .HasMaxLength(500);
+
+        modelBuilder.Entity<LeaveRequest>()
+            .HasOne(request => request.ReviewedByUserAccount)
+            .WithMany()
+            .HasForeignKey(request => request.ReviewedByUserAccountId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ShiftType>()

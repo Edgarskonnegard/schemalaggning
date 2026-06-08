@@ -20,5 +20,9 @@ public class Employee
 
     public ICollection<Shift> Shifts { get; set; } = new List<Shift>();
 
+    public ICollection<LeaveAllowance> LeaveAllowances { get; set; } = new List<LeaveAllowance>();
+
+    public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();
+
     public UserAccount? UserAccount { get; set; }
 }

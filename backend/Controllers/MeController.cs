@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Schemalaggning.Data;
 using Schemalaggning.DTOs.Me;
+using Schemalaggning.DTOs.LeaveRequests;
 using Schemalaggning.Services;
 
 namespace Schemalaggning.Controllers;
@@ -12,6 +13,7 @@ namespace Schemalaggning.Controllers;
 [Route("api/me")]
 public class MeController : ControllerBase
 {
+    private const int DefaultAnnualLeaveDays = 25;
     private readonly AppDbContext _context;
 
     public MeController(AppDbContext context)
@@ -50,6 +52,7 @@ public class MeController : ControllerBase
         if (account.EmployeeId is not null)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
+            dto.LeaveBalance = await GetLeaveBalanceAsync(account.EmployeeId.Value, today.Year);
 
             dto.UpcomingShifts = await _context.Shifts
                 .AsNoTracking()
@@ -79,5 +82,34 @@ public class MeController : ControllerBase
         }
 
         return Ok(dto);
+    }
+
+    private async Task<LeaveBalanceReadDto> GetLeaveBalanceAsync(int employeeId, int year)
+    {
+        var allowance = await _context.LeaveAllowances
+            .AsNoTracking()
+            .FirstOrDefaultAsync(current => current.EmployeeId == employeeId && current.Year == year);
+
+        var requests = await _context.LeaveRequests
+            .AsNoTracking()
+            .Where(request => request.EmployeeId == employeeId && request.StartDate.Year == year)
+            .ToListAsync();
+
+        var usedDays = requests
+            .Where(request => request.Status == "Approved")
+            .Sum(request => request.RequestedDays);
+        var pendingDays = requests
+            .Where(request => request.Status == "Pending")
+            .Sum(request => request.RequestedDays);
+        var totalDays = allowance?.TotalDays ?? DefaultAnnualLeaveDays;
+
+        return new LeaveBalanceReadDto
+        {
+            Year = year,
+            TotalDays = totalDays,
+            UsedDays = usedDays,
+            RemainingDays = Math.Max(0, totalDays - usedDays),
+            PendingDays = pendingDays
+        };
     }
 }
