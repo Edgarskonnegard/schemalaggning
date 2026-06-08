@@ -22,6 +22,9 @@ pnpm-debug.log*
 *.userosscache
 *.sln.docstates
 
+# Local report material
+backend/docs/testing-investigation.txt
+
 # IDE and OS files
 .DS_Store
 .idea/
