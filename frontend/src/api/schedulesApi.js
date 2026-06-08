@@ -16,6 +16,10 @@ export function publishSchedule(id) {
   return put(`/api/schedules/${id}/publish`);
 }
 
+export function createScheduleShift(scheduleId, shift) {
+  return post(`/api/schedules/${scheduleId}/shifts`, shift);
+}
+
 export function updateShift(id, shift) {
   return put(`/api/shifts/${id}`, shift);
 }

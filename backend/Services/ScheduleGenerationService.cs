@@ -99,7 +99,14 @@ public class ScheduleGenerationService : IScheduleGenerationService
 
         var created = await _scheduleRepository.CreateAsync(schedule);
         var createdWithShifts = await _scheduleRepository.GetByIdWithShiftsAsync(created.Id);
-        return createdWithShifts!.ToReadDto();
+        if (createdWithShifts is null)
+        {
+            throw new InvalidOperationException("Created schedule could not be loaded.");
+        }
+
+        var readDto = createdWithShifts.ToReadDto();
+        readDto.CoverageGaps = await GetCoverageGapsAsync(createdWithShifts);
+        return readDto;
     }
 
     private async Task<DateOnly> GetFirstAvailableStartDateAsync(
@@ -183,5 +190,51 @@ public class ScheduleGenerationService : IScheduleGenerationService
         }
 
         return blockedDates;
+    }
+
+    private async Task<List<ScheduleCoverageGapDto>> GetCoverageGapsAsync(Schedule schedule)
+    {
+        var coverageRules = await _context.StoreCoverageRules
+            .AsNoTracking()
+            .Include(rule => rule.ShiftType)
+            .Where(rule => rule.StoreId == schedule.StoreId)
+            .ToListAsync();
+
+        var gaps = new List<ScheduleCoverageGapDto>();
+
+        for (var date = schedule.PeriodStart; date <= schedule.PeriodEnd; date = date.AddDays(1))
+        {
+            foreach (var rule in coverageRules.Where(rule => rule.DayOfWeek == date.DayOfWeek))
+            {
+                var assignedCount = schedule.Shifts.Count(shift =>
+                    shift.Date == date &&
+                    shift.ShiftTypeId == rule.ShiftTypeId &&
+                    shift.StartTime == rule.StartTime &&
+                    shift.EndTime == rule.EndTime);
+
+                if (assignedCount >= rule.RequiredCount)
+                {
+                    continue;
+                }
+
+                gaps.Add(new ScheduleCoverageGapDto
+                {
+                    Date = date,
+                    ShiftTypeId = rule.ShiftTypeId,
+                    ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
+                    StartTime = rule.StartTime,
+                    EndTime = rule.EndTime,
+                    RequiredCount = rule.RequiredCount,
+                    AssignedCount = assignedCount,
+                    MissingCount = rule.RequiredCount - assignedCount
+                });
+            }
+        }
+
+        return gaps
+            .OrderBy(gap => gap.Date)
+            .ThenBy(gap => gap.StartTime)
+            .ThenBy(gap => gap.ShiftTypeName)
+            .ToList();
     }
 }

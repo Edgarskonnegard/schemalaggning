@@ -37,6 +37,21 @@ public class ScheduleServiceTests : IClassFixture<TestApplicationFactory>
     }
 
     [Fact]
+    public async Task Publish_rejects_schedule_with_uncovered_staffing_requirements()
+    {
+        await _factory.ResetDatabaseAsync();
+        var seed = await SeedScheduleAsync(includeCoverageGap: true);
+
+        using var scope = _factory.Services.CreateScope();
+        var service = scope.ServiceProvider.GetRequiredService<IScheduleService>();
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.PublishScheduleAsync(seed.DraftScheduleId));
+
+        Assert.Contains("staffing requirements", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task SwapShiftEmployees_rejects_shifts_on_different_dates()
     {
         await _factory.ResetDatabaseAsync();
@@ -79,7 +94,8 @@ public class ScheduleServiceTests : IClassFixture<TestApplicationFactory>
 
     private async Task<SeedResult> SeedScheduleAsync(
         bool includeSecondShiftDifferentDate = false,
-        bool includeEmployeeWithoutShiftType = false)
+        bool includeEmployeeWithoutShiftType = false,
+        bool includeCoverageGap = false)
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -168,6 +184,19 @@ public class ScheduleServiceTests : IClassFixture<TestApplicationFactory>
         if (includeEmployeeWithoutShiftType)
         {
             context.Employees.Add(blockedEmployee);
+        }
+
+        if (includeCoverageGap)
+        {
+            context.StoreCoverageRules.Add(new StoreCoverageRule
+            {
+                Store = store,
+                ShiftType = shiftType,
+                DayOfWeek = firstShift.Date.DayOfWeek,
+                RequiredCount = 2,
+                StartTime = firstShift.StartTime,
+                EndTime = firstShift.EndTime
+            });
         }
 
         await context.SaveChangesAsync();

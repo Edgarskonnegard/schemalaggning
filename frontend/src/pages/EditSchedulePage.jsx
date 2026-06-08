@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  createScheduleShift,
   generateStoreSchedule,
   getSchedules,
   publishSchedule,
@@ -12,6 +13,7 @@ import {
   getScheduleLeaveBlocks,
   rejectLeaveRequest,
 } from "../api/leaveRequestsApi";
+import { getEmployees } from "../api/employeesApi";
 import { getStores } from "../api/storesApi";
 import ShiftNote from "../components/schedule/ShiftNote";
 import Alert from "../components/ui/Alert";
@@ -134,12 +136,14 @@ function EditSchedulePage() {
   const calendarScrollRef = useRef(null);
   const panStateRef = useRef(null);
   const [stores, setStores] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [leaveBlocks, setLeaveBlocks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [draggedShift, setDraggedShift] = useState(null);
+  const [draggedCoverageGap, setDraggedCoverageGap] = useState(null);
   const [isPanningSchedule, setIsPanningSchedule] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [leaveDecisionIds, setLeaveDecisionIds] = useState([]);
@@ -163,9 +167,10 @@ function EditSchedulePage() {
       setIsLoading(true);
 
       try {
-        const [storesResult, schedulesResult] = await Promise.all([
+        const [storesResult, schedulesResult, employeesResult] = await Promise.all([
           getStores(),
           getSchedules(),
+          getEmployees(),
         ]);
         const defaultStoreId = storesResult[0]?.id?.toString() ?? "";
         const suggestedStart = getFirstAvailableScheduleStart(
@@ -176,6 +181,7 @@ function EditSchedulePage() {
         );
 
         setStores(storesResult);
+        setEmployees(employeesResult);
         setSchedules(schedulesResult);
         setForm((prev) => ({
           ...prev,
@@ -231,6 +237,18 @@ function EditSchedulePage() {
     return getDatesBetween(selectedSchedule.periodStart, selectedSchedule.periodEnd);
   }, [selectedSchedule]);
 
+  const storeEmployees = useMemo(() => {
+    const storeId = selectedSchedule?.storeId ?? form.storeId;
+
+    if (!storeId) {
+      return [];
+    }
+
+    return employees
+      .filter((employee) => employee.storeId.toString() === storeId.toString())
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [employees, form.storeId, selectedSchedule]);
+
   const employeesInSchedule = useMemo(() => {
     if (!selectedSchedule) {
       return [];
@@ -255,10 +273,20 @@ function EditSchedulePage() {
       }
     });
 
+    storeEmployees.forEach((employee) => {
+      if (!employeeMap.has(employee.id)) {
+        employeeMap.set(employee.id, {
+          id: employee.id,
+          name: employee.name,
+          roleName: employee.roleName,
+        });
+      }
+    });
+
     return [...employeeMap.values()].sort((a, b) =>
       a.name.localeCompare(b.name)
     );
-  }, [leaveBlocks, selectedSchedule]);
+  }, [leaveBlocks, selectedSchedule, storeEmployees]);
 
   const shiftsByEmployeeAndDate = useMemo(() => {
     if (!selectedSchedule) {
@@ -305,6 +333,17 @@ function EditSchedulePage() {
     [leaveBlocks]
   );
 
+  const coverageGaps = selectedSchedule?.coverageGaps ?? [];
+  const hasCoverageGaps = coverageGaps.length > 0;
+
+  const coverageGapsByDate = useMemo(() => {
+    return coverageGaps.reduce((groups, gap) => {
+      groups[gap.date] = groups[gap.date] ?? [];
+      groups[gap.date].push(gap);
+      return groups;
+    }, {});
+  }, [coverageGaps]);
+
   const hasRejectedLeaveDuringReview = rejectedLeaveReviewIds.length > 0;
 
   function updateForm(field, value) {
@@ -337,6 +376,24 @@ function EditSchedulePage() {
       selectedSchedule?.status === "Draft" &&
       draggedShift.date === targetDate
     );
+  }
+
+  function canDropCoverageGapOnCell(employee, targetDate) {
+    if (
+      !draggedCoverageGap ||
+      selectedSchedule?.status !== "Draft" ||
+      draggedCoverageGap.date !== targetDate
+    ) {
+      return false;
+    }
+
+    const hasLeave =
+      (leaveBlocksByEmployeeAndDate[`${employee.id}-${targetDate}`] ?? [])
+        .length > 0;
+    const hasShift =
+      (shiftsByEmployeeAndDate[`${employee.id}-${targetDate}`] ?? []).length > 0;
+
+    return !hasLeave && !hasShift;
   }
 
   async function handleGenerate(event) {
@@ -415,6 +472,11 @@ function EditSchedulePage() {
   }
 
   function handlePublishClick() {
+    if (hasCoverageGaps) {
+      setError("Alla bemanningsbehov måste vara placerade innan schemat godkänns.");
+      return;
+    }
+
     if (hasRejectedLeaveDuringReview) {
       setError(
         "Generera om schemautkastet innan publicering eftersom en ledighet nekades."
@@ -431,6 +493,41 @@ function EditSchedulePage() {
     }
 
     handlePublish();
+  }
+
+  function getCoverageGapKey(gap) {
+    return `${gap.date}-${gap.shiftTypeId}-${gap.startTime}-${gap.endTime}`;
+  }
+
+  async function handlePlaceCoverageGap(gap, employeeId) {
+    if (!selectedSchedule) {
+      return;
+    }
+
+    if (!employeeId) {
+      setError("Välj en anställd att placera passet på.");
+      return;
+    }
+
+    setError("");
+    setIsSaving(true);
+
+    try {
+      const updatedSchedule = await createScheduleShift(selectedSchedule.id, {
+        employeeId: Number(employeeId),
+        shiftTypeId: gap.shiftTypeId,
+        date: gap.date,
+        startTime: gap.startTime,
+        endTime: gap.endTime,
+      });
+
+      setSelectedSchedule(updatedSchedule);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDraggedCoverageGap(null);
+      setIsSaving(false);
+    }
   }
 
   async function refreshLeaveBlocks(schedule = selectedSchedule) {
@@ -502,6 +599,16 @@ function EditSchedulePage() {
   }
 
   async function handleDropShift(targetEmployee, targetDate) {
+    if (draggedCoverageGap) {
+      if (!canDropCoverageGapOnCell(targetEmployee, targetDate)) {
+        setDraggedCoverageGap(null);
+        return;
+      }
+
+      await handlePlaceCoverageGap(draggedCoverageGap, targetEmployee.id);
+      return;
+    }
+
     if (!draggedShift || selectedSchedule?.status !== "Draft") {
       setDraggedShift(null);
       return;
@@ -673,6 +780,7 @@ function EditSchedulePage() {
     if (
       event.button !== 0 ||
       draggedShift ||
+      draggedCoverageGap ||
       event.target.closest(".shift-note")
     ) {
       return;
@@ -761,7 +869,11 @@ function EditSchedulePage() {
           {selectedSchedule && (
             <Button
               type="button"
-              disabled={isSaving || selectedSchedule.status !== "Draft"}
+              disabled={
+                isSaving ||
+                selectedSchedule.status !== "Draft" ||
+                hasCoverageGaps
+              }
               onClick={handlePublishClick}
             >
               Godkänn schema
@@ -776,7 +888,9 @@ function EditSchedulePage() {
         ) : (
           <div
             className={`calendar schedule-review-calendar ${
-              draggedShift ? "schedule-review-calendar--dragging" : ""
+              draggedShift || draggedCoverageGap
+                ? "schedule-review-calendar--dragging"
+                : ""
             } ${
               isPanningSchedule ? "schedule-review-calendar--panning" : ""
             }`}
@@ -802,16 +916,22 @@ function EditSchedulePage() {
                   className="schedule-date-grid"
                   style={{
                     gridTemplateColumns: `repeat(${dates.length}, 120px)`,
+                    gridTemplateRows: `var(--schedule-header-height) repeat(${employeesInSchedule.length}, var(--schedule-row-height))`,
                   }}
                 >
                   {dates.map((date) => {
-                    const isDropColumn = draggedShift?.date === date;
+                    const isDropColumn =
+                      draggedShift?.date === date ||
+                      draggedCoverageGap?.date === date;
+                    const hasDateCoverageGap = Boolean(coverageGapsByDate[date]);
 
                     return (
                       <div
                         key={date}
                         className={`calendar-day-header ${
                           isDropColumn ? "schedule-drop-column" : ""
+                        } ${
+                          hasDateCoverageGap ? "schedule-coverage-gap-column" : ""
                         } ${
                           draggedShift && !isDropColumn
                             ? "schedule-dimmed-column"
@@ -839,6 +959,15 @@ function EditSchedulePage() {
                           leaveBlocksByEmployeeAndDate[`${employee.id}-${date}`] ??
                           [];
                         const canDropHere = canDropShiftOnCell(date);
+                        const canDropGapHere = canDropCoverageGapOnCell(
+                          employee,
+                          date
+                        );
+                        const isInvalidGapTarget =
+                          Boolean(draggedCoverageGap) &&
+                          draggedCoverageGap.date === date &&
+                          !canDropGapHere;
+                        const hasDateCoverageGap = Boolean(coverageGapsByDate[date]);
 
                         return (
                           <div
@@ -846,14 +975,23 @@ function EditSchedulePage() {
                             className={`calendar-cell ${
                               blocks.length > 0 ? "schedule-leave-cell" : ""
                             } ${
-                              canDropHere ? "schedule-drop-target" : ""
+                              hasDateCoverageGap ? "schedule-coverage-gap-cell" : ""
                             } ${
-                              draggedShift && !canDropHere
+                              canDropHere || canDropGapHere
+                                ? "schedule-drop-target"
+                                : ""
+                            } ${
+                              isInvalidGapTarget
+                                ? "schedule-invalid-drop-target"
+                                : ""
+                            } ${
+                              (draggedShift && !canDropHere) ||
+                              (draggedCoverageGap && !canDropGapHere)
                                 ? "schedule-dimmed-column"
                                 : ""
                             }`}
                             onDragOver={(event) => {
-                              if (canDropHere) {
+                              if (canDropHere || canDropGapHere) {
                                 event.preventDefault();
                               }
                             }}
@@ -887,7 +1025,10 @@ function EditSchedulePage() {
                                     shift.endTime
                                   )}`}
                                   onClick={() => openShiftEditor(shift)}
-                                  onDragStart={() => setDraggedShift(shift)}
+                                  onDragStart={() => {
+                                    setDraggedCoverageGap(null);
+                                    setDraggedShift(shift);
+                                  }}
                                   onDragEnd={() => setDraggedShift(null)}
                                   onKeyDown={(event) => {
                                     if (
@@ -909,6 +1050,40 @@ function EditSchedulePage() {
                 </div>
               </div>
             </div>
+
+            {hasCoverageGaps && (
+              <section className="schedule-coverage-gaps">
+                <div>
+                  <h3>Bemanningsbehov saknas</h3>
+                  <p>
+                    Dessa pass från bemanningsbehovet finns inte i utkastet.
+                    Dra ett passkort till rätt datumkolumn hos en anställd.
+                  </p>
+                </div>
+
+                <div className="schedule-coverage-gap-list">
+                  {coverageGaps.map((gap) => (
+                    <ShiftNote
+                      className="schedule-coverage-gap-card"
+                      draggable={selectedSchedule.status === "Draft" && !isSaving}
+                      key={getCoverageGapKey(gap)}
+                      title={gap.shiftTypeName}
+                      time={`${formatTime(gap.startTime)}-${formatTime(gap.endTime)}`}
+                      onDragStart={() => {
+                        setDraggedShift(null);
+                        setDraggedCoverageGap(gap);
+                      }}
+                      onDragEnd={() => setDraggedCoverageGap(null)}
+                    >
+                      <span>{formatDate(gap.date)}</span>
+                      <small>
+                        Saknas {gap.missingCount} av {gap.requiredCount}
+                      </small>
+                    </ShiftNote>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         )}
       </section>
