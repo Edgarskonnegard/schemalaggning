@@ -20,12 +20,16 @@ function Sidebar({ isOpen, onClose }) {
             Dashboard
           </NavLink>
 
-          <NavLink to="/schedule" onClick={onClose}>
-            Schema
-          </NavLink>
-
           {isAdmin && (
             <>
+              <NavLink to="/me" onClick={onClose}>
+                Min sida
+              </NavLink>
+
+              <NavLink to="/schedule" onClick={onClose}>
+                Schema
+              </NavLink>
+
               <NavLink to="/edit-schedule" onClick={onClose}>
                 Skapa schema
               </NavLink>
@@ -48,6 +52,18 @@ function Sidebar({ isOpen, onClose }) {
 
               <NavLink to="/approvals" onClick={onClose}>
                 Godkännanden
+              </NavLink>
+            </>
+          )}
+
+          {!isAdmin && (
+            <>
+              <NavLink to="/my-schedule" onClick={onClose}>
+                Mitt schema
+              </NavLink>
+
+              <NavLink to="/me" onClick={onClose}>
+                Min profil
               </NavLink>
             </>
           )}

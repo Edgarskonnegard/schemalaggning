@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { getPendingBaseScheduleApprovalCount } from "../api/approvalsApi";
 import { getEmployees } from "../api/employeesApi";
+import { getMe } from "../api/meApi";
 import { getSchedules } from "../api/schedulesApi";
 import { getStores } from "../api/storesApi";
 import { useAuth } from "../auth/AuthContext";
@@ -18,6 +19,22 @@ function formatDate(value) {
     month: "short",
     year: "numeric",
   });
+}
+
+function formatShiftDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  return new Date(`${value}T00:00:00`).toLocaleDateString("sv-SE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+function formatTime(value) {
+  return value?.slice(0, 5) || "";
 }
 
 function getScheduleStatusLabel(status) {
@@ -40,20 +57,21 @@ function DashboardPage() {
     schedules: [],
     pendingApprovals: 0,
   });
+  const [employeeOverview, setEmployeeOverview] = useState(null);
   const [isLoading, setIsLoading] = useState(isAdmin);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isAdmin) {
-      setIsLoading(false);
-      return;
-    }
-
     async function loadDashboard() {
       setError("");
       setIsLoading(true);
 
       try {
+        if (!isAdmin) {
+          setEmployeeOverview(await getMe());
+          return;
+        }
+
         const [employees, stores, schedules, pendingApprovals] =
           await Promise.all([
             getEmployees(),
@@ -94,29 +112,64 @@ function DashboardPage() {
       .slice(0, 3);
   }, [overview.schedules]);
 
+  const nextShifts = useMemo(() => {
+    return employeeOverview?.upcomingShifts?.slice(0, 3) ?? [];
+  }, [employeeOverview]);
+
   if (!isAdmin) {
     return (
       <main className="dashboard-page">
         <section className="dashboard-hero">
           <div>
             <p className="dashboard-eyebrow">Din översikt</p>
-            <h1>Hej {user?.email || "där"}</h1>
+            <h1>Hej {employeeOverview?.employee?.name || user?.email || "där"}</h1>
             <p>
-              Här kommer din personliga schemavy hamna när vi kopplar på
-              employee-flödet fullt ut.
+              Här ser du dina närmaste pass och kommer senare kunna följa
+              byten, ledighet och andra personalärenden.
             </p>
           </div>
-          <Link className="dashboard-primary-link" to="/schedule">
-            Visa schema
+          <Link className="dashboard-primary-link" to="/my-schedule">
+            Visa mitt schema
           </Link>
         </section>
 
-        <section className="dashboard-empty-state">
-          <h2>Nästa steg för anställda</h2>
-          <p>
-            När vi bygger user actions kan den här sidan visa kommande pass,
-            bytesförfrågningar och ledighetsstatus.
-          </p>
+        {error && <p className="dashboard-error">{error}</p>}
+
+        <section className="dashboard-panel">
+          <div className="dashboard-panel-header">
+            <div>
+              <h2>Nästkommande pass</h2>
+              <p>Dina närmaste publicerade pass.</p>
+            </div>
+            <Link to="/my-schedule">Alla pass</Link>
+          </div>
+
+          {isLoading ? (
+            <p className="dashboard-muted">Laddar dina pass...</p>
+          ) : !employeeOverview?.employee ? (
+            <p className="dashboard-muted">
+              Kontot är inte kopplat till en anställd profil ännu.
+            </p>
+          ) : nextShifts.length === 0 ? (
+            <p className="dashboard-muted">
+              Du har inga kommande publicerade pass.
+            </p>
+          ) : (
+            <div className="dashboard-next-shifts">
+              {nextShifts.map((shift) => (
+                <article className="dashboard-next-shift" key={shift.id}>
+                  <div>
+                    <strong>{shift.shiftTypeName}</strong>
+                    <span>{formatShiftDate(shift.date)}</span>
+                    <small>{shift.storeName}</small>
+                  </div>
+                  <span className="dashboard-shift-time">
+                    {formatTime(shift.startTime)}-{formatTime(shift.endTime)}
+                  </span>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       </main>
     );

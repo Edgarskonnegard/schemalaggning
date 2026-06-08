@@ -48,12 +48,18 @@ public class EmployeeService : IEmployeeService
     public async Task<EmployeeReadDto> CreateAsync(EmployeeCreateDto dto)
     {
         await ValidateEmployeeAsync(dto.Name, dto.StoreId, dto.RoleId, dto.EmploymentPercentage);
+        var existingAccount = HasAccountEmail(dto.AccountEmail)
+            ? await _userAccountRepository.GetByEmailAsync(dto.AccountEmail!)
+            : null;
+
+        EnsureAccountCanBeLinked(existingAccount, employeeId: null);
+
         await ValidateAccountFieldsAsync(
             dto.AccountEmail,
             dto.AccountPassword,
             dto.AccountAccessRole,
-            requirePassword: HasAccountEmail(dto.AccountEmail),
-            existingAccountId: null);
+            requirePassword: HasAccountEmail(dto.AccountEmail) && existingAccount is null,
+            existingAccountId: existingAccount?.Id);
 
         var employee = await _employeeRepository.CreateAsync(new Employee
         {
@@ -65,15 +71,33 @@ public class EmployeeService : IEmployeeService
 
         if (HasAccountEmail(dto.AccountEmail))
         {
-            await _userAccountRepository.CreateAsync(new UserAccount
+            if (existingAccount is null)
             {
-                Email = NormalizeEmail(dto.AccountEmail!),
-                PasswordHash = _passwordHasher.Hash(dto.AccountPassword!),
-                AccessRole = NormalizeAccessRole(dto.AccountAccessRole),
-                EmployeeId = employee.Id,
-                StoreId = dto.StoreId,
-                IsActive = dto.AccountIsActive
-            });
+                await _userAccountRepository.CreateAsync(new UserAccount
+                {
+                    Email = NormalizeEmail(dto.AccountEmail!),
+                    PasswordHash = _passwordHasher.Hash(dto.AccountPassword!),
+                    AccessRole = NormalizeAccessRole(dto.AccountAccessRole),
+                    EmployeeId = employee.Id,
+                    StoreId = dto.StoreId,
+                    IsActive = dto.AccountIsActive
+                });
+            }
+            else
+            {
+                existingAccount.Email = NormalizeEmail(dto.AccountEmail!);
+                existingAccount.AccessRole = NormalizeAccessRole(dto.AccountAccessRole);
+                existingAccount.EmployeeId = employee.Id;
+                existingAccount.StoreId = dto.StoreId;
+                existingAccount.IsActive = dto.AccountIsActive;
+
+                if (!string.IsNullOrWhiteSpace(dto.AccountPassword))
+                {
+                    existingAccount.PasswordHash = _passwordHasher.Hash(dto.AccountPassword);
+                }
+
+                await _userAccountRepository.UpdateAsync(existingAccount);
+            }
         }
 
         var created = await _employeeRepository.GetByIdAsync(employee.Id);
@@ -91,6 +115,13 @@ public class EmployeeService : IEmployeeService
         }
 
         var existingAccount = await _userAccountRepository.GetByEmployeeIdAsync(id);
+        if (existingAccount is null && HasAccountEmail(dto.AccountEmail))
+        {
+            existingAccount = await _userAccountRepository.GetByEmailAsync(dto.AccountEmail!);
+        }
+
+        EnsureAccountCanBeLinked(existingAccount, id);
+
         var shouldHaveAccount = HasAccountEmail(dto.AccountEmail);
         await ValidateAccountFieldsAsync(
             dto.AccountEmail,
@@ -124,6 +155,7 @@ public class EmployeeService : IEmployeeService
             {
                 existingAccount.Email = NormalizeEmail(dto.AccountEmail!);
                 existingAccount.AccessRole = NormalizeAccessRole(dto.AccountAccessRole);
+                existingAccount.EmployeeId = employee.Id;
                 existingAccount.StoreId = dto.StoreId;
                 existingAccount.IsActive = dto.AccountIsActive;
 
@@ -226,5 +258,20 @@ public class EmployeeService : IEmployeeService
     private static string NormalizeAccessRole(string accessRole)
     {
         return accessRole.Equals("Admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "Employee";
+    }
+
+    private static void EnsureAccountCanBeLinked(UserAccount? account, int? employeeId)
+    {
+        if (account?.EmployeeId is null)
+        {
+            return;
+        }
+
+        if (employeeId is not null && account.EmployeeId == employeeId.Value)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException("Email is already connected to another employee.");
     }
 }

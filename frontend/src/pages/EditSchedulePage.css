@@ -16,7 +16,7 @@
 
 .schedule-generator-form {
   display: grid;
-  grid-template-columns: repeat(5, minmax(140px, 1fr));
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
   gap: 14px;
   align-items: end;
 }
@@ -144,23 +144,6 @@
 .schedule-dimmed-column .calendar-day-name,
 .schedule-dimmed-column .calendar-month-name {
   opacity: 0.9;
-}
-
-.schedule-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.schedule-picker button {
-  border: 1px solid #dbeafe;
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: #eff6ff;
-  color: #1d4ed8;
-  cursor: pointer;
-  font-weight: 700;
 }
 
 .schedule-modal-backdrop {

@@ -1,0 +1,58 @@
+.my-schedule-page {
+  display: grid;
+  gap: 24px;
+}
+
+.my-schedule-list {
+  display: grid;
+  gap: 16px;
+}
+
+.my-schedule-day {
+  display: grid;
+  gap: 14px;
+}
+
+.my-schedule-day h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+  text-transform: capitalize;
+}
+
+.my-schedule-shifts {
+  display: grid;
+  gap: 10px;
+}
+
+.my-schedule-shift {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.my-schedule-shift div {
+  display: grid;
+  gap: 3px;
+}
+
+.my-schedule-shift strong {
+  color: #111827;
+}
+
+.my-schedule-shift span,
+.my-schedule-muted {
+  color: #64748b;
+}
+
+@media (max-width: 640px) {
+  .my-schedule-shift {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

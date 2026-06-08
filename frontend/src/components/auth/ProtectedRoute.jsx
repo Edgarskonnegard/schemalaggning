@@ -2,7 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 
 import { useAuth } from "../../auth/AuthContext";
 
-function ProtectedRoute({ children, requireAdmin = false }) {
+function ProtectedRoute({ children, requireAdmin = false, requireEmployee = false }) {
   const location = useLocation();
   const { isAuthenticated, isAdmin } = useAuth();
 
@@ -11,6 +11,10 @@ function ProtectedRoute({ children, requireAdmin = false }) {
   }
 
   if (requireAdmin && !isAdmin) {
+    return <Navigate to="/my-schedule" replace />;
+  }
+
+  if (requireEmployee && isAdmin) {
     return <Navigate to="/schedule" replace />;
   }
 

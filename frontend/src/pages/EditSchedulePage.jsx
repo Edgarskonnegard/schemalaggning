@@ -2,7 +2,6 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   generateStoreSchedule,
-  getSchedules,
   publishSchedule,
   swapShiftEmployees,
   updateShift,
@@ -73,7 +72,6 @@ function EditSchedulePage() {
   const calendarScrollRef = useRef(null);
   const panStateRef = useRef(null);
   const [stores, setStores] = useState([]);
-  const [schedules, setSchedules] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -87,7 +85,6 @@ function EditSchedulePage() {
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     storeId: "",
-    name: "Schemautkast",
     periodStart: initialStart,
     periodEnd: getDefaultEndDate(initialStart),
   });
@@ -98,13 +95,9 @@ function EditSchedulePage() {
       setIsLoading(true);
 
       try {
-        const [storesResult, schedulesResult] = await Promise.all([
-          getStores(),
-          getSchedules(),
-        ]);
+        const storesResult = await getStores();
 
         setStores(storesResult);
-        setSchedules(schedulesResult);
         setForm((prev) => ({
           ...prev,
           storeId: storesResult[0]?.id?.toString() ?? "",
@@ -217,13 +210,11 @@ function EditSchedulePage() {
 
     try {
       const schedule = await generateStoreSchedule(form.storeId, {
-        name: form.name,
         periodStart: form.periodStart,
         periodEnd: form.periodEnd,
       });
 
       setSelectedSchedule(schedule);
-      setSchedules((prev) => [schedule, ...prev]);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -473,12 +464,6 @@ function EditSchedulePage() {
           </Select>
 
           <Input
-            label="Namn"
-            value={form.name}
-            onChange={(event) => updateForm("name", event.target.value)}
-          />
-
-          <Input
             label="Start"
             type="date"
             value={form.periodStart}
@@ -532,25 +517,7 @@ function EditSchedulePage() {
 
         {!selectedSchedule ? (
           <div className="schedule-empty-state">
-            {schedules.length === 0 ? (
-              <p>Inga schemautkast finns ännu.</p>
-            ) : (
-              <>
-                <p>Välj ett tidigare schema att granska.</p>
-                <div className="schedule-picker">
-                  {schedules.map((schedule) => (
-                    <button
-                      key={schedule.id}
-                      type="button"
-                      onClick={() => setSelectedSchedule(schedule)}
-                    >
-                      {schedule.name} · {schedule.storeName || "Butik"} ·{" "}
-                      {schedule.status}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
+            <p>Generera ett nytt schemautkast för att granska allas pass.</p>
           </div>
         ) : (
           <div

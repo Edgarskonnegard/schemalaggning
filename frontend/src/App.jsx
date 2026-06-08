@@ -13,9 +13,15 @@ import StoreCoveragePage from "./pages/StoreCoveragePage";
 import ApprovalsPage from "./pages/ApprovalsPage";
 import ScheduleRulesPage from "./pages/ScheduleRulesPage";
 import LoginPage from "./pages/LoginPage";
+import UserPage from "./pages/UserPage";
+import MySchedulePage from "./pages/MySchedulePage";
 
 function AdminRoute({ children }) {
   return <ProtectedRoute requireAdmin>{children}</ProtectedRoute>;
+}
+
+function EmployeeRoute({ children }) {
+  return <ProtectedRoute requireEmployee>{children}</ProtectedRoute>;
 }
 
 function App() {
@@ -29,7 +35,23 @@ function App() {
             <AppLayout>
               <Routes>
                 <Route path="/" element={<DashboardPage />} />
-                <Route path="/schedule" element={<SchedulePage />} />
+                <Route path="/me" element={<UserPage />} />
+                <Route
+                  path="/my-schedule"
+                  element={
+                    <EmployeeRoute>
+                      <MySchedulePage />
+                    </EmployeeRoute>
+                  }
+                />
+                <Route
+                  path="/schedule"
+                  element={
+                    <AdminRoute>
+                      <SchedulePage />
+                    </AdminRoute>
+                  }
+                />
                 <Route
                   path="/edit-schedule"
                   element={

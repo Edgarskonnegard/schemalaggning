@@ -158,7 +158,8 @@
 }
 
 .dashboard-schedule-list,
-.dashboard-action-list {
+.dashboard-action-list,
+.dashboard-next-shifts {
   display: grid;
   gap: 10px;
 }
@@ -225,6 +226,45 @@
   background: #eff6ff;
 }
 
+.dashboard-next-shift {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.dashboard-next-shift div {
+  display: grid;
+  gap: 4px;
+}
+
+.dashboard-next-shift strong {
+  color: #111827;
+}
+
+.dashboard-next-shift span,
+.dashboard-next-shift small {
+  color: #64748b;
+}
+
+.dashboard-next-shift small {
+  font-size: 13px;
+}
+
+.dashboard-shift-time {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #eef2ff;
+  color: #3730a3 !important;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .dashboard-muted {
   color: #6b7280;
 }
@@ -255,7 +295,8 @@
     font-size: 28px;
   }
 
-  .dashboard-schedule-item {
+  .dashboard-schedule-item,
+  .dashboard-next-shift {
     align-items: flex-start;
     flex-direction: column;
   }

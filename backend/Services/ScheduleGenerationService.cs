@@ -23,11 +23,6 @@ public class ScheduleGenerationService : IScheduleGenerationService
 
     public async Task<ScheduleReadDto> GenerateFromBaseScheduleAsync(ScheduleCreateDto dto)
     {
-        if (string.IsNullOrWhiteSpace(dto.Name))
-        {
-            throw new ArgumentException("Schedule name is required.");
-        }
-
         if (dto.PeriodEnd < dto.PeriodStart)
         {
             throw new ArgumentException("Period end must be after or equal to period start.");
@@ -44,7 +39,9 @@ public class ScheduleGenerationService : IScheduleGenerationService
 
         var schedule = new Schedule
         {
-            Name = dto.Name.Trim(),
+            Name = string.IsNullOrWhiteSpace(dto.Name)
+                ? $"Schema {dto.PeriodStart:yyyy-MM-dd} - {dto.PeriodEnd:yyyy-MM-dd}"
+                : dto.Name.Trim(),
             StoreId = dto.StoreId,
             PeriodStart = dto.PeriodStart,
             PeriodEnd = dto.PeriodEnd,

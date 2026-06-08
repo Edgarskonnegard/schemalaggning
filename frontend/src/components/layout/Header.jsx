@@ -5,7 +5,7 @@ import { getPendingBaseScheduleApprovalCount } from "../../api/approvalsApi";
 import { useAuth } from "../../auth/AuthContext";
 import "./Header.css";
 function Header({ onToggleMenu }) {
-  const { logout, user } = useAuth();
+  const { isAdmin, logout, user } = useAuth();
   const navigate = useNavigate();
   const [pendingCount, setPendingCount] = useState(0);
 
@@ -40,12 +40,14 @@ function Header({ onToggleMenu }) {
 
       <h1>Schemaläggningssystem</h1>
 
-      <Link className="notification-link" to="/approvals" aria-label="Godkännanden">
-        <span className="notification-icon">!</span>
-        {pendingCount > 0 && (
-          <span className="notification-badge">{pendingCount}</span>
-        )}
-      </Link>
+      {isAdmin && (
+        <Link className="notification-link" to="/approvals" aria-label="Godkännanden">
+          <span className="notification-icon">!</span>
+          {pendingCount > 0 && (
+            <span className="notification-badge">{pendingCount}</span>
+          )}
+        </Link>
+      )}
 
       <div className="header-user">
         <span>{user?.email}</span>
