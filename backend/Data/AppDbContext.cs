@@ -25,6 +25,7 @@ public class AppDbContext : DbContext
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<ShiftComment> ShiftComments => Set<ShiftComment>();
+    public DbSet<ShiftSwapRequest> ShiftSwapRequests => Set<ShiftSwapRequest>();
     public DbSet<LeaveAllowance> LeaveAllowances => Set<LeaveAllowance>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
 
@@ -146,6 +147,18 @@ public class AppDbContext : DbContext
             .HasMany(e => e.ShiftComments)
             .WithOne(comment => comment.Employee)
             .HasForeignKey(comment => comment.EmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Employee>()
+            .HasMany(e => e.SentShiftSwapRequests)
+            .WithOne(request => request.FromEmployee)
+            .HasForeignKey(request => request.FromEmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Employee>()
+            .HasMany(e => e.ReceivedShiftSwapRequests)
+            .WithOne(request => request.ToEmployee)
+            .HasForeignKey(request => request.ToEmployeeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Employee>()
@@ -337,6 +350,12 @@ public class AppDbContext : DbContext
             .HasForeignKey(comment => comment.ShiftId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<Shift>()
+            .HasMany(s => s.SwapRequests)
+            .WithOne(request => request.Shift)
+            .HasForeignKey(request => request.ShiftId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<ShiftComment>()
             .Property(comment => comment.Message)
             .HasMaxLength(1000)
@@ -352,5 +371,14 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(comment => comment.ResolvedByUserAccountId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ShiftSwapRequest>()
+            .Property(request => request.Message)
+            .HasMaxLength(1000);
+
+        modelBuilder.Entity<ShiftSwapRequest>()
+            .Property(request => request.Status)
+            .HasMaxLength(30)
+            .IsRequired();
     }
 }

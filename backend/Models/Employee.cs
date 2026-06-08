@@ -22,6 +22,10 @@ public class Employee
 
     public ICollection<ShiftComment> ShiftComments { get; set; } = new List<ShiftComment>();
 
+    public ICollection<ShiftSwapRequest> SentShiftSwapRequests { get; set; } = new List<ShiftSwapRequest>();
+
+    public ICollection<ShiftSwapRequest> ReceivedShiftSwapRequests { get; set; } = new List<ShiftSwapRequest>();
+
     public ICollection<LeaveAllowance> LeaveAllowances { get; set; } = new List<LeaveAllowance>();
 
     public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();

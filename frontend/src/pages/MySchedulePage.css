@@ -20,6 +20,51 @@
   text-transform: capitalize;
 }
 
+.my-schedule-swaps {
+  display: grid;
+  gap: 16px;
+}
+
+.my-schedule-swaps h2,
+.my-schedule-swap-section h3 {
+  margin: 0;
+  color: #111827;
+}
+
+.my-schedule-swap-section {
+  display: grid;
+  gap: 10px;
+}
+
+.my-schedule-swap-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.my-schedule-swap-item > div:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.my-schedule-swap-item strong {
+  color: #111827;
+}
+
+.my-schedule-swap-item span,
+.my-schedule-swap-item p {
+  color: #64748b;
+}
+
+.my-schedule-swap-item p {
+  margin: 0;
+}
+
 .my-schedule-shifts {
   display: grid;
   gap: 10px;
@@ -41,7 +86,8 @@
   gap: 3px;
 }
 
-.my-schedule-shift-actions {
+.my-schedule-shift .my-schedule-shift-actions,
+.my-schedule-swap-item .my-schedule-shift-actions {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -124,6 +170,10 @@
 
   .my-schedule-shift-actions {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .my-schedule-swap-item {
     flex-direction: column;
   }
 }

@@ -27,4 +27,6 @@ public class Shift
     public string Status { get; set; } = "Draft";
 
     public ICollection<ShiftComment> Comments { get; set; } = new List<ShiftComment>();
+
+    public ICollection<ShiftSwapRequest> SwapRequests { get; set; } = new List<ShiftSwapRequest>();
 }
