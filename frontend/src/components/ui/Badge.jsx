@@ -1,8 +1,8 @@
 import "./Badge.css";
 
-function Badge({children}) {
+function Badge({ children, variant = "info", className = "" }) {
   return (
-    <span className="badge">
+    <span className={`badge badge-${variant} ${className}`.trim()}>
       {children}
     </span>
   );

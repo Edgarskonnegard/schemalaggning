@@ -8,7 +8,15 @@ import {
 import { getEmployeeDetails, updateEmployee } from "../api/employeesApi";
 import { getRoles } from "../api/rolesApi";
 import { getShiftTypes } from "../api/shiftTypesApi";
+import { getStores } from "../api/storesApi";
 import EmployeeBaseSchedule from "../components/employees/EmployeeBaseSchedule";
+import Alert from "../components/ui/Alert";
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Input from "../components/ui/Input";
+import PageHeader from "../components/ui/PageHeader";
+import Select from "../components/ui/Select";
 import "./EmployeeDetailsPage.css";
 
 function getEmploymentLabel(percentage) {
@@ -27,6 +35,7 @@ function EmployeeDetailsPage() {
   const { employeeId } = useParams();
 
   const [employee, setEmployee] = useState(null);
+  const [stores, setStores] = useState([]);
   const [roles, setRoles] = useState([]);
   const [shiftTypes, setShiftTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,14 +58,16 @@ function EmployeeDetailsPage() {
     setIsLoading(true);
 
     try {
-      const [employeeResult, rolesResult, shiftTypesResult] =
+      const [employeeResult, storesResult, rolesResult, shiftTypesResult] =
         await Promise.all([
           getEmployeeDetails(employeeId),
+          getStores(),
           getRoles(),
           getShiftTypes(),
         ]);
 
       setEmployee(employeeResult);
+      setStores(storesResult);
       setRoles(rolesResult);
       setShiftTypes(shiftTypesResult);
     } catch (err) {
@@ -75,9 +86,12 @@ function EmployeeDetailsPage() {
 
     setEmployee((prev) => ({
       ...prev,
-      [name]: name === "employmentPercentage" || name === "roleId"
-        ? Number(value)
-        : value,
+      [name]:
+        e.target.type === "checkbox"
+          ? e.target.checked
+          : name === "employmentPercentage" || name === "roleId" || name === "storeId"
+            ? Number(value)
+            : value,
     }));
   }
 
@@ -95,8 +109,13 @@ function EmployeeDetailsPage() {
 
       await updateEmployee(employee.id, {
         name: employee.name,
+        storeId: employee.storeId,
         roleId: employee.roleId,
         employmentPercentage: employee.employmentPercentage,
+        accountEmail: employee.accountEmail,
+        accountPassword: employee.accountPassword || "",
+        accountAccessRole: employee.accountAccessRole || "Employee",
+        accountIsActive: employee.accountIsActive,
       });
 
       await loadData();
@@ -135,6 +154,8 @@ function EmployeeDetailsPage() {
             weekInCycle: change.weekInCycle,
             dayOfWeek: change.dayOfWeek,
             shiftTypeId: Number(change.shiftTypeId),
+            startTime: change.startTime,
+            endTime: change.endTime,
           });
         })
       );
@@ -167,7 +188,7 @@ function EmployeeDetailsPage() {
         </Link>
 
         <h1>Anställd hittades inte</h1>
-        {error && <p className="page-error">{error}</p>}
+        <Alert>{error}</Alert>
       </main>
     );
   }
@@ -178,68 +199,124 @@ function EmployeeDetailsPage() {
         Tillbaka till anställda
       </Link>
 
-      {error && <p className="page-error">{error}</p>}
-      {statusMessage && <p className="page-status">{statusMessage}</p>}
+      <Alert>{error}</Alert>
+      <Alert variant="success">{statusMessage}</Alert>
 
-      <div className="employee-details-header">
-        <div>
-          <h1>{employee.name}</h1>
-          <p>Hantera personuppgifter, roll och fyraveckors grundschema.</p>
-        </div>
-
-        <span className="employee-status-badge">
-          {getEmploymentLabel(employee.employmentPercentage)}
-        </span>
-      </div>
+      <PageHeader
+        title={employee.name}
+        description="Hantera personuppgifter, roll och fyraveckors grundschema."
+        actions={
+          <Badge>{getEmploymentLabel(employee.employmentPercentage)}</Badge>
+        }
+      />
 
       <div className="employee-details-layout">
-        <section className="details-card">
+        <Card>
           <h2>Personuppgifter</h2>
 
           <form onSubmit={handleEmployeeSubmit}>
-            <div className="form-group">
-              <label>Namn</label>
-              <input
-                name="name"
-                value={employee.name}
-                onChange={handleEmployeeChange}
-              />
-            </div>
+            <Input
+              label="Namn"
+              name="name"
+              value={employee.name}
+              onChange={handleEmployeeChange}
+            />
 
-            <div className="form-group">
-              <label>Roll</label>
-              <select
-                name="roleId"
-                value={employee.roleId}
-                onChange={handleEmployeeChange}
-              >
-                {roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Butik"
+              name="storeId"
+              value={employee.storeId}
+              onChange={handleEmployeeChange}
+            >
+              {stores.map((store) => (
+                <option key={store.id} value={store.id}>
+                  {store.name}
+                </option>
+              ))}
+            </Select>
 
-            <div className="form-group">
-              <label>Anställningsgrad</label>
-              <input
-                type="number"
-                name="employmentPercentage"
-                min="0"
-                max="100"
-                value={employee.employmentPercentage}
-                onChange={handleEmployeeChange}
-              />
-            </div>
+            <Select
+              label="Roll"
+              name="roleId"
+              value={employee.roleId}
+              onChange={handleEmployeeChange}
+            >
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </Select>
 
-            <button type="submit" className="save-btn" disabled={isSavingEmployee}>
+            <Input
+              label="Anställningsgrad"
+              type="number"
+              name="employmentPercentage"
+              min="0"
+              max="100"
+              value={employee.employmentPercentage}
+              onChange={handleEmployeeChange}
+            />
+
+            <Button type="submit" fullWidth disabled={isSavingEmployee}>
               {isSavingEmployee ? "Sparar..." : "Spara"}
-            </button>
+            </Button>
           </form>
-        </section>
+        </Card>
 
-        <section className="details-card">
+        <Card>
+          <h2>Inloggning</h2>
+
+          <form onSubmit={handleEmployeeSubmit}>
+            <Input
+              label="Email"
+              type="email"
+              name="accountEmail"
+              value={employee.accountEmail || ""}
+              onChange={handleEmployeeChange}
+              placeholder="namn@example.com"
+            />
+
+            <Input
+              label="Nytt lösenord"
+              type="password"
+              name="accountPassword"
+              value={employee.accountPassword || ""}
+              onChange={handleEmployeeChange}
+              placeholder={
+                employee.accountId
+                  ? "Lämna tomt för att behålla"
+                  : "Minst 8 tecken"
+              }
+            />
+
+            <Select
+              label="Access"
+              name="accountAccessRole"
+              value={employee.accountAccessRole || "Employee"}
+              onChange={handleEmployeeChange}
+            >
+              <option value="Employee">Anställd</option>
+              <option value="Admin">Admin</option>
+            </Select>
+
+            <label className="details-checkbox">
+              <input
+                type="checkbox"
+                name="accountIsActive"
+                checked={Boolean(employee.accountIsActive)}
+                onChange={handleEmployeeChange}
+              />
+              <span>Kontot är aktivt</span>
+            </label>
+
+            <Button type="submit" fullWidth disabled={isSavingEmployee}>
+              {isSavingEmployee ? "Sparar..." : "Spara inloggning"}
+            </Button>
+          </form>
+        </Card>
+
+        <Card>
           <h2>Passtyper via roll</h2>
 
           {matchingShiftTypes.length === 0 ? (
@@ -249,19 +326,17 @@ function EmployeeDetailsPage() {
           ) : (
             <div className="shift-type-list">
               {matchingShiftTypes.map((shiftType) => (
-                <article key={shiftType.id} className="shift-type-option">
-                  <span>
-                    {shiftType.name}
-                    <small>
-                      {shiftType.defaultStartTime?.slice(0, 5)}-
-                      {shiftType.defaultEndTime?.slice(0, 5)}
-                    </small>
-                  </span>
-                </article>
+                <Badge key={shiftType.id} variant="neutral" className="shift-type-option">
+                  {shiftType.name}
+                  <small>
+                    {shiftType.defaultStartTime?.slice(0, 5)}-
+                    {shiftType.defaultEndTime?.slice(0, 5)}
+                  </small>
+                </Badge>
               ))}
             </div>
           )}
-        </section>
+        </Card>
       </div>
 
       <EmployeeBaseSchedule

@@ -189,6 +189,112 @@ Varje regel måste referera till en passtyp som matchar den anställdas roll.
 
 Tar bort grundschemaregeln för en viss cykelvecka och veckodag.
 
+## Store Coverage
+
+Butikens bemanningsbehov beskriver vilka pass som behöver täckas i en normalvecka som upprepas. Det är inte ett anställdschema och ska inte ändras när faktiska schemapass flyttas runt.
+
+### GET `/api/stores/{storeId}/coverage-rules`
+
+Returnerar butikens behovsregler.
+
+### PUT `/api/stores/{storeId}/coverage-rules`
+
+Skapar eller uppdaterar en behovsregel för butik, veckodag och passtyp.
+
+Exempel:
+
+```json
+{
+  "shiftTypeId": 1,
+  "dayOfWeek": 1,
+  "requiredCount": 2,
+  "startTime": "10:00:00",
+  "endTime": "18:00:00"
+}
+```
+
+Regeln betyder: butiken behöver två pass av passtypen varje måndag.
+
+### DELETE `/api/stores/{storeId}/coverage-rules/{id}`
+
+Tar bort en behovsregel för butiken.
+
+## Base Schedule Generation
+
+### POST `/api/stores/{storeId}/base-schedules/generate`
+
+Genererar ett väntande grundschemaförslag från butikens bemanningsbehov.
+
+Första versionen är avsiktligt enkel:
+
+- skapar en `BaseScheduleGenerationBatch` med status `Pending`
+- skapar `BaseScheduleDraftRule`, inte skarpa `BaseScheduleRule`
+- upprepar butikens veckobehov i draftens fyra veckor
+- matchar passtyp mot anställdas roll
+- försöker balansera timmar mot `EmploymentPercentage`
+- räknar `100%` som `40` timmar per vecka
+- hoppar över behov som inte kan placeras utan att fastna
+- skarpa grundschemaregler skrivs först när förslaget godkänns
+
+Svarsexempel:
+
+```json
+{
+  "batchId": 10,
+  "storeId": 1,
+  "status": "Pending",
+  "employeeCount": 5,
+  "coverageRuleCount": 8,
+  "createdRuleCount": 32,
+  "unassignedNeedCount": 0,
+  "warnings": []
+}
+```
+
+## Base Schedule Approvals
+
+### GET `/api/approvals/base-schedules/pending-count`
+
+Returnerar antal anställda vars grundschemaförslag väntar på godkännande.
+
+### GET `/api/approvals/base-schedules`
+
+Returnerar väntande grundschemaförslag med employee approvals, draft-regler, varningar och timsammanfattning.
+
+### POST `/api/approvals/base-schedules/{id}/approve`
+
+Godkänner ett helt grundschemaförslag. Används främst som batch-operation.
+
+### POST `/api/approvals/base-schedules/{id}/reject`
+
+Avvisar ett helt grundschemaförslag utan att ändra skarpa grundschemaregler.
+
+### POST `/api/approvals/base-schedules/{id}/employees/{employeeId}/approve`
+
+Godkänner en anställds del av grundschemaförslaget. Vid godkännande rensas bara den anställdas befintliga `BaseScheduleRule` och den anställdas draft-regler kopieras till skarpa grundschemaregler.
+
+### POST `/api/approvals/base-schedules/{id}/employees/{employeeId}/reject`
+
+Avvisar en anställds del av grundschemaförslaget utan att ändra den anställdas skarpa grundschema.
+
+### POST `/api/approvals/base-schedules/{id}/employees/{employeeId}/rules`
+
+Placerar ett oplacerat draft-pass på en anställd innan godkännande.
+
+Exempel:
+
+```json
+{
+  "unassignedRuleId": 12
+}
+```
+
+Backend kräver att förslaget och den anställdas approval fortfarande är `Pending`, att det oplacerade passet tillhör samma batch, att anställdas roll får arbeta passtypen och att anställd inte redan har ett draft-pass samma cykelvecka och dag.
+
+### DELETE `/api/approvals/base-schedules/{id}/employees/{employeeId}/rules/{ruleId}`
+
+Tar bort ett draft-pass från en anställd innan godkännande och flyttar tillbaka passet till listan över oplacerade draft-pass.
+
 ## Schedules
 
 ### GET `/api/schedules`
@@ -203,11 +309,16 @@ Returnerar ett schema med dess pass.
 
 Genererar ett nytt schema från grundscheman.
 
+### POST `/api/stores/{storeId}/schedules/generate`
+
+Genererar ett nytt schema för en specifik butik från godkända grundscheman. Detta är den rekommenderade endpointen framåt.
+
 Exempel:
 
 ```json
 {
   "name": "Juni 2026",
+  "storeId": 1,
   "periodStart": "2026-06-01",
   "periodEnd": "2026-06-30"
 }
@@ -216,7 +327,9 @@ Exempel:
 Förväntat beteende:
 
 - skapar ett nytt schema med status `Draft`
+- kopplar schemat till butik via `StoreId`
 - skapar faktiska pass från `BaseScheduleRule` genom att matcha fyraveckorscykel och veckodag
+- cykelveckor rullar 1, 2, 3, 4 och börjar sedan om på 1 för längre perioder
 - kopierar tider från `ShiftType` till varje `Shift`
 - ändrar inte `ShiftType`
 - ändrar inte `BaseScheduleRule`
@@ -227,6 +340,8 @@ Exempel på svar:
 {
   "id": 1,
   "name": "Juni 2026",
+  "storeId": 1,
+  "storeName": "Centrum",
   "periodStart": "2026-06-01",
   "periodEnd": "2026-06-30",
   "status": "Draft",

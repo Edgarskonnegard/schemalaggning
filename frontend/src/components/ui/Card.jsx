@@ -1,10 +1,10 @@
 import "./Card.css";
 
-function Card({ children }) {
+function Card({ children, className = "", as: Component = "section" }) {
   return (
-    <div className="card">
+    <Component className={`card ${className}`.trim()}>
       {children}
-    </div>
+    </Component>
   );
 }
 

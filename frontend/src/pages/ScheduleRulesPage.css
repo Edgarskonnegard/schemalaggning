@@ -1,0 +1,59 @@
+.schedule-rules-page {
+  display: grid;
+  gap: 24px;
+}
+
+.schedule-rules-card {
+  display: grid;
+  gap: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 20px;
+}
+
+.schedule-rules-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(170px, 1fr)) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.schedule-rules-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 39px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.schedule-rules-checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
+.schedule-rule-note {
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #eff6ff;
+  padding: 16px;
+}
+
+.schedule-rule-note h2 {
+  margin: 0 0 6px;
+  color: #1e3a8a;
+  font-size: 1rem;
+}
+
+.schedule-rule-note p {
+  margin: 0;
+  color: #1e40af;
+  line-height: 1.5;
+}
+
+@media (max-width: 980px) {
+  .schedule-rules-form {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,7 +1,10 @@
 async function request(path, options = {}) {
+  const token = localStorage.getItem("authToken");
+
   const response = await fetch(path, {
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
     ...options,

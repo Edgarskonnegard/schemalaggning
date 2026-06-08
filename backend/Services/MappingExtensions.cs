@@ -1,8 +1,11 @@
 using Schemalaggning.DTOs.BaseScheduleRules;
+using Schemalaggning.DTOs.Auth;
 using Schemalaggning.DTOs.Employees;
 using Schemalaggning.DTOs.Roles;
 using Schemalaggning.DTOs.Schedules;
 using Schemalaggning.DTOs.ShiftTypes;
+using Schemalaggning.DTOs.Stores;
+using Schemalaggning.DTOs.StoreCoverageRules;
 using Schemalaggning.Models;
 
 namespace Schemalaggning.Services;
@@ -18,15 +21,43 @@ internal static class MappingExtensions
         };
     }
 
+    public static StoreReadDto ToReadDto(this Store store)
+    {
+        return new StoreReadDto
+        {
+            Id = store.Id,
+            Name = store.Name
+        };
+    }
+
+    public static UserAccountReadDto ToReadDto(this UserAccount userAccount)
+    {
+        return new UserAccountReadDto
+        {
+            Id = userAccount.Id,
+            Email = userAccount.Email,
+            AccessRole = userAccount.AccessRole,
+            EmployeeId = userAccount.EmployeeId,
+            StoreId = userAccount.StoreId,
+            IsActive = userAccount.IsActive
+        };
+    }
+
     public static EmployeeReadDto ToReadDto(this Employee employee)
     {
         return new EmployeeReadDto
         {
             Id = employee.Id,
             Name = employee.Name,
+            StoreId = employee.StoreId,
+            StoreName = employee.Store?.Name ?? string.Empty,
             RoleId = employee.RoleId,
             RoleName = employee.Role?.Name ?? string.Empty,
             EmploymentPercentage = employee.EmploymentPercentage,
+            AccountId = employee.UserAccount?.Id,
+            AccountEmail = employee.UserAccount?.Email ?? string.Empty,
+            AccountAccessRole = employee.UserAccount?.AccessRole ?? string.Empty,
+            AccountIsActive = employee.UserAccount?.IsActive ?? true,
             BaseSchedule = employee.BaseScheduleRules
                 .OrderBy(rule => rule.WeekInCycle)
                 .ThenBy(rule => rule.DayOfWeek)
@@ -64,8 +95,24 @@ internal static class MappingExtensions
             ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
             WeekInCycle = rule.WeekInCycle,
             DayOfWeek = rule.DayOfWeek,
-            StartTime = rule.ShiftType?.DefaultStartTime ?? default,
-            EndTime = rule.ShiftType?.DefaultEndTime ?? default
+            StartTime = rule.StartTime,
+            EndTime = rule.EndTime
+        };
+    }
+
+    public static StoreCoverageRuleReadDto ToReadDto(this StoreCoverageRule rule)
+    {
+        return new StoreCoverageRuleReadDto
+        {
+            Id = rule.Id,
+            StoreId = rule.StoreId,
+            StoreName = rule.Store?.Name ?? string.Empty,
+            ShiftTypeId = rule.ShiftTypeId,
+            ShiftTypeName = rule.ShiftType?.Name ?? string.Empty,
+            DayOfWeek = rule.DayOfWeek,
+            RequiredCount = rule.RequiredCount,
+            StartTime = rule.StartTime,
+            EndTime = rule.EndTime
         };
     }
 
@@ -75,6 +122,8 @@ internal static class MappingExtensions
         {
             Id = schedule.Id,
             Name = schedule.Name,
+            StoreId = schedule.StoreId,
+            StoreName = schedule.Store?.Name ?? string.Empty,
             PeriodStart = schedule.PeriodStart,
             PeriodEnd = schedule.PeriodEnd,
             Status = schedule.Status,
@@ -93,6 +142,7 @@ internal static class MappingExtensions
             Id = shift.Id,
             EmployeeId = shift.EmployeeId,
             EmployeeName = shift.Employee?.Name ?? string.Empty,
+            EmployeeRoleName = shift.Employee?.Role?.Name ?? string.Empty,
             ShiftTypeId = shift.ShiftTypeId,
             ShiftTypeName = shift.ShiftType?.Name ?? string.Empty,
             Date = shift.Date,

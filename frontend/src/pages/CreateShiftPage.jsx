@@ -8,6 +8,8 @@ import {
 } from "../api/shiftTypesApi";
 import CreateShiftForm from "../components/schedule/CreateShiftForm";
 import ScheduleList from "../components/schedule/ScheduleList";
+import Alert from "../components/ui/Alert";
+import PageHeader from "../components/ui/PageHeader";
 import "./CreateShiftPage.css";
 
 function CreateShiftPage() {
@@ -63,16 +65,12 @@ function CreateShiftPage() {
 
   return (
     <main className="create-shift-page">
-      <div className="page-header">
-        <h1>Passtyper</h1>
+      <PageHeader
+        title="Passtyper"
+        description="Skapa passmallar som används senare vid schemagenerering och schemaredigering."
+      />
 
-        <p>
-          Skapa passmallar som används senare vid schemagenerering
-          och schemaredigering.
-        </p>
-      </div>
-
-      {error && <p className="page-error">{error}</p>}
+      <Alert>{error}</Alert>
 
       <div className="create-shift-layout">
         <section className="left-panel">

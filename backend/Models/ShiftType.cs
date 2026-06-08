@@ -12,6 +12,8 @@ public class ShiftType
 
     public ICollection<RoleShiftType> RoleShiftTypes { get; set; } = new List<RoleShiftType>();
 
+    public ICollection<StoreCoverageRule> StoreCoverageRules { get; set; } = new List<StoreCoverageRule>();
+
     public ICollection<BaseScheduleRule> BaseScheduleRules { get; set; } = new List<BaseScheduleRule>();
 
     public ICollection<Shift> Shifts { get; set; } = new List<Shift>();

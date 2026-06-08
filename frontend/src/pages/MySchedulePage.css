@@ -1,0 +1,179 @@
+.my-schedule-page {
+  display: grid;
+  gap: 24px;
+}
+
+.my-schedule-list {
+  display: grid;
+  gap: 16px;
+}
+
+.my-schedule-day {
+  display: grid;
+  gap: 14px;
+}
+
+.my-schedule-day h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 20px;
+  text-transform: capitalize;
+}
+
+.my-schedule-swaps {
+  display: grid;
+  gap: 16px;
+}
+
+.my-schedule-swaps h2,
+.my-schedule-swap-section h3 {
+  margin: 0;
+  color: #111827;
+}
+
+.my-schedule-swap-section {
+  display: grid;
+  gap: 10px;
+}
+
+.my-schedule-swap-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.my-schedule-swap-item > div:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.my-schedule-swap-item strong {
+  color: #111827;
+}
+
+.my-schedule-swap-item span,
+.my-schedule-swap-item p {
+  color: #64748b;
+}
+
+.my-schedule-swap-item p {
+  margin: 0;
+}
+
+.my-schedule-shifts {
+  display: grid;
+  gap: 10px;
+}
+
+.my-schedule-shift {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.my-schedule-shift div {
+  display: grid;
+  gap: 3px;
+}
+
+.my-schedule-shift .my-schedule-shift-actions,
+.my-schedule-swap-item .my-schedule-shift-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.my-schedule-shift strong {
+  color: #111827;
+}
+
+.my-schedule-shift span,
+.my-schedule-muted {
+  color: #64748b;
+}
+
+.my-schedule-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.my-schedule-modal {
+  width: min(100%, 460px);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 20px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.22);
+}
+
+.my-schedule-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.my-schedule-modal-header h2 {
+  margin: 0 0 6px;
+  color: #111827;
+}
+
+.my-schedule-modal-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.my-schedule-modal-close {
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.my-schedule-comment-form {
+  display: grid;
+  gap: 14px;
+}
+
+.my-schedule-comment-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.my-schedule-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .my-schedule-shift {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .my-schedule-shift-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .my-schedule-swap-item {
+    flex-direction: column;
+  }
+}

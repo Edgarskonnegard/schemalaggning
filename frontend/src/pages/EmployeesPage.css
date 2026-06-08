@@ -1,12 +1,6 @@
 .employees-page {
-  padding: 32px;
-  background: #f5f7fb;
-  min-height: 100%;
-}
-
-.employees-title {
-  font-size: 32px;
-  margin-bottom: 24px;
+  display: grid;
+  gap: 24px;
 }
 
 .employee-layout {
@@ -21,68 +15,45 @@
   gap: 16px;
 }
 
-.page-error {
-  margin-bottom: 16px;
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: #fef2f2;
-  color: #b91c1c;
-  font-size: 14px;
-}
-
-/* FORM */
-
-.form-card {
-  background: white;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-}
-
 .section-title {
-  margin-bottom: 18px;
+  margin: 0 0 18px;
+  color: #111827;
 }
 
-.form-group {
+.employees-page form {
+  display: grid;
+  gap: 14px;
+}
+
+.form-checkbox {
   display: flex;
-  flex-direction: column;
-  margin-bottom: 16px;
-}
-
-.form-group label {
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  color: #374151;
   font-size: 14px;
   font-weight: 600;
-  margin-bottom: 6px;
 }
 
-.form-group input,
-.form-group select {
+.form-checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
+.generation-result {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
   padding: 12px;
-  border: 1px solid #d7dce5;
-  border-radius: 10px;
+  background: #eff6ff;
+  color: #1e3a8a;
   font-size: 14px;
-  outline: none;
 }
 
-.form-group input:focus,
-.form-group select:focus {
-  border-color: #4f46e5;
-}
-
-.add-btn {
-  width: 100%;
-  border: none;
-  padding: 14px;
-  border-radius: 10px;
-  background: #4f46e5;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.add-btn:hover {
-  opacity: 0.9;
+.generation-result strong {
+  color: #1e40af;
 }
 
 /* EMPLOYEES */
@@ -93,10 +64,18 @@
 }
 
 .employee-card {
-  background: white;
-  border-radius: 16px;
+  display: block;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.employee-card:hover {
+  border-color: #bfdbfe;
+  background: #f8fafc;
 }
 
 .employee-header {
@@ -109,15 +88,6 @@
 .employee-name {
   font-size: 18px;
   font-weight: 700;
-}
-
-.badge {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #4f46e5;
-  font-size: 12px;
-  font-weight: 600;
 }
 
 .employee-info {
@@ -156,15 +126,8 @@
   color: #444;
 }
 
-.shift-chip {
-  display: inline-flex;
+.shift-access .badge {
   margin: 0 8px 8px 0;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #f1f5f9;
-  color: #334155;
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .role-list {
@@ -184,27 +147,10 @@
   background: #fafbff;
 }
 
-.role-row button,
-.role-actions button {
-  border: none;
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: #eef2ff;
-  color: #4f46e5;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .role-edit-form {
   display: grid;
   gap: 8px;
   width: 100%;
-}
-
-.role-edit-form input {
-  padding: 10px;
-  border: 1px solid #d7dce5;
-  border-radius: 8px;
 }
 
 .role-actions {
@@ -217,10 +163,10 @@
   font-size: 14px;
   font-style: italic;
 }
-.employee-card {
-  text-decoration: none;
-  color: inherit;
-  display: block;
+@media (max-width: 980px) {
+  .employee-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {

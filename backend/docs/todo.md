@@ -2,6 +2,21 @@
 
 Det här dokumentet samlar saker som ska göras senare och rekommenderad ordning för större arbetsflöden.
 
+## Utredning och teststrategi
+
+- [x] Skriv en teknisk utredning om val av testdatabasstrategi för integrationstester: EF Core InMemory, SQLite in-memory eller SQL Server/Testcontainers.
+- [x] Lägg utredningen lokalt i `backend/docs/testing-investigation.txt`.
+- [x] Lägg utredningsfilen i `.gitignore` så rapportunderlag inte följer med till GitHub.
+- [x] Skapa GitHub Actions workflow för backend/frontend-build.
+- [x] Skapa `backend.Tests` som första backend-testprojekt.
+- [x] Bygg integrationstestmiljö med `WebApplicationFactory` och in-memory SQLite.
+- [x] Lägg till flera endpointtester för ett auth-känsligt flöde: shift comments för employee och admin.
+- [x] Lägg till provider-experiment som jämför SQLite in-memory och EF Core InMemory för unique index/constraint behavior.
+- [x] Koppla `dotnet test` till CI så tester körs vid pull request/merge.
+- [x] Bygg vidare med endpointtester för ledighetsansökan, schema-publicering och passbyte.
+- [ ] Lägg till fokuserade unit tests för schemagenereringens viktigaste affärsregler.
+- [ ] Utvärdera om frontend behöver komponenttester eller om build + manuella smoke tests räcker i projektets nuvarande storlek.
+
 ## Rekommenderad genomförandeordning
 
 1. Rensa projektgrunden
@@ -60,12 +75,25 @@ Den nuvarande modellen räcker för att hantera roller, anställda, passtyper oc
 - En `Store` representerar en butik/verksamhet.
 - Anställda kopplas till en butik.
 - Roller och passtyper kan vara butiksspecifika eller globala. Detta behöver beslutas.
-- Butiken har ett grundbehov: vilka pass som behöver täckas i en fyraveckorscykel.
+- Butiken har ett grundbehov: vilka pass som behöver täckas i en normalvecka som upprepas.
 - En schemagenereringstjänst fördelar butikens behovspass till anställda utifrån regler.
 - Fördelade pass blir först förslag.
 - Admin granskar och godkänner förslag innan passen blir del av schemat.
 - Det allmänna schemat skapas från godkända pass samt händelser.
 - Ändringar i det allmänna schemat sparas på faktiska `Shift` och påverkar inte grundschema eller butikens grundbehov.
+
+### Implementerat hittills
+
+- `Store` finns och anställda kan kopplas till butik.
+- `UserAccount` finns som separat konto från `Employee`, med första login/JWT-grunden.
+- `StoreCoverageRule` finns för butikens grundbehov i en repeterande normalvecka.
+- Frontend har en första vy för att lägga till, ändra och ta bort bemanningsbehov per butik.
+
+### Nästa rekommenderade steg
+
+- Kör migrationen `AddStoreCoverageRules` mot lokal databas.
+- Börja på en första fördelningstjänst som läser butikens `StoreCoverageRule` och skapar förslag, inte faktiska pass direkt.
+- Lägg därefter till en enkel admin-vy för att granska och godkänna förslagen.
 
 ### Föreslagen domänmodell att utreda
 
@@ -97,7 +125,6 @@ Employee
 StoreCoverageRule / StoreBaseShiftNeed
 - StoreId
 - ShiftTypeId
-- WeekInCycle
 - DayOfWeek
 - RequiredCount
 - StartTime
@@ -109,8 +136,8 @@ StoreCoverageRule / StoreBaseShiftNeed
 Exempel:
 
 ```text
-Butiken behöver 2 mellanpass tisdag vecka 1.
-Butiken behöver 1 stängningspass fredag vecka 3.
+Butiken behöver 2 mellanpass varje tisdag.
+Butiken behöver 1 stängningspass varje fredag.
 ```
 
 ```text
@@ -229,41 +256,66 @@ Backend-regler:
 ### Rekommenderad ny implementationordning
 
 1. Inför `Store`
-   - Lägg till `Store`-modell.
-   - Koppla `Employee` till `Store`.
-   - Lägg till enkla CRUD-endpoints och frontendvy för butik.
+   - Status: infört som första skiva.
+   - `Store`-modell finns.
+   - `Employee` är kopplad till `Store`.
+   - Enkla CRUD-endpoints finns för butik.
+   - Frontend kan skapa butik och välja butik vid skapande/uppdatering av anställd.
 
 2. Inför konton och auth-grund
-   - Skapa `UserAccount`.
-   - Lägg till password hashing.
-   - Lägg till login-endpoint som returnerar JWT.
+   - Status: infört som första backend-skiva.
+   - `UserAccount` finns.
+   - Password hashing finns.
+   - Login-endpoint som returnerar JWT finns.
    - Lägg till admin/employee accessroller.
-   - Koppla employee-konto till `Employee`.
+   - Employee-konto kan kopplas till `Employee` från anställd-vyn.
    - Koppla admin-konto till butik eller systemnivå.
-   - Skydda admin-endpoints och employee-endpoints med policies.
+   - Frontend API-wrapper för auth finns.
+   - Kvar: skydda admin-endpoints och employee-endpoints med JWT bearer och policies.
+   - Kvar: login-sida, token-lagring och frontend route guards.
 
 3. Inför butikens grundbehov
-   - Skapa modell för `StoreCoverageRule` eller `StoreBaseShiftNeed`.
-   - Bygg frontend-rutnät liknande grundschema, men för butikens behov.
-   - Stöd `RequiredCount` så flera personer kan behövas på samma pass.
+   - Status: infört som första skiva.
+   - `StoreCoverageRule` finns.
+   - API finns för att lista, skapa/uppdatera och ta bort behovsregler per butik.
+   - Frontend har en första vy för att skapa, ändra och ta bort butikens behov.
+   - `RequiredCount` stöds så flera personer kan behövas på samma pass.
 
 4. Bestäm relation mellan anställdas grundschema och butikens behov
-   - Utred om anställdas nuvarande `BaseScheduleRule` ska tas bort, behållas som preferens/tillgänglighet, eller användas som input till fördelning.
-   - Dokumentera beslut innan migration.
+   - Status: första beslut infört med godkännandesteg.
+   - Butikens behov används som input för att generera ett grundschemaförslag.
+   - Förslaget sparas som `BaseScheduleGenerationBatch` och `BaseScheduleDraftRule`.
+   - Godkännande kopierar draft-regler till skarpa `BaseScheduleRule`.
+   - Grundschemaförslaget upprepar butikens veckobehov över fyra cykelveckor.
 
 5. Bygg fördelningstjänst
-   - Input: butikens grundbehov, anställda, roller, sysselsättningsgrad och eventuella händelser.
-   - Output: `AssignmentProposal`.
-   - Första versionen kan vara regelbaserad och enkel.
+   - Status: första enkel version införd.
+   - Input: butikens grundbehov, anställda, roller och sysselsättningsgrad.
+   - Output: väntande `BaseScheduleDraftRule`.
+   - Matchar passtyp mot anställdas roll.
+   - Försöker balansera timmar där 100% motsvarar 40 timmar per vecka.
+   - Admin kan ställa in minsta dygnsvila per butik via genereringsregler.
+   - Generering tar hänsyn till minsta dygnsvila, även över fyraveckorscykelns gräns.
+   - Admin kan ställa in max antal arbetsdagar i rad per butik.
+   - Admin kan aktivera regeln ledig minst varannan helg.
+   - Generering använder max arbetsdagar och ledig minst varannan helg som hårda regler.
+   - Kvar: maxpass, preferenser och bättre rättvisa.
 
 6. Lägg till admin-godkännande
-   - Admin ser förslag.
-   - Admin kan godkänna, avvisa eller manuellt ändra.
-   - Godkända förslag skapar faktiska `Shift`.
+   - Status: första version införd för grundschemaförslag.
+   - Header visar notis för väntande godkännanden.
+   - Admin kan se en anställds förslag, timsammanfattning och fyraveckorsrutnät.
+   - Admin kan godkänna eller avvisa en anställd i taget.
+   - Godkännande rensar och skriver bara den valda anställdas grundschema.
+   - Kvar: manuell ändring i godkännandevyn.
 
 7. Skapa allmänt schema från godkända pass och händelser
+   - Status: första version införd.
    - `Schedule` skapas per butik och period.
    - Faktiska `Shift` sparas på schemat.
+   - Generering utgår från godkända `BaseScheduleRule`.
+   - Cykelveckor rullar 1-4 och börjar om på 1 för längre perioder.
+   - Frontend kan generera och godkänna/publicera ett schema som helhet.
    - Händelser integreras som justeringar eller blockeringar.
 
 8. Stöd schemaändringar och byten

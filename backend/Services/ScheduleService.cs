@@ -40,6 +40,16 @@ public class ScheduleService : IScheduleService
             return false;
         }
 
+        if (shift.Schedule.Status != "Draft" && shift.Schedule.Status != "Published")
+        {
+            throw new InvalidOperationException("Only draft or published schedule shifts can be updated.");
+        }
+
+        if (dto.Date != shift.Date)
+        {
+            throw new ArgumentException("Shift date cannot be changed from this view.");
+        }
+
         if (dto.Date < shift.Schedule.PeriodStart || dto.Date > shift.Schedule.PeriodEnd)
         {
             throw new ArgumentException("Shift date must be within the schedule period.");
@@ -59,6 +69,53 @@ public class ScheduleService : IScheduleService
         return await _scheduleRepository.UpdateShiftAsync(shift);
     }
 
+    public async Task<bool> SwapShiftEmployeesAsync(int shiftId, ShiftSwapDto dto)
+    {
+        if (shiftId == dto.TargetShiftId)
+        {
+            throw new ArgumentException("Cannot swap a shift with itself.");
+        }
+
+        var sourceShift = await _scheduleRepository.GetShiftByIdAsync(shiftId);
+        var targetShift = await _scheduleRepository.GetShiftByIdAsync(dto.TargetShiftId);
+
+        if (sourceShift is null || targetShift is null)
+        {
+            return false;
+        }
+
+        if (sourceShift.ScheduleId != targetShift.ScheduleId)
+        {
+            throw new ArgumentException("Shifts must belong to the same schedule.");
+        }
+
+        if (!CanEditSchedule(sourceShift.Schedule.Status) || !CanEditSchedule(targetShift.Schedule.Status))
+        {
+            throw new InvalidOperationException("Only draft or published schedule shifts can be swapped.");
+        }
+
+        if (sourceShift.Date != targetShift.Date)
+        {
+            throw new ArgumentException("Only shifts on the same date can be swapped.");
+        }
+
+        if (!await _employeeRepository.CanWorkShiftTypeAsync(targetShift.EmployeeId, sourceShift.ShiftTypeId))
+        {
+            throw new InvalidOperationException("Target employee role does not allow the source shift type.");
+        }
+
+        if (!await _employeeRepository.CanWorkShiftTypeAsync(sourceShift.EmployeeId, targetShift.ShiftTypeId))
+        {
+            throw new InvalidOperationException("Source employee role does not allow the target shift type.");
+        }
+
+        var sourceEmployeeId = sourceShift.EmployeeId;
+        sourceShift.EmployeeId = targetShift.EmployeeId;
+        targetShift.EmployeeId = sourceEmployeeId;
+
+        return await _scheduleRepository.UpdateShiftsAsync([sourceShift, targetShift]);
+    }
+
     public async Task<bool> PublishScheduleAsync(int scheduleId)
     {
         var schedule = await _scheduleRepository.GetByIdWithShiftsAsync(scheduleId);
@@ -72,6 +129,15 @@ public class ScheduleService : IScheduleService
             throw new InvalidOperationException("Only draft schedules can be published.");
         }
 
+        if (await _scheduleRepository.HasPublishedOverlapAsync(
+            schedule.StoreId,
+            schedule.PeriodStart,
+            schedule.PeriodEnd,
+            schedule.Id))
+        {
+            throw new InvalidOperationException("Schedule period overlaps an already published schedule.");
+        }
+
         schedule.Status = "Published";
         foreach (var shift in schedule.Shifts)
         {
@@ -79,5 +145,10 @@ public class ScheduleService : IScheduleService
         }
 
         return await _scheduleRepository.UpdateAsync(schedule);
+    }
+
+    private static bool CanEditSchedule(string status)
+    {
+        return status == "Draft" || status == "Published";
     }
 }

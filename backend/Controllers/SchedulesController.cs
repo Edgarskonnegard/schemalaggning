@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Schemalaggning.DTOs.Schedules;
 using Schemalaggning.Services.Interfaces;
@@ -5,6 +6,7 @@ using Schemalaggning.Services.Interfaces;
 namespace Schemalaggning.Controllers;
 
 [ApiController]
+[Authorize(Policy = "AdminOnly")]
 [Route("api")]
 public class SchedulesController : ControllerBase
 {
@@ -44,6 +46,29 @@ public class SchedulesController : ControllerBase
         {
             return BadRequest(exception.Message);
         }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(exception.Message);
+        }
+    }
+
+    [HttpPost("stores/{storeId:int}/schedules/generate")]
+    public async Task<ActionResult<ScheduleReadDto>> GenerateForStore(int storeId, ScheduleCreateDto dto)
+    {
+        try
+        {
+            dto.StoreId = storeId;
+            var schedule = await _scheduleGenerationService.GenerateFromBaseScheduleAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = schedule.Id }, schedule);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(exception.Message);
+        }
     }
 
     [HttpPut("schedules/{id:int}/publish")]
@@ -66,6 +91,24 @@ public class SchedulesController : ControllerBase
         try
         {
             var updated = await _scheduleService.UpdateShiftAsync(shiftId, dto);
+            return updated ? NoContent() : NotFound();
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(exception.Message);
+        }
+    }
+
+    [HttpPut("shifts/{shiftId:int}/swap")]
+    public async Task<IActionResult> SwapShiftEmployees(int shiftId, ShiftSwapDto dto)
+    {
+        try
+        {
+            var updated = await _scheduleService.SwapShiftEmployeesAsync(shiftId, dto);
             return updated ? NoContent() : NotFound();
         }
         catch (ArgumentException exception)

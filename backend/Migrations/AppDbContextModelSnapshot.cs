@@ -22,6 +22,117 @@ namespace backend.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleDraftRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("ShiftTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("WeekInCycle")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("ShiftTypeId");
+
+                    b.ToTable("BaseScheduleDraftRules");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleEmployeeApproval", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("BatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("BatchId", "EmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("BaseScheduleEmployeeApprovals");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleGenerationBatch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("StoreId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WarningText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("BaseScheduleGenerationBatches");
+                });
+
             modelBuilder.Entity("Schemalaggning.Models.BaseScheduleRule", b =>
                 {
                     b.Property<int>("Id")
@@ -36,8 +147,14 @@ namespace backend.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
                     b.Property<int>("ShiftTypeId")
                         .HasColumnType("int");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
 
                     b.Property<int>("WeekInCycle")
                         .HasColumnType("int");
@@ -50,6 +167,41 @@ namespace backend.Migrations
                         .IsUnique();
 
                     b.ToTable("BaseScheduleRules");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleUnassignedDraftRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("ShiftTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("WeekInCycle")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("ShiftTypeId");
+
+                    b.ToTable("BaseScheduleUnassignedDraftRules");
                 });
 
             modelBuilder.Entity("Schemalaggning.Models.Employee", b =>
@@ -71,11 +223,96 @@ namespace backend.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
+                    b.Property<int>("StoreId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
 
+                    b.HasIndex("StoreId");
+
                     b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.LeaveAllowance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(25);
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "Year")
+                        .IsUnique();
+
+                    b.ToTable("LeaveAllowances");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.LeaveRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminComment")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("RequestedDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReviewedByUserAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("ReviewedByUserAccountId");
+
+                    b.ToTable("LeaveRequests");
                 });
 
             modelBuilder.Entity("Schemalaggning.Models.Role", b =>
@@ -138,9 +375,46 @@ namespace backend.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<int>("StoreId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("StoreId");
+
                     b.ToTable("Schedules");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.ScheduleGenerationSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("BalanceWeekends")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int>("MaxConsecutiveWorkDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
+
+                    b.Property<decimal>("MinimumRestHours")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("StoreId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId")
+                        .IsUnique();
+
+                    b.ToTable("ScheduleGenerationSettings");
                 });
 
             modelBuilder.Entity("Schemalaggning.Models.Shift", b =>
@@ -190,6 +464,94 @@ namespace backend.Migrations
                     b.ToTable("Shifts");
                 });
 
+            modelBuilder.Entity("Schemalaggning.Models.ShiftComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("ResolvedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ResolvedByUserAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShiftId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("ResolvedByUserAccountId");
+
+                    b.HasIndex("ShiftId");
+
+                    b.ToTable("ShiftComments");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.ShiftSwapRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FromEmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("RespondedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ShiftId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("ToEmployeeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromEmployeeId");
+
+                    b.HasIndex("ShiftId");
+
+                    b.HasIndex("ToEmployeeId");
+
+                    b.ToTable("ShiftSwapRequests");
+                });
+
             modelBuilder.Entity("Schemalaggning.Models.ShiftType", b =>
                 {
                     b.Property<int>("Id")
@@ -217,6 +579,166 @@ namespace backend.Migrations
                     b.ToTable("ShiftTypes");
                 });
 
+            modelBuilder.Entity("Schemalaggning.Models.Store", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Stores");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.StoreCoverageRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("RequiredCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShiftTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("StoreId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShiftTypeId");
+
+                    b.HasIndex("StoreId", "DayOfWeek", "ShiftTypeId")
+                        .IsUnique();
+
+                    b.ToTable("StoreCoverageRules");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.UserAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccessRole")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("StoreId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique()
+                        .HasFilter("[EmployeeId] IS NOT NULL");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("UserAccounts");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleDraftRule", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.BaseScheduleGenerationBatch", "Batch")
+                        .WithMany("DraftRules")
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Schemalaggning.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Schemalaggning.Models.ShiftType", "ShiftType")
+                        .WithMany()
+                        .HasForeignKey("ShiftTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("ShiftType");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleEmployeeApproval", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.BaseScheduleGenerationBatch", "Batch")
+                        .WithMany("EmployeeApprovals")
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Schemalaggning.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleGenerationBatch", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.Store", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Store");
+                });
+
             modelBuilder.Entity("Schemalaggning.Models.BaseScheduleRule", b =>
                 {
                     b.HasOne("Schemalaggning.Models.Employee", "Employee")
@@ -236,6 +758,25 @@ namespace backend.Migrations
                     b.Navigation("ShiftType");
                 });
 
+            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleUnassignedDraftRule", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.BaseScheduleGenerationBatch", "Batch")
+                        .WithMany("UnassignedDraftRules")
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Schemalaggning.Models.ShiftType", "ShiftType")
+                        .WithMany()
+                        .HasForeignKey("ShiftTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("ShiftType");
+                });
+
             modelBuilder.Entity("Schemalaggning.Models.Employee", b =>
                 {
                     b.HasOne("Schemalaggning.Models.Role", "Role")
@@ -244,7 +785,44 @@ namespace backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Schemalaggning.Models.Store", "Store")
+                        .WithMany("Employees")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Role");
+
+                    b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.LeaveAllowance", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.Employee", "Employee")
+                        .WithMany("LeaveAllowances")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.LeaveRequest", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.Employee", "Employee")
+                        .WithMany("LeaveRequests")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Schemalaggning.Models.UserAccount", "ReviewedByUserAccount")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("ReviewedByUserAccount");
                 });
 
             modelBuilder.Entity("Schemalaggning.Models.RoleShiftType", b =>
@@ -264,6 +842,28 @@ namespace backend.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("ShiftType");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.Schedule", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.Store", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.ScheduleGenerationSettings", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.Store", "Store")
+                        .WithOne("ScheduleGenerationSettings")
+                        .HasForeignKey("Schemalaggning.Models.ScheduleGenerationSettings", "StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Store");
                 });
 
             modelBuilder.Entity("Schemalaggning.Models.Shift", b =>
@@ -293,11 +893,121 @@ namespace backend.Migrations
                     b.Navigation("ShiftType");
                 });
 
+            modelBuilder.Entity("Schemalaggning.Models.ShiftComment", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.Employee", "Employee")
+                        .WithMany("ShiftComments")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Schemalaggning.Models.UserAccount", "ResolvedByUserAccount")
+                        .WithMany()
+                        .HasForeignKey("ResolvedByUserAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Schemalaggning.Models.Shift", "Shift")
+                        .WithMany("Comments")
+                        .HasForeignKey("ShiftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("ResolvedByUserAccount");
+
+                    b.Navigation("Shift");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.ShiftSwapRequest", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.Employee", "FromEmployee")
+                        .WithMany("SentShiftSwapRequests")
+                        .HasForeignKey("FromEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Schemalaggning.Models.Shift", "Shift")
+                        .WithMany("SwapRequests")
+                        .HasForeignKey("ShiftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Schemalaggning.Models.Employee", "ToEmployee")
+                        .WithMany("ReceivedShiftSwapRequests")
+                        .HasForeignKey("ToEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FromEmployee");
+
+                    b.Navigation("Shift");
+
+                    b.Navigation("ToEmployee");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.StoreCoverageRule", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.ShiftType", "ShiftType")
+                        .WithMany("StoreCoverageRules")
+                        .HasForeignKey("ShiftTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Schemalaggning.Models.Store", "Store")
+                        .WithMany("CoverageRules")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ShiftType");
+
+                    b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.UserAccount", b =>
+                {
+                    b.HasOne("Schemalaggning.Models.Employee", "Employee")
+                        .WithOne("UserAccount")
+                        .HasForeignKey("Schemalaggning.Models.UserAccount", "EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Schemalaggning.Models.Store", "Store")
+                        .WithMany("UserAccounts")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.BaseScheduleGenerationBatch", b =>
+                {
+                    b.Navigation("DraftRules");
+
+                    b.Navigation("EmployeeApprovals");
+
+                    b.Navigation("UnassignedDraftRules");
+                });
+
             modelBuilder.Entity("Schemalaggning.Models.Employee", b =>
                 {
                     b.Navigation("BaseScheduleRules");
 
+                    b.Navigation("LeaveAllowances");
+
+                    b.Navigation("LeaveRequests");
+
+                    b.Navigation("ReceivedShiftSwapRequests");
+
+                    b.Navigation("SentShiftSwapRequests");
+
+                    b.Navigation("ShiftComments");
+
                     b.Navigation("Shifts");
+
+                    b.Navigation("UserAccount");
                 });
 
             modelBuilder.Entity("Schemalaggning.Models.Role", b =>
@@ -312,6 +1022,13 @@ namespace backend.Migrations
                     b.Navigation("Shifts");
                 });
 
+            modelBuilder.Entity("Schemalaggning.Models.Shift", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("SwapRequests");
+                });
+
             modelBuilder.Entity("Schemalaggning.Models.ShiftType", b =>
                 {
                     b.Navigation("BaseScheduleRules");
@@ -319,6 +1036,19 @@ namespace backend.Migrations
                     b.Navigation("RoleShiftTypes");
 
                     b.Navigation("Shifts");
+
+                    b.Navigation("StoreCoverageRules");
+                });
+
+            modelBuilder.Entity("Schemalaggning.Models.Store", b =>
+                {
+                    b.Navigation("CoverageRules");
+
+                    b.Navigation("Employees");
+
+                    b.Navigation("ScheduleGenerationSettings");
+
+                    b.Navigation("UserAccounts");
                 });
 #pragma warning restore 612, 618
         }
