@@ -4,13 +4,14 @@ Det här dokumentet samlar saker som ska göras senare och rekommenderad ordning
 
 ## Utredning och teststrategi
 
-- [x] Skriv en teknisk utredning om riskbaserad teststrategi, endpointtester och CI-pipeline.
+- [x] Skriv en teknisk utredning om val av testdatabasstrategi för integrationstester: EF Core InMemory, SQLite in-memory eller SQL Server/Testcontainers.
 - [x] Lägg utredningen lokalt i `backend/docs/testing-investigation.txt`.
 - [x] Lägg utredningsfilen i `.gitignore` så rapportunderlag inte följer med till GitHub.
 - [x] Skapa GitHub Actions workflow för backend/frontend-build.
 - [x] Skapa `backend.Tests` som första backend-testprojekt.
 - [x] Bygg integrationstestmiljö med `WebApplicationFactory` och in-memory SQLite.
-- [x] Lägg till första endpointtester för ett auth-känsligt flöde: employee får kommentera egna publicerade pass men inte andras.
+- [x] Lägg till flera endpointtester för ett auth-känsligt flöde: shift comments för employee och admin.
+- [x] Lägg till provider-experiment som jämför SQLite in-memory och EF Core InMemory för unique index/constraint behavior.
 - [x] Koppla `dotnet test` till CI så tester körs vid pull request/merge.
 - [ ] Bygg vidare med endpointtester för ledighetsansökan, schema-publicering och passbyte.
 - [ ] Lägg till fokuserade unit tests för schemagenereringens viktigaste affärsregler.

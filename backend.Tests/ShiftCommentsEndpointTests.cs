@@ -53,6 +53,89 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Employee_cannot_create_empty_comment()
+    {
+        await _factory.ResetDatabaseAsync();
+        var seed = await SeedScenarioAsync();
+        using var client = _factory.CreateClient();
+        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+
+        var response = await client.PostAsJsonAsync(
+            $"/api/me/shifts/{seed.FirstEmployeeShiftId}/comments",
+            new { message = "   " });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Employee_cannot_comment_shift_in_draft_schedule()
+    {
+        await _factory.ResetDatabaseAsync();
+        var seed = await SeedScenarioAsync();
+        using var client = _factory.CreateClient();
+        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+
+        var response = await client.PostAsJsonAsync(
+            $"/api/me/shifts/{seed.DraftShiftId}/comments",
+            new { message = "Det här passet är inte publicerat ännu." });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Admin_can_see_pending_shift_comments()
+    {
+        await _factory.ResetDatabaseAsync();
+        var seed = await SeedScenarioAsync();
+        using var client = _factory.CreateClient();
+        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+
+        var createResponse = await client.PostAsJsonAsync(
+            $"/api/me/shifts/{seed.FirstEmployeeShiftId}/comments",
+            new { message = "Kan admin se den här kommentaren?" });
+        createResponse.EnsureSuccessStatusCode();
+
+        await AuthenticateAsync(client, seed.AdminEmail);
+
+        var response = await client.GetAsync("/api/admin/shift-comments/pending-count");
+        var count = await response.Content.ReadFromJsonAsync<int>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public async Task Admin_can_resolve_pending_shift_comment()
+    {
+        await _factory.ResetDatabaseAsync();
+        var seed = await SeedScenarioAsync();
+        using var client = _factory.CreateClient();
+        await AuthenticateAsync(client, seed.FirstEmployeeEmail);
+
+        var createResponse = await client.PostAsJsonAsync(
+            $"/api/me/shifts/{seed.FirstEmployeeShiftId}/comments",
+            new { message = "Markera mig som hanterad." });
+        createResponse.EnsureSuccessStatusCode();
+
+        int commentId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            commentId = context.ShiftComments.Single().Id;
+        }
+
+        await AuthenticateAsync(client, seed.AdminEmail);
+
+        var response = await client.PostAsync($"/api/admin/shift-comments/{commentId}/resolve", null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyContext = verifyScope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Assert.Equal("Resolved", verifyContext.ShiftComments.Single().Status);
+    }
+
     private async Task AuthenticateAsync(HttpClient client, string email)
     {
         var response = await client.PostAsJsonAsync(
@@ -121,6 +204,16 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
             IsActive = true
         };
 
+        const string adminEmail = "admin.test@example.local";
+        var adminAccount = new UserAccount
+        {
+            Email = adminEmail,
+            PasswordHash = passwordHasher.Hash(EmployeePassword),
+            AccessRole = "Admin",
+            Store = store,
+            IsActive = true
+        };
+
         var schedule = new Schedule
         {
             Name = "Publicerat testschema",
@@ -128,6 +221,15 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
             PeriodStart = new DateOnly(2026, 7, 1),
             PeriodEnd = new DateOnly(2026, 7, 7),
             Status = "Published"
+        };
+
+        var draftSchedule = new Schedule
+        {
+            Name = "Utkast testschema",
+            Store = store,
+            PeriodStart = new DateOnly(2026, 8, 1),
+            PeriodEnd = new DateOnly(2026, 8, 7),
+            Status = "Draft"
         };
 
         var firstShift = new Shift
@@ -154,6 +256,18 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
             Status = "Published"
         };
 
+        var draftShift = new Shift
+        {
+            Schedule = draftSchedule,
+            Employee = firstEmployee,
+            ShiftType = shiftType,
+            Date = new DateOnly(2026, 8, 1),
+            StartTime = new TimeOnly(8, 0),
+            EndTime = new TimeOnly(16, 0),
+            Source = "Test",
+            Status = "Draft"
+        };
+
         context.AddRange(
             store,
             role,
@@ -162,22 +276,29 @@ public class ShiftCommentsEndpointTests : IClassFixture<TestApplicationFactory>
             secondEmployee,
             firstAccount,
             secondAccount,
+            adminAccount,
             schedule,
+            draftSchedule,
             firstShift,
-            secondShift);
+            secondShift,
+            draftShift);
 
         await context.SaveChangesAsync();
 
         return new SeedResult(
             firstEmployeeEmail,
+            adminEmail,
             firstShift.Id,
-            secondShift.Id);
+            secondShift.Id,
+            draftShift.Id);
     }
 
     private sealed record SeedResult(
         string FirstEmployeeEmail,
+        string AdminEmail,
         int FirstEmployeeShiftId,
-        int SecondEmployeeShiftId);
+        int SecondEmployeeShiftId,
+        int DraftShiftId);
 
     private sealed class LoginResponse
     {
