@@ -29,7 +29,8 @@ public class AuthController : ControllerBase
     {
         try
         {
-            return Ok(await _authService.CreateAccountAsync(dto));
+            var account = await _authService.CreateAccountAsync(dto);
+            return Created($"/api/auth/accounts/{account.Id}", account);
         }
         catch (ArgumentException exception)
         {

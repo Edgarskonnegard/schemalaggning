@@ -122,7 +122,6 @@ function EmployeeBaseSchedule({ baseSchedule, shiftTypes, onChange }) {
 
         {weekDays.map((day) => (
           <div key={day.id} className="schedule-day-heading">
-            <span>{day.label}</span>
             <strong>{day.fullLabel}</strong>
           </div>
         ))}

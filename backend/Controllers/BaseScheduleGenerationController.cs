@@ -26,6 +26,11 @@ public class BaseScheduleGenerationController : ControllerBase
         }
         catch (InvalidOperationException exception)
         {
+            if (exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(exception.Message);
+            }
+
             return Conflict(exception.Message);
         }
     }

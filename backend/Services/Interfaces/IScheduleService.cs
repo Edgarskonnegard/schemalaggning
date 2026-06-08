@@ -6,6 +6,7 @@ public interface IScheduleService
 {
     Task<List<ScheduleReadDto>> GetAllAsync();
     Task<ScheduleReadDto?> GetByIdAsync(int id);
+    Task<ScheduleReadDto?> CreateShiftAsync(int scheduleId, ShiftCreateDto dto);
     Task<bool> UpdateShiftAsync(int shiftId, ShiftUpdateDto dto);
     Task<bool> SwapShiftEmployeesAsync(int shiftId, ShiftSwapDto dto);
     Task<bool> PublishScheduleAsync(int scheduleId);

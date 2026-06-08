@@ -14,7 +14,8 @@ Det här dokumentet samlar saker som ska göras senare och rekommenderad ordning
 - [x] Lägg till provider-experiment som jämför SQLite in-memory och EF Core InMemory för unique index/constraint behavior.
 - [x] Koppla `dotnet test` till CI så tester körs vid pull request/merge.
 - [x] Bygg vidare med endpointtester för ledighetsansökan, schema-publicering och passbyte.
-- [ ] Lägg till fokuserade unit tests för schemagenereringens viktigaste affärsregler.
+- [x] Lägg till fokuserade service-/unitnära tester för schemagenereringens viktigaste affärsregler.
+- [x] Lägg till fler service-tester för publicering, shift swap-regler och grundschemagenerering.
 - [ ] Utvärdera om frontend behöver komponenttester eller om build + manuella smoke tests räcker i projektets nuvarande storlek.
 
 ## Rekommenderad genomförandeordning

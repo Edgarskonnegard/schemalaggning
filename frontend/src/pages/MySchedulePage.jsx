@@ -13,7 +13,9 @@ import Alert from "../components/ui/Alert";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import Modal from "../components/ui/Modal";
 import PageHeader from "../components/ui/PageHeader";
+import Textarea from "../components/ui/Textarea";
 import "./MySchedulePage.css";
 
 function formatDate(value) {
@@ -354,148 +356,91 @@ function MySchedulePage() {
       )}
 
       {selectedShift && (
-        <div className="my-schedule-modal-backdrop" onClick={closeCommentModal}>
-          <section
-            className="my-schedule-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="shift-comment-modal-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="my-schedule-modal-header">
-              <div>
-                <h2 id="shift-comment-modal-title">Kommentera pass</h2>
-                <p>
-                  {formatDate(selectedShift.date)} · {selectedShift.shiftTypeName} ·{" "}
-                  {formatTime(selectedShift.startTime)}-
-                  {formatTime(selectedShift.endTime)}
-                </p>
-              </div>
+        <Modal
+          title="Kommentera pass"
+          description={`${formatDate(selectedShift.date)} · ${
+            selectedShift.shiftTypeName
+          } · ${formatTime(selectedShift.startTime)}-${formatTime(
+            selectedShift.endTime
+          )}`}
+          onClose={closeCommentModal}
+        >
+          <form className="my-schedule-comment-form" onSubmit={handleCommentSubmit}>
+            <Textarea
+              className="my-schedule-comment-textarea"
+              label="Kommentar till admin"
+              maxLength={1000}
+              required
+              value={commentMessage}
+              onChange={(event) => setCommentMessage(event.target.value)}
+            />
 
-              <button
-                className="my-schedule-modal-close"
-                type="button"
-                onClick={closeCommentModal}
+            <div className="my-schedule-modal-actions">
+              <Button type="button" variant="secondary" onClick={closeCommentModal}>
+                Avbryt
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSavingComment || !commentMessage.trim()}
               >
-                Stäng
-              </button>
+                {isSavingComment ? "Skickar..." : "Skicka kommentar"}
+              </Button>
             </div>
-
-            <form className="my-schedule-comment-form" onSubmit={handleCommentSubmit}>
-              <label className="input-wrapper">
-                <span>Kommentar till admin</span>
-                <textarea
-                  className="input my-schedule-comment-textarea"
-                  maxLength={1000}
-                  required
-                  value={commentMessage}
-                  onChange={(event) => setCommentMessage(event.target.value)}
-                />
-              </label>
-
-              <div className="my-schedule-modal-actions">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={closeCommentModal}
-                >
-                  Avbryt
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSavingComment || !commentMessage.trim()}
-                >
-                  {isSavingComment ? "Skickar..." : "Skicka kommentar"}
-                </Button>
-              </div>
-            </form>
-          </section>
-        </div>
+          </form>
+        </Modal>
       )}
 
       {swapShift && (
-        <div className="my-schedule-modal-backdrop" onClick={closeSwapModal}>
-          <section
-            className="my-schedule-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="shift-swap-modal-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="my-schedule-modal-header">
-              <div>
-                <h2 id="shift-swap-modal-title">Föreslå passbyte</h2>
-                <p>
-                  {formatDate(swapShift.date)} · {swapShift.shiftTypeName} ·{" "}
-                  {formatTime(swapShift.startTime)}-{formatTime(swapShift.endTime)}
-                </p>
+        <Modal
+          title="Föreslå passbyte"
+          description={`${formatDate(swapShift.date)} · ${
+            swapShift.shiftTypeName
+          } · ${formatTime(swapShift.startTime)}-${formatTime(swapShift.endTime)}`}
+          onClose={closeSwapModal}
+        >
+          {isLoadingSwapCandidates ? (
+            <p className="my-schedule-muted">Letar lediga kollegor...</p>
+          ) : swapCandidates.length === 0 ? (
+            <p className="my-schedule-muted">
+              Det finns ingen ledig kollega som kan ta det här passet.
+            </p>
+          ) : (
+            <form className="my-schedule-comment-form" onSubmit={handleSwapSubmit}>
+              <label className="input-wrapper">
+                <span>Skicka till</span>
+                <select
+                  className="input"
+                  required
+                  value={selectedSwapEmployeeId}
+                  onChange={(event) => setSelectedSwapEmployeeId(event.target.value)}
+                >
+                  {swapCandidates.map((candidate) => (
+                    <option key={candidate.employeeId} value={candidate.employeeId}>
+                      {candidate.employeeName} · {candidate.roleName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <Textarea
+                className="my-schedule-comment-textarea"
+                label="Meddelande"
+                maxLength={1000}
+                value={swapMessage}
+                onChange={(event) => setSwapMessage(event.target.value)}
+              />
+
+              <div className="my-schedule-modal-actions">
+                <Button type="button" variant="secondary" onClick={closeSwapModal}>
+                  Avbryt
+                </Button>
+                <Button type="submit" disabled={isSavingSwap || !selectedSwapEmployeeId}>
+                  {isSavingSwap ? "Skickar..." : "Skicka bytesförfrågan"}
+                </Button>
               </div>
-
-              <button
-                className="my-schedule-modal-close"
-                type="button"
-                onClick={closeSwapModal}
-              >
-                Stäng
-              </button>
-            </div>
-
-            {isLoadingSwapCandidates ? (
-              <p className="my-schedule-muted">Letar lediga kollegor...</p>
-            ) : swapCandidates.length === 0 ? (
-              <p className="my-schedule-muted">
-                Det finns ingen ledig kollega som kan ta det här passet.
-              </p>
-            ) : (
-              <form className="my-schedule-comment-form" onSubmit={handleSwapSubmit}>
-                <label className="input-wrapper">
-                  <span>Skicka till</span>
-                  <select
-                    className="input"
-                    required
-                    value={selectedSwapEmployeeId}
-                    onChange={(event) => setSelectedSwapEmployeeId(event.target.value)}
-                  >
-                    {swapCandidates.map((candidate) => (
-                      <option
-                        key={candidate.employeeId}
-                        value={candidate.employeeId}
-                      >
-                        {candidate.employeeName} · {candidate.roleName}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="input-wrapper">
-                  <span>Meddelande</span>
-                  <textarea
-                    className="input my-schedule-comment-textarea"
-                    maxLength={1000}
-                    value={swapMessage}
-                    onChange={(event) => setSwapMessage(event.target.value)}
-                  />
-                </label>
-
-                <div className="my-schedule-modal-actions">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={closeSwapModal}
-                  >
-                    Avbryt
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSavingSwap || !selectedSwapEmployeeId}
-                  >
-                    {isSavingSwap ? "Skickar..." : "Skicka bytesförfrågan"}
-                  </Button>
-                </div>
-              </form>
-            )}
-          </section>
-        </div>
+            </form>
+          )}
+        </Modal>
       )}
     </main>
   );

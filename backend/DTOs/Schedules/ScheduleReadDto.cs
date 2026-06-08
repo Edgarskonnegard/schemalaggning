@@ -17,4 +17,6 @@ public class ScheduleReadDto
     public string Status { get; set; } = string.Empty;
 
     public List<ShiftReadDto> Shifts { get; set; } = new();
+
+    public List<ScheduleCoverageGapDto> CoverageGaps { get; set; } = new();
 }

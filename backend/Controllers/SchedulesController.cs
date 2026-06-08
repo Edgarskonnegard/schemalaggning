@@ -48,6 +48,11 @@ public class SchedulesController : ControllerBase
         }
         catch (InvalidOperationException exception)
         {
+            if (exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(exception.Message);
+            }
+
             return Conflict(exception.Message);
         }
     }
@@ -67,6 +72,11 @@ public class SchedulesController : ControllerBase
         }
         catch (InvalidOperationException exception)
         {
+            if (exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(exception.Message);
+            }
+
             return Conflict(exception.Message);
         }
     }
@@ -99,6 +109,29 @@ public class SchedulesController : ControllerBase
         }
         catch (InvalidOperationException exception)
         {
+            return Conflict(exception.Message);
+        }
+    }
+
+    [HttpPost("schedules/{id:int}/shifts")]
+    public async Task<ActionResult<ScheduleReadDto>> CreateShift(int id, ShiftCreateDto dto)
+    {
+        try
+        {
+            var schedule = await _scheduleService.CreateShiftAsync(id, dto);
+            return schedule is null ? NotFound() : Ok(schedule);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(exception.Message);
+        }
+        catch (InvalidOperationException exception)
+        {
+            if (exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(exception.Message);
+            }
+
             return Conflict(exception.Message);
         }
     }

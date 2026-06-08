@@ -1,4 +1,10 @@
 .calendar {
+  --calendar-border: #d7dce2;
+  --calendar-border-strong: #c7cbd1;
+  --calendar-header-bg: #e2e4e7;
+  --calendar-side-bg: #f1f3f5;
+  --calendar-cell-bg: #ffffff;
+
   width: 100%;
 }
 
@@ -71,9 +77,9 @@
 .calendar-scroll {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid #ddd;
+  border: 1px solid var(--calendar-border);
   border-radius: 12px;
-  background: white;
+  background: var(--calendar-cell-bg);
   cursor: grab;
   touch-action: pan-y;
   user-select: none;
@@ -92,8 +98,8 @@
 .calendar-day-header,
 .calendar-employee,
 .calendar-cell {
-  border-right: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
+  border-right: 1px solid var(--calendar-border);
+  border-bottom: 1px solid var(--calendar-border);
   box-sizing: border-box;
 }
 
@@ -101,8 +107,9 @@
   position: sticky;
   left: 0;
   z-index: 3;
-  background: #f3f4f6;
+  background: var(--calendar-side-bg);
   padding: 0.75rem;
+  color: #111827;
   font-weight: 700;
 }
 
@@ -112,7 +119,8 @@
   z-index: 2;
   min-height: 72px;
   padding: 0.5rem;
-  background: #f9fafb;
+  border-bottom-color: var(--calendar-border-strong);
+  background: var(--calendar-header-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -137,7 +145,7 @@
   z-index: 1;
   min-height: 72px;
   padding: 0.75rem;
-  background: #f9fafb;
+  background: var(--calendar-side-bg);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -145,7 +153,7 @@
 
 .calendar-employee span {
   font-size: 0.8rem;
-  color: #666;
+  color: #475569;
 }
 
 .calendar-cell {
@@ -154,7 +162,7 @@
   gap: 8px;
   min-height: 72px;
   padding: 0.5rem;
-  background: white;
+  background: var(--calendar-cell-bg);
 }
 
 .calendar-drop-target {

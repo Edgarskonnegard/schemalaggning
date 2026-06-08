@@ -11,6 +11,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import PageHeader from "../components/ui/PageHeader";
+import Textarea from "../components/ui/Textarea";
 import "./LeavePage.css";
 
 function toDateInputValue(date) {
@@ -181,14 +182,12 @@ function LeavePage() {
               onChange={(event) => updateForm("endDate", event.target.value)}
             />
 
-            <label className="leave-reason">
-              <span>Kommentar</span>
-              <textarea
-                value={form.reason}
-                onChange={(event) => updateForm("reason", event.target.value)}
-                placeholder="Valfri kommentar till admin"
-              />
-            </label>
+            <Textarea
+              label="Kommentar"
+              value={form.reason}
+              onChange={(event) => updateForm("reason", event.target.value)}
+              placeholder="Valfri kommentar till admin"
+            />
 
             <Button type="submit" disabled={isSaving || isLoading}>
               {isSaving ? "Skickar..." : "Skicka ansökan"}

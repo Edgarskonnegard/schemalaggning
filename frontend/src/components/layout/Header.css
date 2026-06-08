@@ -1,30 +1,35 @@
 header {
   height: 72px;
-  background: white;
+  background: var(--color-surface);
   padding: 0 24px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
 
   display: flex;
   align-items: center;
   gap: 20px;
+  min-width: 0;
 }
 
 header h1 {
   font-size: 22px;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 header .menu-button {
   padding: 10px 14px;
   border: none;
-  border-radius: 8px;
-  background: #2563eb;
-  color: white;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-surface);
   cursor: pointer;
 }
 
 header .menu-button:hover {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 .notification-link {
@@ -34,9 +39,9 @@ header .menu-button:hover {
   justify-content: center;
   width: 42px;
   height: 42px;
-  border-radius: 8px;
-  background: #eef2ff;
-  color: #3730a3;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-soft-text);
   text-decoration: none;
   font-weight: 900;
 }
@@ -82,10 +87,10 @@ header .menu-button:hover {
 }
 
 .logout-button {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 9px 12px;
-  background: #ffffff;
+  background: var(--color-surface);
   color: #374151;
   cursor: pointer;
   font-weight: 700;
@@ -93,4 +98,24 @@ header .menu-button:hover {
 
 .logout-button:hover {
   background: #f9fafb;
+}
+
+@media (max-width: 720px) {
+  header {
+    height: 64px;
+    gap: 12px;
+    padding: 0 14px;
+  }
+
+  header h1 {
+    font-size: 18px;
+  }
+
+  .header-user {
+    display: none;
+  }
+
+  .logout-button {
+    padding: 8px 10px;
+  }
 }
