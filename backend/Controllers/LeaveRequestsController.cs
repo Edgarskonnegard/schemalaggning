@@ -32,6 +32,7 @@ public class LeaveRequestsController : ControllerBase
         var requests = await _context.LeaveRequests
             .AsNoTracking()
             .Include(request => request.Employee)
+                .ThenInclude(employee => employee.Role)
             .Where(request => request.EmployeeId == employeeId.Value)
             .OrderByDescending(request => request.StartDate)
             .Select(request => ToReadDto(request))
@@ -100,6 +101,7 @@ public class LeaveRequestsController : ControllerBase
         var created = await _context.LeaveRequests
             .AsNoTracking()
             .Include(leaveRequest => leaveRequest.Employee)
+                .ThenInclude(employee => employee.Role)
             .FirstAsync(leaveRequest => leaveRequest.Id == request.Id);
 
         return CreatedAtAction(nameof(GetMyLeaveRequests), new { id = request.Id }, ToReadDto(created));
@@ -147,6 +149,7 @@ public class LeaveRequestsController : ControllerBase
             Id = request.Id,
             EmployeeId = request.EmployeeId,
             EmployeeName = request.Employee?.Name ?? string.Empty,
+            EmployeeRoleName = request.Employee?.Role?.Name ?? string.Empty,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             RequestedDays = request.RequestedDays,

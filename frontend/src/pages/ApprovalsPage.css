@@ -10,12 +10,18 @@
   align-items: start;
 }
 
+.leave-approval-panel,
 .approvals-list,
 .approval-detail {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #ffffff;
   padding: 18px;
+}
+
+.leave-approval-panel {
+  display: grid;
+  gap: 14px;
 }
 
 .approvals-list h2,
@@ -74,6 +80,41 @@
 .approval-actions {
   display: flex;
   gap: 10px;
+}
+
+.leave-approval-list {
+  display: grid;
+  gap: 10px;
+}
+
+.leave-approval-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.leave-approval-item div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.leave-approval-item strong {
+  color: #111827;
+}
+
+.leave-approval-item span,
+.leave-approval-item small,
+.leave-approval-item p {
+  color: #64748b;
+}
+
+.leave-approval-item p {
+  margin: 4px 0 0;
 }
 
 .approval-warnings {

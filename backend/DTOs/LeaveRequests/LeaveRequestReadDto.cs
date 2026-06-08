@@ -8,6 +8,8 @@ public class LeaveRequestReadDto
 
     public string EmployeeName { get; set; } = string.Empty;
 
+    public string EmployeeRoleName { get; set; } = string.Empty;
+
     public DateOnly StartDate { get; set; }
 
     public DateOnly EndDate { get; set; }

@@ -7,7 +7,13 @@ import {
   getBaseScheduleApprovals,
   rejectBaseScheduleEmployee,
 } from "../api/approvalsApi";
+import {
+  approveLeaveRequest,
+  getPendingLeaveRequests,
+  rejectLeaveRequest,
+} from "../api/leaveRequestsApi";
 import Alert from "../components/ui/Alert";
+import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import PageHeader from "../components/ui/PageHeader";
 import Select from "../components/ui/Select";
@@ -33,6 +39,14 @@ function formatHours(value) {
   return Number(value).toFixed(1).replace(".0", "");
 }
 
+function formatDate(value) {
+  return new Date(`${value}T00:00:00`).toLocaleDateString("sv-SE", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function getPendingItems(approvals) {
   return approvals.flatMap((approval) =>
     approval.employeeApprovals
@@ -52,6 +66,7 @@ function getSelectedKey(item) {
 
 function ApprovalsPage() {
   const [approvals, setApprovals] = useState([]);
+  const [leaveRequests, setLeaveRequests] = useState([]);
   const [selectedKey, setSelectedKey] = useState(null);
   const [addTarget, setAddTarget] = useState(null);
   const [selectedUnassignedRuleId, setSelectedUnassignedRuleId] = useState("");
@@ -67,12 +82,14 @@ function ApprovalsPage() {
 
     try {
       const result = await getBaseScheduleApprovals();
+      const leaveResult = await getPendingLeaveRequests();
       const nextPendingItems = getPendingItems(result);
       const selectedExists = nextPendingItems.some(
         (item) => getSelectedKey(item) === nextSelectedKey
       );
 
       setApprovals(result);
+      setLeaveRequests(leaveResult);
       setSelectedKey(
         selectedExists
           ? nextSelectedKey
@@ -82,6 +99,26 @@ function ApprovalsPage() {
       setError(err.message);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleLeaveDecision(id, action) {
+    setError("");
+    setIsSaving(true);
+
+    try {
+      if (action === "approve") {
+        await approveLeaveRequest(id);
+      } else {
+        await rejectLeaveRequest(id);
+      }
+
+      window.dispatchEvent(new Event("approvals-updated"));
+      await loadApprovals(selectedKey);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -229,6 +266,57 @@ function ApprovalsPage() {
       />
 
       <Alert>{error}</Alert>
+
+      <section className="leave-approval-panel">
+        <div className="approval-detail-header">
+          <div>
+            <h2>Ledighetsansökningar</h2>
+            <p>Väntande ansökningar tas med som blockeringar i schemautkast.</p>
+          </div>
+          <Badge variant={leaveRequests.length > 0 ? "warning" : "neutral"}>
+            {leaveRequests.length} väntar
+          </Badge>
+        </div>
+
+        {isLoading ? (
+          <p className="empty-text">Laddar ledighetsansökningar...</p>
+        ) : leaveRequests.length === 0 ? (
+          <p className="empty-text">Inga ledighetsansökningar väntar.</p>
+        ) : (
+          <div className="leave-approval-list">
+            {leaveRequests.map((request) => (
+              <article className="leave-approval-item" key={request.id}>
+                <div>
+                  <strong>{request.employeeName}</strong>
+                  <span>
+                    {formatDate(request.startDate)} - {formatDate(request.endDate)}
+                  </span>
+                  <small>{request.requestedDays} semesterdagar</small>
+                  {request.reason && <p>{request.reason}</p>}
+                </div>
+
+                <div className="approval-actions">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={isSaving}
+                    onClick={() => handleLeaveDecision(request.id, "reject")}
+                  >
+                    Neka
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={() => handleLeaveDecision(request.id, "approve")}
+                  >
+                    Godkänn
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="approvals-layout">
         <aside className="approvals-list">

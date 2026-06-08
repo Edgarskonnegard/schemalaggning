@@ -146,6 +146,47 @@
   opacity: 0.9;
 }
 
+.schedule-leave-cell {
+  background: #fff7ed;
+}
+
+.schedule-leave-note {
+  display: grid;
+  gap: 2px;
+  border-radius: 8px;
+  padding: 9px;
+  background: #ffedd5;
+  color: #9a3412;
+  box-shadow: inset 3px 0 0 #f97316;
+}
+
+.schedule-leave-note strong,
+.schedule-leave-note small {
+  display: block;
+}
+
+.schedule-leave-note strong {
+  color: #7c2d12;
+  font-size: 14px;
+}
+
+.schedule-leave-note small {
+  color: #9a3412;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.schedule-leave-note-approved {
+  background: #dcfce7;
+  color: #166534;
+  box-shadow: inset 3px 0 0 #22c55e;
+}
+
+.schedule-leave-note-approved strong,
+.schedule-leave-note-approved small {
+  color: #166534;
+}
+
 .schedule-modal-backdrop {
   position: fixed;
   inset: 0;

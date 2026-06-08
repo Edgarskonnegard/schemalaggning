@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { getPendingBaseScheduleApprovalCount } from "../../api/approvalsApi";
+import { getPendingLeaveRequestCount } from "../../api/leaveRequestsApi";
 import { useAuth } from "../../auth/AuthContext";
 import "./Header.css";
 function Header({ onToggleMenu }) {
@@ -17,8 +18,16 @@ function Header({ onToggleMenu }) {
   useEffect(() => {
     async function loadPendingCount() {
       try {
-        const count = await getPendingBaseScheduleApprovalCount();
-        setPendingCount(count);
+        if (!isAdmin) {
+          setPendingCount(0);
+          return;
+        }
+
+        const [baseCount, leaveCount] = await Promise.all([
+          getPendingBaseScheduleApprovalCount(),
+          getPendingLeaveRequestCount(),
+        ]);
+        setPendingCount(baseCount + leaveCount);
       } catch {
         setPendingCount(0);
       }
@@ -30,7 +39,7 @@ function Header({ onToggleMenu }) {
     return () => {
       window.removeEventListener("approvals-updated", loadPendingCount);
     };
-  }, []);
+  }, [isAdmin]);
 
   return (
     <header>

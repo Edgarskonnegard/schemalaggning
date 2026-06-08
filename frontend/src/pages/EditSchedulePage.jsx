@@ -6,6 +6,7 @@ import {
   swapShiftEmployees,
   updateShift,
 } from "../api/schedulesApi";
+import { getScheduleLeaveBlocks } from "../api/leaveRequestsApi";
 import { getStores } from "../api/storesApi";
 import ShiftNote from "../components/schedule/ShiftNote";
 import Alert from "../components/ui/Alert";
@@ -73,6 +74,7 @@ function EditSchedulePage() {
   const panStateRef = useRef(null);
   const [stores, setStores] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [leaveBlocks, setLeaveBlocks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [draggedShift, setDraggedShift] = useState(null);
@@ -164,10 +166,20 @@ function EditSchedulePage() {
       return map;
     }, new Map());
 
+    leaveBlocks.forEach((block) => {
+      if (!employeeMap.has(block.employeeId)) {
+        employeeMap.set(block.employeeId, {
+          id: block.employeeId,
+          name: block.employeeName,
+          roleName: block.employeeRoleName,
+        });
+      }
+    });
+
     return [...employeeMap.values()].sort((a, b) =>
       a.name.localeCompare(b.name)
     );
-  }, [selectedSchedule]);
+  }, [leaveBlocks, selectedSchedule]);
 
   const shiftsByEmployeeAndDate = useMemo(() => {
     if (!selectedSchedule) {
@@ -181,6 +193,33 @@ function EditSchedulePage() {
       return groups;
     }, {});
   }, [selectedSchedule]);
+
+  const leaveBlocksByEmployeeAndDate = useMemo(() => {
+    if (!selectedSchedule) {
+      return {};
+    }
+
+    return leaveBlocks.reduce((groups, block) => {
+      const start = block.startDate < selectedSchedule.periodStart
+        ? selectedSchedule.periodStart
+        : block.startDate;
+      const end = block.endDate > selectedSchedule.periodEnd
+        ? selectedSchedule.periodEnd
+        : block.endDate;
+      const current = new Date(`${start}T00:00:00`);
+      const last = new Date(`${end}T00:00:00`);
+
+      while (current <= last) {
+        const date = toDateInputValue(current);
+        const key = `${block.employeeId}-${date}`;
+        groups[key] = groups[key] ?? [];
+        groups[key].push(block);
+        current.setDate(current.getDate() + 1);
+      }
+
+      return groups;
+    }, {});
+  }, [leaveBlocks, selectedSchedule]);
 
   function updateForm(field, value) {
     setForm((prev) => ({
@@ -206,6 +245,7 @@ function EditSchedulePage() {
     }
 
     setError("");
+    setLeaveBlocks([]);
     setIsSaving(true);
 
     try {
@@ -213,8 +253,14 @@ function EditSchedulePage() {
         periodStart: form.periodStart,
         periodEnd: form.periodEnd,
       });
+      const blocks = await getScheduleLeaveBlocks(
+        schedule.storeId,
+        schedule.periodStart,
+        schedule.periodEnd
+      );
 
       setSelectedSchedule(schedule);
+      setLeaveBlocks(blocks);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -581,12 +627,17 @@ function EditSchedulePage() {
                         const shifts =
                           shiftsByEmployeeAndDate[`${employee.id}-${date}`] ??
                           [];
+                        const blocks =
+                          leaveBlocksByEmployeeAndDate[`${employee.id}-${date}`] ??
+                          [];
                         const canDropHere = canDropShiftOnCell(date);
 
                         return (
                           <div
                             key={`${employee.id}-${date}`}
                             className={`calendar-cell ${
+                              blocks.length > 0 ? "schedule-leave-cell" : ""
+                            } ${
                               canDropHere ? "schedule-drop-target" : ""
                             } ${
                               draggedShift && !canDropHere
@@ -600,8 +651,24 @@ function EditSchedulePage() {
                             }}
                             onDrop={() => handleDropShift(employee, date)}
                           >
+                            {blocks.map((block) => (
+                              <div
+                                className={`schedule-leave-note schedule-leave-note-${block.status.toLowerCase()}`}
+                                key={block.id}
+                              >
+                                <strong>Ledig</strong>
+                                <small>
+                                  {block.status === "Pending"
+                                    ? "Väntar"
+                                    : "Godkänd"}
+                                </small>
+                              </div>
+                            ))}
+
                             {shifts.length === 0 ? (
-                              <span className="calendar-empty">Ledig</span>
+                              blocks.length === 0 && (
+                                <span className="calendar-empty">Ledig</span>
+                              )
                             ) : (
                               shifts.map((shift) => (
                                 <ShiftNote

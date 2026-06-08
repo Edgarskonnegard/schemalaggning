@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Schemalaggning.Data;
 using Schemalaggning.DTOs.Schedules;
 using Schemalaggning.Models;
 using Schemalaggning.Repositories.Interfaces;
@@ -10,15 +12,18 @@ public class ScheduleGenerationService : IScheduleGenerationService
     private readonly IBaseScheduleRuleRepository _baseScheduleRuleRepository;
     private readonly IScheduleRepository _scheduleRepository;
     private readonly IStoreRepository _storeRepository;
+    private readonly AppDbContext _context;
 
     public ScheduleGenerationService(
         IBaseScheduleRuleRepository baseScheduleRuleRepository,
         IScheduleRepository scheduleRepository,
-        IStoreRepository storeRepository)
+        IStoreRepository storeRepository,
+        AppDbContext context)
     {
         _baseScheduleRuleRepository = baseScheduleRuleRepository;
         _scheduleRepository = scheduleRepository;
         _storeRepository = storeRepository;
+        _context = context;
     }
 
     public async Task<ScheduleReadDto> GenerateFromBaseScheduleAsync(ScheduleCreateDto dto)
@@ -36,6 +41,11 @@ public class ScheduleGenerationService : IScheduleGenerationService
         var rules = (await _baseScheduleRuleRepository.GetAllWithDetailsAsync())
             .Where(rule => rule.Employee.StoreId == dto.StoreId)
             .ToList();
+        var employeeIds = rules
+            .Select(rule => rule.EmployeeId)
+            .Distinct()
+            .ToList();
+        var blockedDates = await GetBlockedLeaveDatesAsync(employeeIds, dto.PeriodStart, dto.PeriodEnd);
 
         var schedule = new Schedule
         {
@@ -56,6 +66,11 @@ public class ScheduleGenerationService : IScheduleGenerationService
                 rule.WeekInCycle == weekInCycle &&
                 rule.DayOfWeek == date.DayOfWeek))
             {
+                if (blockedDates.Contains((rule.EmployeeId, date)))
+                {
+                    continue;
+                }
+
                 schedule.Shifts.Add(new Shift
                 {
                     EmployeeId = rule.EmployeeId,
@@ -79,5 +94,35 @@ public class ScheduleGenerationService : IScheduleGenerationService
         var daysFromStart = date.DayNumber - periodStart.DayNumber;
         var weekIndex = daysFromStart / 7;
         return weekIndex % 4 + 1;
+    }
+
+    private async Task<HashSet<(int EmployeeId, DateOnly Date)>> GetBlockedLeaveDatesAsync(
+        List<int> employeeIds,
+        DateOnly periodStart,
+        DateOnly periodEnd)
+    {
+        var leaveRequests = await _context.LeaveRequests
+            .AsNoTracking()
+            .Where(request =>
+                employeeIds.Contains(request.EmployeeId) &&
+                (request.Status == "Pending" || request.Status == "Approved") &&
+                request.StartDate <= periodEnd &&
+                request.EndDate >= periodStart)
+            .ToListAsync();
+
+        var blockedDates = new HashSet<(int EmployeeId, DateOnly Date)>();
+
+        foreach (var request in leaveRequests)
+        {
+            var start = request.StartDate < periodStart ? periodStart : request.StartDate;
+            var end = request.EndDate > periodEnd ? periodEnd : request.EndDate;
+
+            for (var date = start; date <= end; date = date.AddDays(1))
+            {
+                blockedDates.Add((request.EmployeeId, date));
+            }
+        }
+
+        return blockedDates;
     }
 }
