@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { getMe } from "../api/meApi";
+import { createShiftComment } from "../api/shiftCommentsApi";
 import Alert from "../components/ui/Alert";
 import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
 import "./MySchedulePage.css";
@@ -21,23 +23,27 @@ function formatTime(value) {
 
 function MySchedulePage() {
   const [me, setMe] = useState(null);
+  const [selectedShift, setSelectedShift] = useState(null);
+  const [commentMessage, setCommentMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSavingComment, setIsSavingComment] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadSchedule() {
-      setError("");
-      setIsLoading(true);
+  async function loadSchedule() {
+    setError("");
+    setIsLoading(true);
 
-      try {
-        setMe(await getMe());
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
+    try {
+      setMe(await getMe());
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
+  }
 
+  useEffect(() => {
     loadSchedule();
   }, []);
 
@@ -54,6 +60,46 @@ function MySchedulePage() {
     return [...groups.entries()];
   }, [me]);
 
+  function openCommentModal(shift) {
+    setError("");
+    setStatusMessage("");
+    setSelectedShift(shift);
+    setCommentMessage("");
+  }
+
+  function closeCommentModal() {
+    if (isSavingComment) {
+      return;
+    }
+
+    setSelectedShift(null);
+    setCommentMessage("");
+  }
+
+  async function handleCommentSubmit(event) {
+    event.preventDefault();
+
+    if (!selectedShift) {
+      return;
+    }
+
+    setError("");
+    setStatusMessage("");
+    setIsSavingComment(true);
+
+    try {
+      await createShiftComment(selectedShift.id, commentMessage);
+      setStatusMessage("Kommentaren är skickad till admin.");
+      setSelectedShift(null);
+      setCommentMessage("");
+      window.dispatchEvent(new Event("approvals-updated"));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSavingComment(false);
+    }
+  }
+
   return (
     <main className="my-schedule-page">
       <PageHeader
@@ -62,6 +108,7 @@ function MySchedulePage() {
       />
 
       <Alert>{error}</Alert>
+      <Alert variant="success">{statusMessage}</Alert>
 
       {isLoading ? (
         <Card>
@@ -93,14 +140,83 @@ function MySchedulePage() {
                       <span>{shift.storeName}</span>
                     </div>
 
-                    <Badge variant="neutral">
-                      {formatTime(shift.startTime)}-{formatTime(shift.endTime)}
-                    </Badge>
+                    <div className="my-schedule-shift-actions">
+                      <Badge variant="neutral">
+                        {formatTime(shift.startTime)}-{formatTime(shift.endTime)}
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => openCommentModal(shift)}
+                      >
+                        Kommentera
+                      </Button>
+                    </div>
                   </article>
                 ))}
               </div>
             </Card>
           ))}
+        </div>
+      )}
+
+      {selectedShift && (
+        <div className="my-schedule-modal-backdrop" onClick={closeCommentModal}>
+          <section
+            className="my-schedule-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="shift-comment-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="my-schedule-modal-header">
+              <div>
+                <h2 id="shift-comment-modal-title">Kommentera pass</h2>
+                <p>
+                  {formatDate(selectedShift.date)} · {selectedShift.shiftTypeName} ·{" "}
+                  {formatTime(selectedShift.startTime)}-
+                  {formatTime(selectedShift.endTime)}
+                </p>
+              </div>
+
+              <button
+                className="my-schedule-modal-close"
+                type="button"
+                onClick={closeCommentModal}
+              >
+                Stäng
+              </button>
+            </div>
+
+            <form className="my-schedule-comment-form" onSubmit={handleCommentSubmit}>
+              <label className="input-wrapper">
+                <span>Kommentar till admin</span>
+                <textarea
+                  className="input my-schedule-comment-textarea"
+                  maxLength={1000}
+                  required
+                  value={commentMessage}
+                  onChange={(event) => setCommentMessage(event.target.value)}
+                />
+              </label>
+
+              <div className="my-schedule-modal-actions">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={closeCommentModal}
+                >
+                  Avbryt
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSavingComment || !commentMessage.trim()}
+                >
+                  {isSavingComment ? "Skickar..." : "Skicka kommentar"}
+                </Button>
+              </div>
+            </form>
+          </section>
         </div>
       )}
     </main>

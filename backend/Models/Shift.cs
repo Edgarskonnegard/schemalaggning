@@ -25,4 +25,6 @@ public class Shift
     public string Source { get; set; } = "BaseSchedule";
 
     public string Status { get; set; } = "Draft";
+
+    public ICollection<ShiftComment> Comments { get; set; } = new List<ShiftComment>();
 }

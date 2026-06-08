@@ -12,6 +12,10 @@ import {
   getPendingLeaveRequests,
   rejectLeaveRequest,
 } from "../api/leaveRequestsApi";
+import {
+  getPendingShiftComments,
+  resolveShiftComment,
+} from "../api/shiftCommentsApi";
 import Alert from "../components/ui/Alert";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
@@ -67,6 +71,7 @@ function getSelectedKey(item) {
 function ApprovalsPage() {
   const [approvals, setApprovals] = useState([]);
   const [leaveRequests, setLeaveRequests] = useState([]);
+  const [shiftComments, setShiftComments] = useState([]);
   const [selectedKey, setSelectedKey] = useState(null);
   const [addTarget, setAddTarget] = useState(null);
   const [selectedUnassignedRuleId, setSelectedUnassignedRuleId] = useState("");
@@ -83,6 +88,7 @@ function ApprovalsPage() {
     try {
       const result = await getBaseScheduleApprovals();
       const leaveResult = await getPendingLeaveRequests();
+      const shiftCommentResult = await getPendingShiftComments();
       const nextPendingItems = getPendingItems(result);
       const selectedExists = nextPendingItems.some(
         (item) => getSelectedKey(item) === nextSelectedKey
@@ -90,6 +96,7 @@ function ApprovalsPage() {
 
       setApprovals(result);
       setLeaveRequests(leaveResult);
+      setShiftComments(shiftCommentResult);
       setSelectedKey(
         selectedExists
           ? nextSelectedKey
@@ -113,6 +120,21 @@ function ApprovalsPage() {
         await rejectLeaveRequest(id);
       }
 
+      window.dispatchEvent(new Event("approvals-updated"));
+      await loadApprovals(selectedKey);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleResolveShiftComment(id) {
+    setError("");
+    setIsSaving(true);
+
+    try {
+      await resolveShiftComment(id);
       window.dispatchEvent(new Event("approvals-updated"));
       await loadApprovals(selectedKey);
     } catch (err) {
@@ -266,6 +288,50 @@ function ApprovalsPage() {
       />
 
       <Alert>{error}</Alert>
+
+      <section className="leave-approval-panel">
+        <div className="approval-detail-header">
+          <div>
+            <h2>Passkommentarer</h2>
+            <p>Nya kommentarer från anställda kopplade till publicerade pass.</p>
+          </div>
+          <Badge variant={shiftComments.length > 0 ? "warning" : "neutral"}>
+            {shiftComments.length} nya
+          </Badge>
+        </div>
+
+        {isLoading ? (
+          <p className="empty-text">Laddar passkommentarer...</p>
+        ) : shiftComments.length === 0 ? (
+          <p className="empty-text">Inga nya passkommentarer.</p>
+        ) : (
+          <div className="leave-approval-list">
+            {shiftComments.map((comment) => (
+              <article className="leave-approval-item shift-comment-item" key={comment.id}>
+                <div>
+                  <strong>{comment.employeeName}</strong>
+                  <span>
+                    {formatDate(comment.date)} · {comment.shiftTypeName} ·{" "}
+                    {formatTime(comment.startTime)}-{formatTime(comment.endTime)}
+                  </span>
+                  <small>{comment.storeName}</small>
+                  <p>{comment.message}</p>
+                </div>
+
+                <div className="approval-actions">
+                  <Button
+                    type="button"
+                    disabled={isSaving}
+                    onClick={() => handleResolveShiftComment(comment.id)}
+                  >
+                    Markera hanterad
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="leave-approval-panel">
         <div className="approval-detail-header">

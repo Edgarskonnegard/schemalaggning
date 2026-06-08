@@ -117,6 +117,13 @@
   margin: 4px 0 0;
 }
 
+.shift-comment-item p {
+  border-radius: 8px;
+  padding: 10px;
+  background: #ffffff;
+  color: #334155;
+}
+
 .approval-warnings {
   display: grid;
   gap: 8px;

@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<BaseScheduleUnassignedDraftRule> BaseScheduleUnassignedDraftRules => Set<BaseScheduleUnassignedDraftRule>();
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<ShiftComment> ShiftComments => Set<ShiftComment>();
     public DbSet<LeaveAllowance> LeaveAllowances => Set<LeaveAllowance>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
 
@@ -139,6 +140,12 @@ public class AppDbContext : DbContext
             .HasMany(e => e.Shifts)
             .WithOne(s => s.Employee)
             .HasForeignKey(s => s.EmployeeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Employee>()
+            .HasMany(e => e.ShiftComments)
+            .WithOne(comment => comment.Employee)
+            .HasForeignKey(comment => comment.EmployeeId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Employee>()
@@ -323,5 +330,27 @@ public class AppDbContext : DbContext
             .Property(s => s.Status)
             .HasMaxLength(30)
             .IsRequired();
+
+        modelBuilder.Entity<Shift>()
+            .HasMany(s => s.Comments)
+            .WithOne(comment => comment.Shift)
+            .HasForeignKey(comment => comment.ShiftId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ShiftComment>()
+            .Property(comment => comment.Message)
+            .HasMaxLength(1000)
+            .IsRequired();
+
+        modelBuilder.Entity<ShiftComment>()
+            .Property(comment => comment.Status)
+            .HasMaxLength(30)
+            .IsRequired();
+
+        modelBuilder.Entity<ShiftComment>()
+            .HasOne(comment => comment.ResolvedByUserAccount)
+            .WithMany()
+            .HasForeignKey(comment => comment.ResolvedByUserAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

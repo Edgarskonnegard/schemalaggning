@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { getPendingBaseScheduleApprovalCount } from "../../api/approvalsApi";
 import { getPendingLeaveRequestCount } from "../../api/leaveRequestsApi";
+import { getPendingShiftCommentCount } from "../../api/shiftCommentsApi";
 import { useAuth } from "../../auth/AuthContext";
 import "./Header.css";
 function Header({ onToggleMenu }) {
@@ -23,11 +24,12 @@ function Header({ onToggleMenu }) {
           return;
         }
 
-        const [baseCount, leaveCount] = await Promise.all([
+        const [baseCount, leaveCount, shiftCommentCount] = await Promise.all([
           getPendingBaseScheduleApprovalCount(),
           getPendingLeaveRequestCount(),
+          getPendingShiftCommentCount(),
         ]);
-        setPendingCount(baseCount + leaveCount);
+        setPendingCount(baseCount + leaveCount + shiftCommentCount);
       } catch {
         setPendingCount(0);
       }
