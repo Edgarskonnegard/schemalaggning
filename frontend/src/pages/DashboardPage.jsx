@@ -7,6 +7,7 @@ import { getMe } from "../api/meApi";
 import { getSchedules } from "../api/schedulesApi";
 import { getStores } from "../api/storesApi";
 import { useAuth } from "../auth/AuthContext";
+import ButtonLink from "../components/ui/ButtonLink";
 import "./DashboardPage.css";
 
 function formatDate(value) {
@@ -128,9 +129,9 @@ function DashboardPage() {
               byten, ledighet och andra personalärenden.
             </p>
           </div>
-          <Link className="dashboard-primary-link" to="/my-schedule">
+          <ButtonLink to="/my-schedule">
             Visa mitt schema
-          </Link>
+          </ButtonLink>
         </section>
 
         {error && <p className="dashboard-error">{error}</p>}
@@ -235,12 +236,12 @@ function DashboardPage() {
         </div>
 
         <div className="dashboard-hero-actions">
-          <Link className="dashboard-primary-link" to="/edit-schedule">
+          <ButtonLink to="/edit-schedule">
             Skapa schema
-          </Link>
-          <Link className="dashboard-secondary-link" to="/approvals">
+          </ButtonLink>
+          <ButtonLink to="/approvals" variant="secondary">
             Granska utkast
-          </Link>
+          </ButtonLink>
         </div>
       </section>
 

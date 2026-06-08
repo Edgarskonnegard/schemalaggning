@@ -102,58 +102,13 @@
   color: #64748b;
 }
 
-.my-schedule-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(15, 23, 42, 0.48);
-}
-
-.my-schedule-modal {
-  width: min(100%, 460px);
-  border-radius: 8px;
-  background: #ffffff;
-  padding: 20px;
-  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.22);
-}
-
-.my-schedule-modal-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
-  margin-bottom: 18px;
-}
-
-.my-schedule-modal-header h2 {
-  margin: 0 0 6px;
-  color: #111827;
-}
-
-.my-schedule-modal-header p {
-  margin: 0;
-  color: #64748b;
-}
-
-.my-schedule-modal-close {
-  border: 0;
-  background: transparent;
-  color: #2563eb;
-  cursor: pointer;
-  font-weight: 800;
-}
-
 .my-schedule-comment-form {
   display: grid;
   gap: 14px;
 }
 
-.my-schedule-comment-textarea {
+.my-schedule-comment-textarea .textarea {
   min-height: 120px;
-  resize: vertical;
 }
 
 .my-schedule-modal-actions {

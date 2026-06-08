@@ -46,31 +46,6 @@
   gap: 14px;
 }
 
-.leave-reason {
-  display: grid;
-  gap: 8px;
-}
-
-.leave-reason span {
-  color: #374151;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.leave-reason textarea {
-  min-height: 92px;
-  resize: vertical;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font: inherit;
-}
-
-.leave-reason textarea:focus {
-  border-color: #2563eb;
-  outline: 2px solid #bfdbfe;
-}
-
 .leave-request-list {
   display: grid;
   gap: 10px;

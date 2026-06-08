@@ -1,5 +1,5 @@
 .alert {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   padding: 12px 14px;
   font-size: 14px;
   font-weight: 700;
@@ -7,7 +7,7 @@
 
 .alert-error {
   background: #fef2f2;
-  color: #991b1b;
+  color: var(--color-danger);
 }
 
 .alert-success {
