@@ -40,6 +40,22 @@ public class ScheduleRepository : IScheduleRepository
             .FirstOrDefaultAsync(schedule => schedule.Id == id);
     }
 
+    public Task<bool> HasPublishedOverlapAsync(
+        int storeId,
+        DateOnly periodStart,
+        DateOnly periodEnd,
+        int excludeScheduleId)
+    {
+        return _context.Schedules
+            .AsNoTracking()
+            .AnyAsync(schedule =>
+                schedule.Id != excludeScheduleId &&
+                schedule.StoreId == storeId &&
+                schedule.Status == "Published" &&
+                schedule.PeriodStart <= periodEnd &&
+                schedule.PeriodEnd >= periodStart);
+    }
+
     public async Task<Schedule> CreateAsync(Schedule schedule)
     {
         _context.Schedules.Add(schedule);

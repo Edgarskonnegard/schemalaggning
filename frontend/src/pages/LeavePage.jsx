@@ -14,7 +14,10 @@ import PageHeader from "../components/ui/PageHeader";
 import "./LeavePage.css";
 
 function toDateInputValue(date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function getToday() {

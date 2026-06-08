@@ -163,6 +163,47 @@
   outline-offset: -6px;
 }
 
+.calendar-leave-cell {
+  background: #fff7ed;
+}
+
+.calendar-leave-note {
+  display: grid;
+  gap: 2px;
+  border-radius: 8px;
+  padding: 9px;
+  background: #ffedd5;
+  color: #9a3412;
+  box-shadow: inset 3px 0 0 #f97316;
+}
+
+.calendar-leave-note strong,
+.calendar-leave-note small {
+  display: block;
+}
+
+.calendar-leave-note strong {
+  color: #7c2d12;
+  font-size: 14px;
+}
+
+.calendar-leave-note small {
+  color: #9a3412;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.calendar-leave-note-approved {
+  background: #dcfce7;
+  color: #166534;
+  box-shadow: inset 3px 0 0 #22c55e;
+}
+
+.calendar-leave-note-approved strong,
+.calendar-leave-note-approved small {
+  color: #166534;
+}
+
 .calendar-shift-note {
   cursor: grab;
 }

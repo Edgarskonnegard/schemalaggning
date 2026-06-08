@@ -2,11 +2,16 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   generateStoreSchedule,
+  getSchedules,
   publishSchedule,
   swapShiftEmployees,
   updateShift,
 } from "../api/schedulesApi";
-import { getScheduleLeaveBlocks } from "../api/leaveRequestsApi";
+import {
+  approveLeaveRequest,
+  getScheduleLeaveBlocks,
+  rejectLeaveRequest,
+} from "../api/leaveRequestsApi";
 import { getStores } from "../api/storesApi";
 import ShiftNote from "../components/schedule/ShiftNote";
 import Alert from "../components/ui/Alert";
@@ -18,7 +23,10 @@ import "../components/calendar/Calendar.css";
 import "./EditSchedulePage.css";
 
 function toDateInputValue(date) {
-  return date.toISOString().slice(0, 10);
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function getDefaultStartDate() {
@@ -35,6 +43,18 @@ function getDefaultEndDate(startDate) {
   return toDateInputValue(date);
 }
 
+function addDaysToDateInput(value, days) {
+  const date = new Date(`${value}T00:00:00`);
+  date.setDate(date.getDate() + days);
+  return toDateInputValue(date);
+}
+
+function getDaysBetween(start, end) {
+  const startDate = new Date(`${start}T00:00:00`);
+  const endDate = new Date(`${end}T00:00:00`);
+  return Math.max(0, Math.round((endDate - startDate) / 86400000));
+}
+
 function formatTime(value) {
   return value?.slice(0, 5) || "";
 }
@@ -48,6 +68,14 @@ function getDayLabel(value) {
 function getMonthLabel(value) {
   return new Date(`${value}T00:00:00`).toLocaleDateString("sv-SE", {
     month: "short",
+  });
+}
+
+function formatDate(value) {
+  return new Date(`${value}T00:00:00`).toLocaleDateString("sv-SE", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -68,17 +96,55 @@ function getDatesBetween(start, end) {
   return dates;
 }
 
+function getFirstAvailableScheduleStart(
+  schedules,
+  storeId,
+  requestedStart,
+  durationInDays
+) {
+  if (!storeId || !requestedStart) {
+    return requestedStart;
+  }
+
+  return schedules
+    .filter(
+      (schedule) =>
+        schedule.storeId.toString() === storeId.toString() &&
+        schedule.status === "Published" &&
+        schedule.periodEnd >= requestedStart
+    )
+    .sort((a, b) => a.periodStart.localeCompare(b.periodStart))
+    .reduce((start, schedule) => {
+      const periodEnd = addDaysToDateInput(start, durationInDays);
+
+      if (schedule.periodStart > periodEnd) {
+        return start;
+      }
+
+      if (schedule.periodStart <= periodEnd && schedule.periodEnd >= start) {
+        return addDaysToDateInput(schedule.periodEnd, 1);
+      }
+
+      return start;
+    }, requestedStart);
+}
+
 function EditSchedulePage() {
   const initialStart = getDefaultStartDate();
   const calendarScrollRef = useRef(null);
   const panStateRef = useRef(null);
   const [stores, setStores] = useState([]);
+  const [schedules, setSchedules] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [leaveBlocks, setLeaveBlocks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [draggedShift, setDraggedShift] = useState(null);
   const [isPanningSchedule, setIsPanningSchedule] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [leaveDecisionIds, setLeaveDecisionIds] = useState([]);
+  const [rejectedLeaveReviewIds, setRejectedLeaveReviewIds] = useState([]);
+  const [leaveReviewMessage, setLeaveReviewMessage] = useState("");
   const [editingShift, setEditingShift] = useState(null);
   const [shiftTimeForm, setShiftTimeForm] = useState({
     startTime: "",
@@ -97,12 +163,25 @@ function EditSchedulePage() {
       setIsLoading(true);
 
       try {
-        const storesResult = await getStores();
+        const [storesResult, schedulesResult] = await Promise.all([
+          getStores(),
+          getSchedules(),
+        ]);
+        const defaultStoreId = storesResult[0]?.id?.toString() ?? "";
+        const suggestedStart = getFirstAvailableScheduleStart(
+          schedulesResult,
+          defaultStoreId,
+          initialStart,
+          27
+        );
 
         setStores(storesResult);
+        setSchedules(schedulesResult);
         setForm((prev) => ({
           ...prev,
-          storeId: storesResult[0]?.id?.toString() ?? "",
+          storeId: defaultStoreId,
+          periodStart: suggestedStart,
+          periodEnd: getDefaultEndDate(suggestedStart),
         }));
       } catch (err) {
         setError(err.message);
@@ -221,10 +300,34 @@ function EditSchedulePage() {
     }, {});
   }, [leaveBlocks, selectedSchedule]);
 
+  const pendingLeaveBlocks = useMemo(
+    () => leaveBlocks.filter((block) => block.status === "Pending"),
+    [leaveBlocks]
+  );
+
+  const hasRejectedLeaveDuringReview = rejectedLeaveReviewIds.length > 0;
+
   function updateForm(field, value) {
     setForm((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  }
+
+  function handleStoreChange(storeId) {
+    const durationInDays = getDaysBetween(form.periodStart, form.periodEnd);
+    const suggestedStart = getFirstAvailableScheduleStart(
+      schedules,
+      storeId,
+      form.periodStart,
+      durationInDays
+    );
+
+    setForm((prev) => ({
+      ...prev,
+      storeId,
+      periodStart: suggestedStart,
+      periodEnd: getDefaultEndDate(suggestedStart),
     }));
   }
 
@@ -246,6 +349,9 @@ function EditSchedulePage() {
 
     setError("");
     setLeaveBlocks([]);
+    setIsPublishModalOpen(false);
+    setRejectedLeaveReviewIds([]);
+    setLeaveReviewMessage("");
     setIsSaving(true);
 
     try {
@@ -286,10 +392,112 @@ function EditSchedulePage() {
           status: "Published",
         })),
       }));
+      setSchedules((prev) => {
+        const publishedSchedule = {
+          ...selectedSchedule,
+          status: "Published",
+        };
+
+        if (prev.some((schedule) => schedule.id === selectedSchedule.id)) {
+          return prev.map((schedule) =>
+            schedule.id === selectedSchedule.id ? publishedSchedule : schedule
+          );
+        }
+
+        return [publishedSchedule, ...prev];
+      });
+      setIsPublishModalOpen(false);
     } catch (err) {
       setError(err.message);
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  function handlePublishClick() {
+    if (hasRejectedLeaveDuringReview) {
+      setError(
+        "Generera om schemautkastet innan publicering eftersom en ledighet nekades."
+      );
+      setIsPublishModalOpen(true);
+      return;
+    }
+
+    if (pendingLeaveBlocks.length > 0) {
+      setError("");
+      setLeaveReviewMessage("");
+      setIsPublishModalOpen(true);
+      return;
+    }
+
+    handlePublish();
+  }
+
+  async function refreshLeaveBlocks(schedule = selectedSchedule) {
+    if (!schedule) {
+      return [];
+    }
+
+    const blocks = await getScheduleLeaveBlocks(
+      schedule.storeId,
+      schedule.periodStart,
+      schedule.periodEnd
+    );
+    setLeaveBlocks(blocks);
+    return blocks;
+  }
+
+  async function handleLeaveDecision(block, decision) {
+    setError("");
+    setLeaveReviewMessage("");
+    setLeaveDecisionIds((prev) => [...prev, block.id]);
+
+    try {
+      if (decision === "approve") {
+        await approveLeaveRequest(block.id);
+        setLeaveReviewMessage(`${block.employeeName}s ledighet är godkänd.`);
+      } else {
+        await rejectLeaveRequest(block.id);
+        setRejectedLeaveReviewIds((prev) => [...new Set([...prev, block.id])]);
+        setLeaveReviewMessage(
+          "Ledigheten nekades. Generera om schemautkastet innan du godkänner schemat, så passen kan placeras med den nya informationen."
+        );
+      }
+
+      await refreshLeaveBlocks();
+      window.dispatchEvent(new Event("approvals-updated"));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLeaveDecisionIds((prev) => prev.filter((id) => id !== block.id));
+    }
+  }
+
+  async function handleReviewedPublish() {
+    setError("");
+    setLeaveReviewMessage("");
+
+    if (hasRejectedLeaveDuringReview) {
+      setLeaveReviewMessage(
+        "Generera om schemautkastet innan publicering eftersom en ledighet nekades."
+      );
+      return;
+    }
+
+    try {
+      const blocks = await refreshLeaveBlocks();
+      const hasPending = blocks.some((block) => block.status === "Pending");
+
+      if (hasPending) {
+        setLeaveReviewMessage(
+          "Alla ledighetsansökningar behöver hanteras innan schemat kan godkännas."
+        );
+        return;
+      }
+
+      await handlePublish();
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -499,7 +707,7 @@ function EditSchedulePage() {
           <Select
             label="Butik"
             value={form.storeId}
-            onChange={(event) => updateForm("storeId", event.target.value)}
+            onChange={(event) => handleStoreChange(event.target.value)}
           >
             <option value="">Välj butik</option>
             {stores.map((store) => (
@@ -554,7 +762,7 @@ function EditSchedulePage() {
             <Button
               type="button"
               disabled={isSaving || selectedSchedule.status !== "Draft"}
-              onClick={handlePublish}
+              onClick={handlePublishClick}
             >
               Godkänn schema
             </Button>
@@ -759,6 +967,121 @@ function EditSchedulePage() {
                 </Button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+
+      {isPublishModalOpen && (
+        <div
+          className="schedule-modal-backdrop"
+          onClick={() => {
+            if (!isSaving) {
+              setIsPublishModalOpen(false);
+            }
+          }}
+        >
+          <section
+            className="schedule-modal schedule-publish-modal"
+            aria-labelledby="schedule-publish-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="schedule-modal-header">
+              <div>
+                <h2 id="schedule-publish-modal-title">
+                  Granska ledigheter
+                </h2>
+                <p>
+                  Hantera väntande ledighetsansökningar innan schemat godkänns.
+                </p>
+              </div>
+
+              <button
+                aria-label="Stäng"
+                className="schedule-modal-close"
+                type="button"
+                disabled={isSaving}
+                onClick={() => setIsPublishModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            {leaveReviewMessage && (
+              <div className="schedule-publish-message">
+                {leaveReviewMessage}
+              </div>
+            )}
+
+            {pendingLeaveBlocks.length === 0 ? (
+              <div className="schedule-publish-ready">
+                Alla ledigheter i utkastet är hanterade.
+              </div>
+            ) : (
+              <div className="schedule-publish-leave-list">
+                {pendingLeaveBlocks.map((block) => {
+                  const isDeciding = leaveDecisionIds.includes(block.id);
+
+                  return (
+                    <article className="schedule-publish-leave-item" key={block.id}>
+                      <div>
+                        <strong>{block.employeeName}</strong>
+                        <span>{block.employeeRoleName || "Roll saknas"}</span>
+                      </div>
+
+                      <p>
+                        {formatDate(block.startDate)} - {formatDate(block.endDate)}
+                      </p>
+
+                      <small>
+                        {block.requestedDays} semesterdagar
+                        {block.reason ? ` · ${block.reason}` : ""}
+                      </small>
+
+                      <div className="schedule-publish-leave-actions">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          disabled={isSaving || isDeciding}
+                          onClick={() => handleLeaveDecision(block, "approve")}
+                        >
+                          {isDeciding ? "Hanterar..." : "Godkänn"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="danger"
+                          disabled={isSaving || isDeciding}
+                          onClick={() => handleLeaveDecision(block, "reject")}
+                        >
+                          Neka
+                        </Button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="schedule-modal-actions">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={isSaving}
+                onClick={() => setIsPublishModalOpen(false)}
+              >
+                Avbryt
+              </Button>
+              <Button
+                type="button"
+                disabled={
+                  isSaving ||
+                  pendingLeaveBlocks.length > 0 ||
+                  hasRejectedLeaveDuringReview
+                }
+                onClick={handleReviewedPublish}
+              >
+                {isSaving ? "Godkänner..." : "Godkänn schema"}
+              </Button>
+            </div>
           </section>
         </div>
       )}

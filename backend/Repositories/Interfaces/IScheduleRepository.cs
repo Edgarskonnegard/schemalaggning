@@ -7,6 +7,7 @@ public interface IScheduleRepository
     Task<List<Schedule>> GetAllAsync();
     Task<Schedule?> GetByIdAsync(int id);
     Task<Schedule?> GetByIdWithShiftsAsync(int id);
+    Task<bool> HasPublishedOverlapAsync(int storeId, DateOnly periodStart, DateOnly periodEnd, int excludeScheduleId);
     Task<Schedule> CreateAsync(Schedule schedule);
     Task<bool> UpdateAsync(Schedule schedule);
     Task<bool> DeleteAsync(int id);

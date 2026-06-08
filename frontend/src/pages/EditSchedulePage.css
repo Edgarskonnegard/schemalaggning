@@ -205,6 +205,10 @@
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.22);
 }
 
+.schedule-publish-modal {
+  width: min(100%, 640px);
+}
+
 .schedule-modal-header {
   display: flex;
   justify-content: space-between;
@@ -243,6 +247,71 @@
   justify-content: flex-end;
   gap: 10px;
   margin-top: 4px;
+}
+
+.schedule-publish-message,
+.schedule-publish-ready {
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 700;
+}
+
+.schedule-publish-message {
+  margin-bottom: 14px;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.schedule-publish-ready {
+  margin-bottom: 14px;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.schedule-publish-leave-list {
+  display: grid;
+  gap: 12px;
+  max-height: min(55vh, 420px);
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.schedule-publish-leave-item {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  background: #ffffff;
+}
+
+.schedule-publish-leave-item > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.schedule-publish-leave-item strong {
+  color: #111827;
+}
+
+.schedule-publish-leave-item span,
+.schedule-publish-leave-item small {
+  color: #64748b;
+}
+
+.schedule-publish-leave-item p {
+  margin: 0;
+  color: #334155;
+  font-weight: 800;
+}
+
+.schedule-publish-leave-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 @media (max-width: 1100px) {

@@ -38,6 +38,19 @@ public class ScheduleGenerationService : IScheduleGenerationService
             throw new InvalidOperationException($"Store {dto.StoreId} does not exist.");
         }
 
+        var requestedDurationInDays = dto.PeriodEnd.DayNumber - dto.PeriodStart.DayNumber;
+        var periodStart = await GetFirstAvailableStartDateAsync(
+            dto.StoreId,
+            dto.PeriodStart,
+            requestedDurationInDays);
+        var periodEnd = periodStart.AddDays(requestedDurationInDays);
+        var cycleAnchorDate = await GetCycleAnchorDateAsync(dto.StoreId) ?? periodStart;
+
+        if (cycleAnchorDate > periodStart)
+        {
+            cycleAnchorDate = periodStart;
+        }
+
         var rules = (await _baseScheduleRuleRepository.GetAllWithDetailsAsync())
             .Where(rule => rule.Employee.StoreId == dto.StoreId)
             .ToList();
@@ -45,22 +58,22 @@ public class ScheduleGenerationService : IScheduleGenerationService
             .Select(rule => rule.EmployeeId)
             .Distinct()
             .ToList();
-        var blockedDates = await GetBlockedLeaveDatesAsync(employeeIds, dto.PeriodStart, dto.PeriodEnd);
+        var blockedDates = await GetBlockedLeaveDatesAsync(employeeIds, periodStart, periodEnd);
 
         var schedule = new Schedule
         {
             Name = string.IsNullOrWhiteSpace(dto.Name)
-                ? $"Schema {dto.PeriodStart:yyyy-MM-dd} - {dto.PeriodEnd:yyyy-MM-dd}"
+                ? $"Schema {periodStart:yyyy-MM-dd} - {periodEnd:yyyy-MM-dd}"
                 : dto.Name.Trim(),
             StoreId = dto.StoreId,
-            PeriodStart = dto.PeriodStart,
-            PeriodEnd = dto.PeriodEnd,
+            PeriodStart = periodStart,
+            PeriodEnd = periodEnd,
             Status = "Draft"
         };
 
-        for (var date = dto.PeriodStart; date <= dto.PeriodEnd; date = date.AddDays(1))
+        for (var date = periodStart; date <= periodEnd; date = date.AddDays(1))
         {
-            var weekInCycle = GetWeekInCycle(dto.PeriodStart, date);
+            var weekInCycle = GetWeekInCycle(cycleAnchorDate, date);
 
             foreach (var rule in rules.Where(rule =>
                 rule.WeekInCycle == weekInCycle &&
@@ -89,9 +102,55 @@ public class ScheduleGenerationService : IScheduleGenerationService
         return createdWithShifts!.ToReadDto();
     }
 
-    private static int GetWeekInCycle(DateOnly periodStart, DateOnly date)
+    private async Task<DateOnly> GetFirstAvailableStartDateAsync(
+        int storeId,
+        DateOnly requestedStart,
+        int durationInDays)
     {
-        var daysFromStart = date.DayNumber - periodStart.DayNumber;
+        var publishedSchedules = await _context.Schedules
+            .AsNoTracking()
+            .Where(schedule =>
+                schedule.StoreId == storeId &&
+                schedule.Status == "Published" &&
+                schedule.PeriodEnd >= requestedStart)
+            .OrderBy(schedule => schedule.PeriodStart)
+            .ToListAsync();
+
+        var start = requestedStart;
+
+        foreach (var schedule in publishedSchedules)
+        {
+            var periodEnd = start.AddDays(durationInDays);
+
+            if (schedule.PeriodStart > periodEnd)
+            {
+                break;
+            }
+
+            if (schedule.PeriodStart <= periodEnd && schedule.PeriodEnd >= start)
+            {
+                start = schedule.PeriodEnd.AddDays(1);
+            }
+        }
+
+        return start;
+    }
+
+    private Task<DateOnly?> GetCycleAnchorDateAsync(int storeId)
+    {
+        return _context.Schedules
+            .AsNoTracking()
+            .Where(schedule =>
+                schedule.StoreId == storeId &&
+                schedule.Status == "Published")
+            .OrderBy(schedule => schedule.PeriodStart)
+            .Select(schedule => (DateOnly?)schedule.PeriodStart)
+            .FirstOrDefaultAsync();
+    }
+
+    private static int GetWeekInCycle(DateOnly cycleAnchorDate, DateOnly date)
+    {
+        var daysFromStart = date.DayNumber - cycleAnchorDate.DayNumber;
         var weekIndex = daysFromStart / 7;
         return weekIndex % 4 + 1;
     }

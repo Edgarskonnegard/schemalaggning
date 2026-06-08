@@ -129,6 +129,15 @@ public class ScheduleService : IScheduleService
             throw new InvalidOperationException("Only draft schedules can be published.");
         }
 
+        if (await _scheduleRepository.HasPublishedOverlapAsync(
+            schedule.StoreId,
+            schedule.PeriodStart,
+            schedule.PeriodEnd,
+            schedule.Id))
+        {
+            throw new InvalidOperationException("Schedule period overlaps an already published schedule.");
+        }
+
         schedule.Status = "Published";
         foreach (var shift in schedule.Shifts)
         {
