@@ -89,7 +89,7 @@ public class AdminLeaveRequestsController : ControllerBase
         }
 
         request.Status = "Approved";
-        request.AdminComment = dto.AdminComment.Trim();
+        request.AdminComment = dto.AdminComment?.Trim() ?? string.Empty;
         request.ReviewedAtUtc = DateTime.UtcNow;
         request.ReviewedByUserAccountId = GetUserIdFromClaims();
 
@@ -112,7 +112,7 @@ public class AdminLeaveRequestsController : ControllerBase
         }
 
         request.Status = "Rejected";
-        request.AdminComment = dto.AdminComment.Trim();
+        request.AdminComment = dto.AdminComment?.Trim() ?? string.Empty;
         request.ReviewedAtUtc = DateTime.UtcNow;
         request.ReviewedByUserAccountId = GetUserIdFromClaims();
 

@@ -110,7 +110,7 @@ public class ShiftSwapsController : ControllerBase
             return BadRequest("Du kan inte skicka ett passbyte till dig själv.");
         }
 
-        var message = dto.Message.Trim();
+        var message = dto.Message?.Trim() ?? string.Empty;
         if (message.Length > 1000)
         {
             return BadRequest("Meddelandet får vara max 1000 tecken.");

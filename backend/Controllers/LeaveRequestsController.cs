@@ -41,6 +41,26 @@ public class LeaveRequestsController : ControllerBase
         return Ok(requests);
     }
 
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<LeaveRequestReadDto>> GetMyLeaveRequest(int id)
+    {
+        var employeeId = GetEmployeeIdFromClaims();
+        if (employeeId is null)
+        {
+            return Forbid();
+        }
+
+        var request = await _context.LeaveRequests
+            .AsNoTracking()
+            .Include(leaveRequest => leaveRequest.Employee)
+                .ThenInclude(employee => employee.Role)
+            .FirstOrDefaultAsync(leaveRequest =>
+                leaveRequest.Id == id &&
+                leaveRequest.EmployeeId == employeeId.Value);
+
+        return request is null ? NotFound() : Ok(ToReadDto(request));
+    }
+
     [HttpGet("balance")]
     public async Task<ActionResult<LeaveBalanceReadDto>> GetMyLeaveBalance([FromQuery] int? year)
     {
@@ -90,7 +110,7 @@ public class LeaveRequestsController : ControllerBase
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             RequestedDays = requestedDays,
-            Reason = dto.Reason.Trim(),
+            Reason = dto.Reason?.Trim() ?? string.Empty,
             Status = "Pending",
             CreatedAtUtc = DateTime.UtcNow
         };
@@ -104,7 +124,7 @@ public class LeaveRequestsController : ControllerBase
                 .ThenInclude(employee => employee.Role)
             .FirstAsync(leaveRequest => leaveRequest.Id == request.Id);
 
-        return CreatedAtAction(nameof(GetMyLeaveRequests), new { id = request.Id }, ToReadDto(created));
+        return CreatedAtAction(nameof(GetMyLeaveRequest), new { id = request.Id }, ToReadDto(created));
     }
 
     private int? GetEmployeeIdFromClaims()

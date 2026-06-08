@@ -29,7 +29,7 @@ public class ShiftCommentsController : ControllerBase
             return Forbid();
         }
 
-        var message = dto.Message.Trim();
+        var message = dto.Message?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(message))
         {
             return BadRequest("Kommentaren får inte vara tom.");

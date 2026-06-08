@@ -40,28 +40,28 @@ public class BaseScheduleApprovalsController : ControllerBase
     public async Task<IActionResult> Approve(int id)
     {
         var approved = await _approvalService.ApproveAsync(id);
-        return approved ? NoContent() : NotFound();
+        return await ToApprovalResultAsync(id, approved);
     }
 
     [HttpPost("{id:int}/reject")]
     public async Task<IActionResult> Reject(int id)
     {
         var rejected = await _approvalService.RejectAsync(id);
-        return rejected ? NoContent() : NotFound();
+        return await ToApprovalResultAsync(id, rejected);
     }
 
     [HttpPost("{id:int}/employees/{employeeId:int}/approve")]
     public async Task<IActionResult> ApproveEmployee(int id, int employeeId)
     {
         var approved = await _approvalService.ApproveEmployeeAsync(id, employeeId);
-        return approved ? NoContent() : NotFound();
+        return await ToApprovalResultAsync(id, approved);
     }
 
     [HttpPost("{id:int}/employees/{employeeId:int}/reject")]
     public async Task<IActionResult> RejectEmployee(int id, int employeeId)
     {
         var rejected = await _approvalService.RejectEmployeeAsync(id, employeeId);
-        return rejected ? NoContent() : NotFound();
+        return await ToApprovalResultAsync(id, rejected);
     }
 
     [HttpPost("{id:int}/employees/{employeeId:int}/rules")]
@@ -90,5 +90,23 @@ public class BaseScheduleApprovalsController : ControllerBase
     {
         var deleted = await _approvalService.DeleteDraftRuleAsync(id, employeeId, ruleId);
         return deleted ? NoContent() : NotFound();
+    }
+
+    private async Task<IActionResult> ToApprovalResultAsync(int batchId, bool succeeded)
+    {
+        if (succeeded)
+        {
+            return NoContent();
+        }
+
+        var batch = await _approvalService.GetByIdAsync(batchId);
+        if (batch is null)
+        {
+            return NotFound();
+        }
+
+        return batch.Status == "Pending"
+            ? NotFound()
+            : Conflict("Endast väntande grundschemautkast kan ändras.");
     }
 }
