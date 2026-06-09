@@ -159,6 +159,21 @@
   box-shadow: inset 0 0 0 1px #fca5a5;
 }
 
+.schedule-consecutive-warning-cell {
+  background: #fef2f2;
+  box-shadow: inset 0 0 0 1px #fca5a5;
+}
+
+.schedule-rule-warning {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .schedule-review-calendar--dragging .calendar-scroll {
   background: #475569;
 }

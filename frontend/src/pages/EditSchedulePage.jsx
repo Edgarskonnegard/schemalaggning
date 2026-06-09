@@ -21,6 +21,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import PageHeader from "../components/ui/PageHeader";
 import Select from "../components/ui/Select";
+import { getConsecutiveWorkdayWarnings } from "../utils/scheduleWarnings";
 import "../components/calendar/Calendar.css";
 import "./EditSchedulePage.css";
 
@@ -331,6 +332,16 @@ function EditSchedulePage() {
   const pendingLeaveBlocks = useMemo(
     () => leaveBlocks.filter((block) => block.status === "Pending"),
     [leaveBlocks]
+  );
+
+  const consecutiveWorkdayWarnings = useMemo(
+    () =>
+      getConsecutiveWorkdayWarnings(
+        employeesInSchedule,
+        dates,
+        shiftsByEmployeeAndDate
+      ),
+    [dates, employeesInSchedule, shiftsByEmployeeAndDate]
   );
 
   const coverageGaps = selectedSchedule?.coverageGaps ?? [];
@@ -958,6 +969,8 @@ function EditSchedulePage() {
                         const blocks =
                           leaveBlocksByEmployeeAndDate[`${employee.id}-${date}`] ??
                           [];
+                        const consecutiveWarning =
+                          consecutiveWorkdayWarnings[`${employee.id}-${date}`];
                         const canDropHere = canDropShiftOnCell(date);
                         const canDropGapHere = canDropCoverageGapOnCell(
                           employee,
@@ -974,6 +987,10 @@ function EditSchedulePage() {
                             key={`${employee.id}-${date}`}
                             className={`calendar-cell ${
                               blocks.length > 0 ? "schedule-leave-cell" : ""
+                            } ${
+                              consecutiveWarning
+                                ? "schedule-consecutive-warning-cell"
+                                : ""
                             } ${
                               hasDateCoverageGap ? "schedule-coverage-gap-cell" : ""
                             } ${
@@ -1016,31 +1033,38 @@ function EditSchedulePage() {
                                 <span className="calendar-empty">Ledig</span>
                               )
                             ) : (
-                              shifts.map((shift) => (
-                                <ShiftNote
-                                  draggable={selectedSchedule.status === "Draft"}
-                                  key={shift.id}
-                                  title={shift.shiftTypeName}
-                                  time={`${formatTime(shift.startTime)}-${formatTime(
-                                    shift.endTime
-                                  )}`}
-                                  onClick={() => openShiftEditor(shift)}
-                                  onDragStart={() => {
-                                    setDraggedCoverageGap(null);
-                                    setDraggedShift(shift);
-                                  }}
-                                  onDragEnd={() => setDraggedShift(null)}
-                                  onKeyDown={(event) => {
-                                    if (
-                                      event.key === "Enter" ||
-                                      event.key === " "
-                                    ) {
-                                      event.preventDefault();
-                                      openShiftEditor(shift);
-                                    }
-                                  }}
-                                />
-                              ))
+                              <>
+                                {consecutiveWarning && (
+                                  <span className="schedule-rule-warning">
+                                    {consecutiveWarning.runLength} dagar i rad
+                                  </span>
+                                )}
+                                {shifts.map((shift) => (
+                                  <ShiftNote
+                                    draggable={selectedSchedule.status === "Draft"}
+                                    key={shift.id}
+                                    title={shift.shiftTypeName}
+                                    time={`${formatTime(shift.startTime)}-${formatTime(
+                                      shift.endTime
+                                    )}`}
+                                    onClick={() => openShiftEditor(shift)}
+                                    onDragStart={() => {
+                                      setDraggedCoverageGap(null);
+                                      setDraggedShift(shift);
+                                    }}
+                                    onDragEnd={() => setDraggedShift(null)}
+                                    onKeyDown={(event) => {
+                                      if (
+                                        event.key === "Enter" ||
+                                        event.key === " "
+                                      ) {
+                                        event.preventDefault();
+                                        openShiftEditor(shift);
+                                      }
+                                    }}
+                                  />
+                                ))}
+                              </>
                             )}
                           </div>
                         );

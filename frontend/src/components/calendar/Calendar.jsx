@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { getScheduleLeaveBlocks } from "../../api/leaveRequestsApi";
 import { getSchedule, getSchedules, updateShift } from "../../api/schedulesApi";
+import { getConsecutiveWorkdayWarnings } from "../../utils/scheduleWarnings";
 import ShiftNote from "../schedule/ShiftNote";
 import "./Calendar.css";
 
@@ -355,6 +356,16 @@ function Calendar() {
 
   const pendingCount = Object.keys(pendingShiftUpdates).length;
 
+  const consecutiveWorkdayWarnings = useMemo(
+    () =>
+      getConsecutiveWorkdayWarnings(
+        employees,
+        dates,
+        shiftsByEmployeeAndDate
+      ),
+    [dates, employees, shiftsByEmployeeAndDate]
+  );
+
   function handlePanStart(event) {
     if (event.button !== 0 || event.target.closest(".shift-note")) {
       return;
@@ -554,6 +565,8 @@ function Calendar() {
                   shiftsByEmployeeAndDate[`${employee.id}-${date}`] ?? [];
                 const blocks =
                   leaveBlocksByEmployeeAndDate[`${employee.id}-${date}`] ?? [];
+                const consecutiveWarning =
+                  consecutiveWorkdayWarnings[`${employee.id}-${date}`];
 
                 return (
                   <div
@@ -562,6 +575,10 @@ function Calendar() {
                       blocks.length > 0 ? "calendar-leave-cell" : ""
                     } ${
                       canDropShiftOnCell(date) ? "calendar-drop-target" : ""
+                    } ${
+                      consecutiveWarning
+                        ? "calendar-consecutive-warning-cell"
+                        : ""
                     }`}
                     onDragOver={(event) => {
                       if (canDropShiftOnCell(date)) {
@@ -583,23 +600,30 @@ function Calendar() {
                     ))}
 
                     {shifts.length > 0 ? (
-                      shifts.map((shift) => (
-                        <ShiftNote
-                          draggable
-                          key={shift.id}
-                          title={shift.shiftTypeName}
-                          time={`${formatTime(shift.startTime)}-${formatTime(
-                            shift.endTime
-                          )}`}
-                          className={`calendar-shift-note ${
-                            pendingShiftUpdates[shift.id]
-                              ? "calendar-shift-note-pending"
-                              : ""
-                          }`}
-                          onDragStart={() => setDraggedShift(shift)}
-                          onDragEnd={() => setDraggedShift(null)}
-                        />
-                      ))
+                      <>
+                        {consecutiveWarning && (
+                          <span className="calendar-rule-warning">
+                            {consecutiveWarning.runLength} dagar i rad
+                          </span>
+                        )}
+                        {shifts.map((shift) => (
+                          <ShiftNote
+                            draggable
+                            key={shift.id}
+                            title={shift.shiftTypeName}
+                            time={`${formatTime(shift.startTime)}-${formatTime(
+                              shift.endTime
+                            )}`}
+                            className={`calendar-shift-note ${
+                              pendingShiftUpdates[shift.id]
+                                ? "calendar-shift-note-pending"
+                                : ""
+                            }`}
+                            onDragStart={() => setDraggedShift(shift)}
+                            onDragEnd={() => setDraggedShift(null)}
+                          />
+                        ))}
+                      </>
                     ) : (
                       blocks.length === 0 && (
                         <span className="calendar-empty">Ledig</span>
