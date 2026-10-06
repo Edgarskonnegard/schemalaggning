@@ -112,6 +112,8 @@ function EmployeeDetailsPage() {
         storeId: employee.storeId,
         roleId: employee.roleId,
         employmentPercentage: employee.employmentPercentage,
+        availableFrom: employee.availableFrom || null,
+        availableTo: employee.availableTo || null,
         accountEmail: employee.accountEmail,
         accountPassword: employee.accountPassword || "",
         accountAccessRole: employee.accountAccessRole || "Employee",
@@ -255,6 +257,23 @@ function EmployeeDetailsPage() {
               min="0"
               max="100"
               value={employee.employmentPercentage}
+              onChange={handleEmployeeChange}
+            />
+
+            <Input
+              label="Tillgänglig från"
+              type="date"
+              name="availableFrom"
+              value={employee.availableFrom || ""}
+              onChange={handleEmployeeChange}
+            />
+
+            <Input
+              label="Tillgänglig till"
+              type="date"
+              name="availableTo"
+              min={employee.availableFrom || undefined}
+              value={employee.availableTo || ""}
               onChange={handleEmployeeChange}
             />
 

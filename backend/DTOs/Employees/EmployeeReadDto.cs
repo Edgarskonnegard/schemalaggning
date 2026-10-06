@@ -18,6 +18,10 @@ public class EmployeeReadDto
 
     public decimal EmploymentPercentage { get; set; }
 
+    public DateOnly? AvailableFrom { get; set; }
+
+    public DateOnly? AvailableTo { get; set; }
+
     public int? AccountId { get; set; }
 
     public string AccountEmail { get; set; } = string.Empty;

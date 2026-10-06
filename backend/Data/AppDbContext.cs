@@ -309,7 +309,14 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<StoreCoverageRule>()
-            .HasIndex(r => new { r.StoreId, r.DayOfWeek, r.ShiftTypeId })
+            .HasIndex(r => new
+            {
+                r.StoreId,
+                r.DayOfWeek,
+                r.ShiftTypeId,
+                r.EffectiveFrom,
+                r.EffectiveTo
+            })
             .IsUnique();
 
         modelBuilder.Entity<Schedule>()

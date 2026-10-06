@@ -54,6 +54,8 @@ internal static class MappingExtensions
             RoleId = employee.RoleId,
             RoleName = employee.Role?.Name ?? string.Empty,
             EmploymentPercentage = employee.EmploymentPercentage,
+            AvailableFrom = employee.AvailableFrom,
+            AvailableTo = employee.AvailableTo,
             AccountId = employee.UserAccount?.Id,
             AccountEmail = employee.UserAccount?.Email ?? string.Empty,
             AccountAccessRole = employee.UserAccount?.AccessRole ?? string.Empty,
@@ -112,7 +114,9 @@ internal static class MappingExtensions
             DayOfWeek = rule.DayOfWeek,
             RequiredCount = rule.RequiredCount,
             StartTime = rule.StartTime,
-            EndTime = rule.EndTime
+            EndTime = rule.EndTime,
+            EffectiveFrom = rule.EffectiveFrom,
+            EffectiveTo = rule.EffectiveTo
         };
     }
 

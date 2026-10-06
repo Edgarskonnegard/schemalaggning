@@ -47,7 +47,13 @@ public class EmployeeService : IEmployeeService
 
     public async Task<EmployeeReadDto> CreateAsync(EmployeeCreateDto dto)
     {
-        await ValidateEmployeeAsync(dto.Name, dto.StoreId, dto.RoleId, dto.EmploymentPercentage);
+        await ValidateEmployeeAsync(
+            dto.Name,
+            dto.StoreId,
+            dto.RoleId,
+            dto.EmploymentPercentage,
+            dto.AvailableFrom,
+            dto.AvailableTo);
         var existingAccount = HasAccountEmail(dto.AccountEmail)
             ? await _userAccountRepository.GetByEmailAsync(dto.AccountEmail!)
             : null;
@@ -66,7 +72,9 @@ public class EmployeeService : IEmployeeService
             Name = dto.Name.Trim(),
             StoreId = dto.StoreId,
             RoleId = dto.RoleId,
-            EmploymentPercentage = dto.EmploymentPercentage
+            EmploymentPercentage = dto.EmploymentPercentage,
+            AvailableFrom = dto.AvailableFrom,
+            AvailableTo = dto.AvailableTo
         });
 
         if (HasAccountEmail(dto.AccountEmail))
@@ -106,7 +114,13 @@ public class EmployeeService : IEmployeeService
 
     public async Task<bool> UpdateAsync(int id, EmployeeUpdateDto dto)
     {
-        await ValidateEmployeeAsync(dto.Name, dto.StoreId, dto.RoleId, dto.EmploymentPercentage);
+        await ValidateEmployeeAsync(
+            dto.Name,
+            dto.StoreId,
+            dto.RoleId,
+            dto.EmploymentPercentage,
+            dto.AvailableFrom,
+            dto.AvailableTo);
 
         var employee = await _employeeRepository.GetByIdAsync(id);
         if (employee is null)
@@ -134,6 +148,8 @@ public class EmployeeService : IEmployeeService
         employee.StoreId = dto.StoreId;
         employee.RoleId = dto.RoleId;
         employee.EmploymentPercentage = dto.EmploymentPercentage;
+        employee.AvailableFrom = dto.AvailableFrom;
+        employee.AvailableTo = dto.AvailableTo;
 
         var employeeUpdated = await _employeeRepository.UpdateAsync(employee);
 
@@ -181,7 +197,13 @@ public class EmployeeService : IEmployeeService
         return _employeeRepository.DeleteAsync(id);
     }
 
-    private async Task ValidateEmployeeAsync(string name, int storeId, int roleId, decimal employmentPercentage)
+    private async Task ValidateEmployeeAsync(
+        string name,
+        int storeId,
+        int roleId,
+        decimal employmentPercentage,
+        DateOnly? availableFrom,
+        DateOnly? availableTo)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -191,6 +213,11 @@ public class EmployeeService : IEmployeeService
         if (employmentPercentage < 0 || employmentPercentage > 100)
         {
             throw new ArgumentException("Employment percentage must be between 0 and 100.");
+        }
+
+        if (availableFrom.HasValue && availableTo.HasValue && availableTo < availableFrom)
+        {
+            throw new ArgumentException("Available to date must be after or equal to available from date.");
         }
 
         if (!await _storeRepository.ExistsAsync(storeId))

@@ -16,6 +16,10 @@ public class Employee
 
     public decimal EmploymentPercentage { get; set; }
 
+    public DateOnly? AvailableFrom { get; set; }
+
+    public DateOnly? AvailableTo { get; set; }
+
     public ICollection<BaseScheduleRule> BaseScheduleRules { get; set; } = new List<BaseScheduleRule>();
 
     public ICollection<Shift> Shifts { get; set; } = new List<Shift>();

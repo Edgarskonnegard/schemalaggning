@@ -10,6 +10,10 @@ public class EmployeeUpdateDto
 
     public decimal EmploymentPercentage { get; set; }
 
+    public DateOnly? AvailableFrom { get; set; }
+
+    public DateOnly? AvailableTo { get; set; }
+
     public string? AccountEmail { get; set; }
 
     public string? AccountPassword { get; set; }

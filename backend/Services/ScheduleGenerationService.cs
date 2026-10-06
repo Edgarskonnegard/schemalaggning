@@ -79,6 +79,11 @@ public class ScheduleGenerationService : IScheduleGenerationService
                 rule.WeekInCycle == weekInCycle &&
                 rule.DayOfWeek == date.DayOfWeek))
             {
+                if (!IsEmployeeAvailableOnDate(rule.Employee, date))
+                {
+                    continue;
+                }
+
                 if (blockedDates.Contains((rule.EmployeeId, date)))
                 {
                     continue;
@@ -204,7 +209,9 @@ public class ScheduleGenerationService : IScheduleGenerationService
 
         for (var date = schedule.PeriodStart; date <= schedule.PeriodEnd; date = date.AddDays(1))
         {
-            foreach (var rule in coverageRules.Where(rule => rule.DayOfWeek == date.DayOfWeek))
+            foreach (var rule in coverageRules.Where(rule =>
+                rule.DayOfWeek == date.DayOfWeek &&
+                IsCoverageRuleEffectiveOnDate(rule, date)))
             {
                 var assignedCount = schedule.Shifts.Count(shift =>
                     shift.Date == date &&
@@ -236,5 +243,17 @@ public class ScheduleGenerationService : IScheduleGenerationService
             .ThenBy(gap => gap.StartTime)
             .ThenBy(gap => gap.ShiftTypeName)
             .ToList();
+    }
+
+    private static bool IsEmployeeAvailableOnDate(Employee employee, DateOnly date)
+    {
+        return (!employee.AvailableFrom.HasValue || employee.AvailableFrom <= date) &&
+            (!employee.AvailableTo.HasValue || employee.AvailableTo >= date);
+    }
+
+    private static bool IsCoverageRuleEffectiveOnDate(StoreCoverageRule rule, DateOnly date)
+    {
+        return (!rule.EffectiveFrom.HasValue || rule.EffectiveFrom <= date) &&
+            (!rule.EffectiveTo.HasValue || rule.EffectiveTo >= date);
     }
 }

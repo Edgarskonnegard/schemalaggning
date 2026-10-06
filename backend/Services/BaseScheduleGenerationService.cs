@@ -37,7 +37,10 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
         }
 
         var employees = await _employeeRepository.GetByStoreIdAsync(storeId);
-        var coverageRules = await _coverageRuleRepository.GetByStoreIdAsync(storeId);
+        var allCoverageRules = await _coverageRuleRepository.GetByStoreIdAsync(storeId);
+        var coverageRules = allCoverageRules
+            .Where(rule => !rule.EffectiveFrom.HasValue && !rule.EffectiveTo.HasValue)
+            .ToList();
         var settings = await _context.ScheduleGenerationSettings
             .AsNoTracking()
             .FirstOrDefaultAsync(item => item.StoreId == storeId);
@@ -63,7 +66,10 @@ public class BaseScheduleGenerationService : IBaseScheduleGenerationService
 
         if (coverageRules.Count == 0)
         {
-            result.Warnings.Add("Butiken har inget bemanningsbehov att generera från.");
+            result.Warnings.Add(
+                allCoverageRules.Count == 0
+                    ? "Butiken har inget bemanningsbehov att generera från."
+                    : "Butiken har bara periodbaserade bemanningsbehov. Grundscheman genereras från regler utan datumperiod.");
             return result;
         }
 

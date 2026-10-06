@@ -46,6 +46,8 @@ function EmployeesPage() {
     storeId: "",
     roleId: "",
     employmentPercentage: 100,
+    availableFrom: "",
+    availableTo: "",
     accountEmail: "",
     accountPassword: "",
     accountAccessRole: "Employee",
@@ -181,6 +183,8 @@ function EmployeesPage() {
         storeId: Number(formData.storeId),
         roleId: Number(formData.roleId),
         employmentPercentage: Number(formData.employmentPercentage),
+        availableFrom: formData.availableFrom || null,
+        availableTo: formData.availableTo || null,
         accountEmail: formData.accountEmail.trim(),
         accountPassword: formData.accountPassword,
         accountAccessRole: formData.accountAccessRole,
@@ -196,6 +200,8 @@ function EmployeesPage() {
         storeId: formData.storeId,
         roleId: formData.roleId,
         employmentPercentage: 100,
+        availableFrom: "",
+        availableTo: "",
         accountEmail: "",
         accountPassword: "",
         accountAccessRole: "Employee",
@@ -369,6 +375,23 @@ function EmployeesPage() {
               />
 
               <Input
+                label="Tillgänglig från"
+                type="date"
+                name="availableFrom"
+                value={formData.availableFrom}
+                onChange={handleChange}
+              />
+
+              <Input
+                label="Tillgänglig till"
+                type="date"
+                name="availableTo"
+                min={formData.availableFrom || undefined}
+                value={formData.availableTo}
+                onChange={handleChange}
+              />
+
+              <Input
                 label="Email för inloggning"
                 type="email"
                 name="accountEmail"
@@ -487,6 +510,15 @@ function EmployeesPage() {
 
                     <div className="employee-info">
                       Roll: {employee.roleName}
+                    </div>
+
+                    <div className="employee-info">
+                      Period:{" "}
+                      {employee.availableFrom || employee.availableTo
+                        ? `${employee.availableFrom || "Alltid"} - ${
+                            employee.availableTo || "Tills vidare"
+                          }`
+                        : "Tillsvidare"}
                     </div>
 
                     <div className="employee-info">

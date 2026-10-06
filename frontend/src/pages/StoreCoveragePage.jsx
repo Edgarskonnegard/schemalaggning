@@ -30,6 +30,8 @@ const EMPTY_RULE_FORM = {
   requiredCount: 1,
   startTime: "08:00",
   endTime: "16:00",
+  effectiveFrom: "",
+  effectiveTo: "",
 };
 
 function formatTime(value) {
@@ -39,6 +41,14 @@ function formatTime(value) {
 
 function toApiTime(value) {
   return value.length === 5 ? `${value}:00` : value;
+}
+
+function formatPeriod(rule) {
+  if (!rule.effectiveFrom && !rule.effectiveTo) {
+    return "Gäller alltid";
+  }
+
+  return `${rule.effectiveFrom || "Start"} - ${rule.effectiveTo || "Tills vidare"}`;
 }
 
 function getDayLabel(dayOfWeek) {
@@ -121,6 +131,8 @@ function StoreCoveragePage() {
       requiredCount: 1,
       startTime: formatTime(shiftType?.defaultStartTime) || "08:00",
       endTime: formatTime(shiftType?.defaultEndTime) || "16:00",
+      effectiveFrom: "",
+      effectiveTo: "",
     };
   }
 
@@ -142,6 +154,8 @@ function StoreCoveragePage() {
       requiredCount: rule.requiredCount,
       startTime: formatTime(rule.startTime),
       endTime: formatTime(rule.endTime),
+      effectiveFrom: rule.effectiveFrom || "",
+      effectiveTo: rule.effectiveTo || "",
     });
   }
 
@@ -195,9 +209,17 @@ function StoreCoveragePage() {
         requiredCount: Number(ruleForm.requiredCount),
         startTime: toApiTime(ruleForm.startTime),
         endTime: toApiTime(ruleForm.endTime),
+        effectiveFrom: ruleForm.effectiveFrom || null,
+        effectiveTo: ruleForm.effectiveTo || null,
       });
 
-      if (editingRule && editingRule.shiftTypeId !== nextShiftTypeId) {
+      const keyChanged =
+        editingRule &&
+        (editingRule.shiftTypeId !== nextShiftTypeId ||
+          (editingRule.effectiveFrom || "") !== ruleForm.effectiveFrom ||
+          (editingRule.effectiveTo || "") !== ruleForm.effectiveTo);
+
+      if (keyChanged) {
         await deleteStoreCoverageRule(selectedStoreId, editingRule.id);
       }
 
@@ -226,6 +248,8 @@ function StoreCoveragePage() {
         requiredCount: draggedRule.requiredCount,
         startTime: draggedRule.startTime,
         endTime: draggedRule.endTime,
+        effectiveFrom: draggedRule.effectiveFrom,
+        effectiveTo: draggedRule.effectiveTo,
       });
 
       await deleteStoreCoverageRule(selectedStoreId, draggedRule.id);
@@ -333,10 +357,13 @@ function StoreCoveragePage() {
                               event.stopPropagation();
                               handleDelete(rule.id);
                             }}
-                          >
-                            Ta bort
-                          </button>
-                        </ShiftNote>
+                        >
+                          Ta bort
+                        </button>
+                        <small className="coverage-rule-period">
+                          {formatPeriod(rule)}
+                        </small>
+                      </ShiftNote>
                       ))}
                     </div>
                   )}
@@ -415,6 +442,25 @@ function StoreCoveragePage() {
                 type="time"
                 value={ruleForm.endTime}
                 onChange={(event) => updateRuleForm("endTime", event.target.value)}
+              />
+
+              <Input
+                label="Gäller från"
+                type="date"
+                value={ruleForm.effectiveFrom}
+                onChange={(event) =>
+                  updateRuleForm("effectiveFrom", event.target.value)
+                }
+              />
+
+              <Input
+                label="Gäller till"
+                type="date"
+                min={ruleForm.effectiveFrom || undefined}
+                value={ruleForm.effectiveTo}
+                onChange={(event) =>
+                  updateRuleForm("effectiveTo", event.target.value)
+                }
               />
 
               <div className="coverage-modal-actions">

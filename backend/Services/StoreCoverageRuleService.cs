@@ -34,7 +34,9 @@ public class StoreCoverageRuleService : IStoreCoverageRuleService
         var existingRule = await _coverageRuleRepository.GetByStoreDayAndShiftTypeAsync(
             storeId,
             dto.DayOfWeek,
-            dto.ShiftTypeId);
+            dto.ShiftTypeId,
+            dto.EffectiveFrom,
+            dto.EffectiveTo);
 
         if (existingRule is null)
         {
@@ -45,7 +47,9 @@ public class StoreCoverageRuleService : IStoreCoverageRuleService
                 DayOfWeek = dto.DayOfWeek,
                 RequiredCount = dto.RequiredCount,
                 StartTime = dto.StartTime,
-                EndTime = dto.EndTime
+                EndTime = dto.EndTime,
+                EffectiveFrom = dto.EffectiveFrom,
+                EffectiveTo = dto.EffectiveTo
             });
 
             var rules = await _coverageRuleRepository.GetByStoreIdAsync(storeId);
@@ -55,6 +59,8 @@ public class StoreCoverageRuleService : IStoreCoverageRuleService
         existingRule.RequiredCount = dto.RequiredCount;
         existingRule.StartTime = dto.StartTime;
         existingRule.EndTime = dto.EndTime;
+        existingRule.EffectiveFrom = dto.EffectiveFrom;
+        existingRule.EffectiveTo = dto.EffectiveTo;
         await _coverageRuleRepository.UpdateAsync(existingRule);
 
         var updatedRules = await _coverageRuleRepository.GetByStoreIdAsync(storeId);
@@ -86,6 +92,13 @@ public class StoreCoverageRuleService : IStoreCoverageRuleService
         if (dto.EndTime <= dto.StartTime)
         {
             throw new ArgumentException("End time must be after start time.");
+        }
+
+        if (dto.EffectiveFrom.HasValue &&
+            dto.EffectiveTo.HasValue &&
+            dto.EffectiveTo < dto.EffectiveFrom)
+        {
+            throw new ArgumentException("Effective end date must be after or equal to effective start date.");
         }
     }
 }

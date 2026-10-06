@@ -255,21 +255,32 @@ function EditSchedulePage() {
       return [];
     }
 
+    const storeEmployeeMap = storeEmployees.reduce((map, employee) => {
+      map.set(employee.id, employee);
+      return map;
+    }, new Map());
+
     const employeeMap = selectedSchedule.shifts.reduce((map, shift) => {
+      const storeEmployee = storeEmployeeMap.get(shift.employeeId);
       map.set(shift.employeeId, {
         id: shift.employeeId,
         name: shift.employeeName,
         roleName: shift.employeeRoleName,
+        availableFrom: storeEmployee?.availableFrom,
+        availableTo: storeEmployee?.availableTo,
       });
       return map;
     }, new Map());
 
     leaveBlocks.forEach((block) => {
+      const storeEmployee = storeEmployeeMap.get(block.employeeId);
       if (!employeeMap.has(block.employeeId)) {
         employeeMap.set(block.employeeId, {
           id: block.employeeId,
           name: block.employeeName,
           roleName: block.employeeRoleName,
+          availableFrom: storeEmployee?.availableFrom,
+          availableTo: storeEmployee?.availableTo,
         });
       }
     });
@@ -280,6 +291,8 @@ function EditSchedulePage() {
           id: employee.id,
           name: employee.name,
           roleName: employee.roleName,
+          availableFrom: employee.availableFrom,
+          availableTo: employee.availableTo,
         });
       }
     });
@@ -403,8 +416,11 @@ function EditSchedulePage() {
         .length > 0;
     const hasShift =
       (shiftsByEmployeeAndDate[`${employee.id}-${targetDate}`] ?? []).length > 0;
+    const isAvailable =
+      (!employee.availableFrom || employee.availableFrom <= targetDate) &&
+      (!employee.availableTo || employee.availableTo >= targetDate);
 
-    return !hasLeave && !hasShift;
+    return isAvailable && !hasLeave && !hasShift;
   }
 
   async function handleGenerate(event) {

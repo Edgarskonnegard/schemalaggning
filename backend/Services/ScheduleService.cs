@@ -66,6 +66,11 @@ public class ScheduleService : IScheduleService
             throw new InvalidOperationException("Employee belongs to another store.");
         }
 
+        if (!IsEmployeeAvailableOnDate(employee, dto.Date))
+        {
+            throw new InvalidOperationException("Employee is not available on this date.");
+        }
+
         if (!await _employeeRepository.CanWorkShiftTypeAsync(dto.EmployeeId, dto.ShiftTypeId))
         {
             throw new InvalidOperationException("Employee role does not allow this shift type.");
@@ -139,6 +144,17 @@ public class ScheduleService : IScheduleService
             throw new InvalidOperationException("Employee role does not allow this shift type.");
         }
 
+        var employee = await _employeeRepository.GetByIdAsync(dto.EmployeeId);
+        if (employee is null)
+        {
+            throw new InvalidOperationException($"Employee {dto.EmployeeId} does not exist.");
+        }
+
+        if (!IsEmployeeAvailableOnDate(employee, dto.Date))
+        {
+            throw new InvalidOperationException("Employee is not available on this date.");
+        }
+
         shift.EmployeeId = dto.EmployeeId;
         shift.ShiftTypeId = dto.ShiftTypeId;
         shift.Date = dto.Date;
@@ -186,6 +202,16 @@ public class ScheduleService : IScheduleService
         if (!await _employeeRepository.CanWorkShiftTypeAsync(sourceShift.EmployeeId, targetShift.ShiftTypeId))
         {
             throw new InvalidOperationException("Source employee role does not allow the target shift type.");
+        }
+
+        if (!IsEmployeeAvailableOnDate(targetShift.Employee, sourceShift.Date))
+        {
+            throw new InvalidOperationException("Target employee is not available on this date.");
+        }
+
+        if (!IsEmployeeAvailableOnDate(sourceShift.Employee, targetShift.Date))
+        {
+            throw new InvalidOperationException("Source employee is not available on this date.");
         }
 
         var sourceEmployeeId = sourceShift.EmployeeId;
@@ -264,7 +290,9 @@ public class ScheduleService : IScheduleService
 
         for (var date = schedule.PeriodStart; date <= schedule.PeriodEnd; date = date.AddDays(1))
         {
-            foreach (var rule in coverageRules.Where(rule => rule.DayOfWeek == date.DayOfWeek))
+            foreach (var rule in coverageRules.Where(rule =>
+                rule.DayOfWeek == date.DayOfWeek &&
+                IsCoverageRuleEffectiveOnDate(rule, date)))
             {
                 var assignedCount = schedule.Shifts.Count(shift =>
                     shift.Date == date &&
@@ -296,5 +324,17 @@ public class ScheduleService : IScheduleService
             .ThenBy(gap => gap.StartTime)
             .ThenBy(gap => gap.ShiftTypeName)
             .ToList();
+    }
+
+    private static bool IsEmployeeAvailableOnDate(Employee employee, DateOnly date)
+    {
+        return (!employee.AvailableFrom.HasValue || employee.AvailableFrom <= date) &&
+            (!employee.AvailableTo.HasValue || employee.AvailableTo >= date);
+    }
+
+    private static bool IsCoverageRuleEffectiveOnDate(StoreCoverageRule rule, DateOnly date)
+    {
+        return (!rule.EffectiveFrom.HasValue || rule.EffectiveFrom <= date) &&
+            (!rule.EffectiveTo.HasValue || rule.EffectiveTo >= date);
     }
 }

@@ -29,7 +29,9 @@ public class StoreCoverageRuleRepository : IStoreCoverageRuleRepository
     public Task<StoreCoverageRule?> GetByStoreDayAndShiftTypeAsync(
         int storeId,
         DayOfWeek dayOfWeek,
-        int shiftTypeId)
+        int shiftTypeId,
+        DateOnly? effectiveFrom,
+        DateOnly? effectiveTo)
     {
         return _context.StoreCoverageRules
             .Include(rule => rule.Store)
@@ -37,7 +39,9 @@ public class StoreCoverageRuleRepository : IStoreCoverageRuleRepository
             .FirstOrDefaultAsync(rule =>
                 rule.StoreId == storeId &&
                 rule.DayOfWeek == dayOfWeek &&
-                rule.ShiftTypeId == shiftTypeId);
+                rule.ShiftTypeId == shiftTypeId &&
+                rule.EffectiveFrom == effectiveFrom &&
+                rule.EffectiveTo == effectiveTo);
     }
 
     public async Task<StoreCoverageRule> CreateAsync(StoreCoverageRule rule)
